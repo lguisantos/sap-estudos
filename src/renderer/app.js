@@ -269,13 +269,13 @@ function renderAnotacoes() {
 /* ---------- configurações ---------- */
 function renderConfig() {
   const c = st.config;
-  $("cfg-repo").value = c.repoUrl; $("cfg-branch").value = c.branch; $("cfg-int").value = c.intervaloMin;
+  $("cfg-repo").value = c.repoUrl; $("cfg-branch").value = c.branch; $("cfg-pasta").value = c.pasta || ""; $("cfg-int").value = c.intervaloMin;
   $("cfg-claude").value = c.claudeCmd; $("cfg-edit").checked = !!c.permitirEdicao; $("cfg-start").checked = !!c.iniciarComWindows;
 }
 $("cfg").addEventListener("submit", async e => {
   e.preventDefault();
   st.config = await window.sap.salvarConfig({
-    repoUrl: $("cfg-repo").value.trim(), branch: $("cfg-branch").value.trim() || "main",
+    repoUrl: $("cfg-repo").value.trim(), branch: $("cfg-branch").value.trim() || "main", pasta: $("cfg-pasta").value.trim().replace(/^\/+|\/+$/g, ""),
     intervaloMin: Number($("cfg-int").value) || 30, claudeCmd: $("cfg-claude").value.trim() || "claude",
     permitirEdicao: $("cfg-edit").checked, iniciarComWindows: $("cfg-start").checked,
   });
@@ -328,7 +328,7 @@ function renderStatus(b) {
   $("sync-status").textContent = b.origem === "repositorio" ? `Atualizado às ${quando}${b.commit ? " · " + b.commit.split(" ")[0] : ""}` : "Conteúdo embutido";
   const msg = [b.erro, b.aviso].filter(Boolean).join(" ");
   $("banner").hidden = !msg; $("banner").textContent = msg;
-  $("cfg-origem").textContent = b.origem === "repositorio" ? `Usando o repositório (commit ${b.commit || "?"}).` : "Usando o conteúdo que veio com o instalador.";
+  $("cfg-origem").textContent = b.origem === "repositorio" ? `Lendo de ${b.fonte || "repositório"} · commit ${b.commit || "?"}.` : "Usando o conteúdo que veio com o instalador.";
 }
 function aplicarBiblioteca(b) {
   const antes = new Set(st.naoVistos);

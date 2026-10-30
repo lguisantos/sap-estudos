@@ -66,3 +66,35 @@ test("sincroniza: clona, recebe edição nova e preserva alterações locais", a
   assert.ok(fs.readFileSync(path.join(clone, "content", "itens", "base-mm.json"), "utf8").endsWith("\n\n"));
   fs.rmSync(tmp, { recursive: true, force: true });
 });
+
+test("fontes: usa a reserva quando o repositório principal não existe e volta a ele quando aparece", async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "sapfontes-"));
+  const git = (cwd, ...a) => execFileSync("git", a, { cwd, stdio: "pipe" }).toString();
+  const repo = (dir, sub) => {
+    fs.mkdirSync(path.join(dir, sub, "content", "itens"), { recursive: true });
+    git(dir, "init", "-q", "-b", "main"); git(dir, "config", "user.email", "t@t"); git(dir, "config", "user.name", "t");
+    fs.copyFileSync(path.join(ITENS, "base-mm.json"), path.join(dir, sub, "content", "itens", "base-mm.json"));
+    git(dir, "add", "."); git(dir, "commit", "-qm", "1");
+  };
+  const reserva = path.join(tmp, "reserva");
+  repo(reserva, "sap-estudos");
+  const principal = path.join(tmp, "principal");
+  const fontes = [{ repoUrl: principal, branch: "main", pasta: "" }, { repoUrl: reserva, branch: "main", pasta: "sap-estudos" }];
+  const falhas = {};
+  let r = await c.sincronizarFontes({ fontes, base: path.join(tmp, "app", "conteudo"), falhas, agora: 1000 });
+  assert.strictEqual(r.fonte.repoUrl, reserva);
+  assert.ok(r.raiz.endsWith(path.join("sap-estudos")));
+  assert.strictEqual(c.carregarItens(r.pastaItens).itens.length, 1);
+  assert.strictEqual(r.erros.length, 1);
+
+  // Dentro da pausa, o principal nem é tentado.
+  r = await c.sincronizarFontes({ fontes, base: path.join(tmp, "app", "conteudo"), falhas, agora: 2000 });
+  assert.strictEqual(r.erros.length, 0);
+
+  // O repositório principal passa a existir: depois da pausa (ou com pausa 0), ele vence.
+  repo(principal, "");
+  r = await c.sincronizarFontes({ fontes, base: path.join(tmp, "app", "conteudo"), falhas, pausaMs: 0, agora: 3000 });
+  assert.strictEqual(r.fonte.repoUrl, principal);
+  assert.strictEqual(r.raiz, path.join(c.pastaDaFonte(path.join(tmp, "app", "conteudo"), fontes[0]), ""));
+  fs.rmSync(tmp, { recursive: true, force: true });
+});

@@ -9,11 +9,14 @@ const APP_ID = "br.lguisantos.sapestudos";
 const PADRAO = {
   repoUrl: "https://github.com/lguisantos/sap-estudos.git",
   branch: "main",
+  pasta: "",
   intervaloMin: 30,
   claudeCmd: "claude",
   permitirEdicao: false,
   iniciarComWindows: true,
 };
+
+const falhasFonte = {};
 
 let janela = null;
 let bandeja = null;
@@ -23,11 +26,13 @@ let pararChat = null;
 
 const dados = () => app.getPath("userData");
 const arqEstado = () => path.join(dados(), "estado.json");
-const pastaClone = () => path.join(dados(), "conteudo");
+const baseClones = () => path.join(dados(), "conteudo");
+// Uma única fonte: o repositório configurado (padrão: lguisantos/sap-estudos, branch main).
+const fontesConfiguradas = () => [{ repoUrl: estado.config.repoUrl, branch: estado.config.branch, pasta: estado.config.pasta || "" }];
 const pastaEmbutida = path.join(__dirname, "..", "content", "itens");
 
 /* ---------- estado persistido ---------- */
-let estado = { config: { ...PADRAO }, vistos: {}, notificados: {}, notas: {}, chat: [], sessaoChat: null };
+let estado = { config: { ...PADRAO }, vistos: {}, notificados: {}, notas: {}, chat: [], sessaoChat: null, raizConteudo: null };
 function lerEstado() {
   try {
     const e = JSON.parse(fs.readFileSync(arqEstado(), "utf8"));
@@ -45,7 +50,9 @@ function salvarEstado() {
 }
 
 /* ---------- conteúdo ---------- */
-let biblioteca = { itens: [], origem: "embutido", commit: "", ultimaSync: null, erro: "", aviso: "" };
+let biblioteca = { itens: [], origem: "embutido", commit: "", ultimaSync: null, erro: "", aviso: "", fonte: "" };
+const itensDa = raiz => path.join(raiz, "content", "itens");
+const raizValida = () => estado.raizConteudo && fs.existsSync(itensDa(estado.raizConteudo)) ? estado.raizConteudo : null;
 
 function carregar(pasta, origem) {
   const { itens, erros } = conteudo.carregarItens(pasta);
@@ -59,17 +66,19 @@ function carregar(pasta, origem) {
 async function sincronizar(manual = false) {
   enviar("sync:status", { sincronizando: true });
   try {
-    const r = await conteudo.sincronizar({ repoUrl: estado.config.repoUrl, branch: estado.config.branch, pastaClone: pastaClone() });
-    if (!carregar(r.pastaItens, "repositorio")) carregar(pastaEmbutida, "embutido");
+    const r = await conteudo.sincronizarFontes({ fontes: fontesConfiguradas(), base: baseClones(), falhas: falhasFonte, ...(manual ? { pausaMs: 0 } : {}) });
+    if (carregar(r.pastaItens, "repositorio")) estado.raizConteudo = r.raiz;
+    else carregar(pastaEmbutida, "embutido");
     biblioteca.commit = r.commit;
     biblioteca.aviso = r.aviso;
+    biblioteca.fonte = `${r.fonte.repoUrl.replace(/^https:\/\/github.com\//, "").replace(/\.git$/, "")}${r.fonte.pasta ? "/" + r.fonte.pasta : ""} (${r.fonte.branch})`;
   } catch (e) {
-    const clonado = path.join(pastaClone(), "content", "itens");
-    if (!carregar(clonado, "repositorio")) carregar(pastaEmbutida, "embutido");
-    const msg = (e.stderr || e.message || "").trim().split("\n").pop();
-    biblioteca.erro = e.code === "ENOENT"
+    const raiz = raizValida();
+    if (!(raiz && carregar(itensDa(raiz), "repositorio"))) carregar(pastaEmbutida, "embutido");
+    const semGit = (e.erros || []).some(m => /ENOENT|spawn git/.test(m)) || e.code === "ENOENT";
+    biblioteca.erro = semGit
       ? "Git não encontrado. Instale o Git para Windows para receber as atualizações."
-      : `Não consegui baixar o conteúdo novo: ${msg}`;
+      : `Não consegui baixar o conteúdo novo: ${(e.erros || [e.message]).join(" | ")}`;
   }
   biblioteca.ultimaSync = new Date().toISOString();
   salvarEstado();
@@ -104,6 +113,7 @@ function resumo() {
     ultimaSync: biblioteca.ultimaSync,
     erro: biblioteca.erro,
     aviso: biblioteca.aviso,
+    fonte: biblioteca.fonte,
   };
 }
 
@@ -193,7 +203,7 @@ ipcMain.handle("config:salvar", (_e, cfg) => {
   salvarEstado();
   aplicarInicioAutomatico();
   agendar();
-  if (antes.repoUrl !== estado.config.repoUrl || antes.branch !== estado.config.branch) sincronizar(true);
+  if (antes.repoUrl !== estado.config.repoUrl || antes.branch !== estado.config.branch || antes.pasta !== estado.config.pasta) sincronizar(true);
   return estado.config;
 });
 ipcMain.handle("claude:versao", async () => {
@@ -211,7 +221,7 @@ ipcMain.handle("chat:enviar", async (_e, { texto, itemId }) => {
   estado.chat.push(resposta);
   estado.chat = estado.chat.slice(-300);
   salvarEstado();
-  const cwd = fs.existsSync(path.join(pastaClone(), ".git")) ? pastaClone() : dados();
+  const cwd = raizValida() || dados();
   pararChat = await claude.perguntar({
     comando: estado.config.claudeCmd,
     cwd,
@@ -227,7 +237,7 @@ ipcMain.handle("chat:enviar", async (_e, { texto, itemId }) => {
         pararChat = null;
         salvarEstado();
         // Com edição liberada, o Claude pode ter alterado o conteúdo: recarrega.
-        if (estado.config.permitirEdicao) { carregar(path.join(pastaClone(), "content", "itens"), "repositorio"); enviar("biblioteca", resumo()); }
+        if (estado.config.permitirEdicao && raizValida()) { carregar(itensDa(raizValida()), "repositorio"); enviar("biblioteca", resumo()); }
       }
       enviar("chat:evento", ev);
     },
@@ -242,7 +252,7 @@ ipcMain.handle("selo", (_e, dataUrl, n) => {
   janela.setOverlayIcon(dataUrl ? nativeImage.createFromDataURL(dataUrl) : null, n ? `${n} novidades` : "");
 });
 ipcMain.handle("abrir:externo", (_e, url) => { if (/^https?:/.test(url)) shell.openExternal(url); });
-ipcMain.handle("abrir:pastaConteudo", () => shell.openPath(fs.existsSync(pastaClone()) ? pastaClone() : dados()));
+ipcMain.handle("abrir:pastaConteudo", () => shell.openPath(raizValida() || dados()));
 
 function aplicarInicioAutomatico() {
   if (process.platform !== "win32" || !app.isPackaged) return;
@@ -257,8 +267,8 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     app.setAppUserModelId(APP_ID);
     lerEstado();
-    carregar(fs.existsSync(path.join(pastaClone(), "content", "itens")) ? path.join(pastaClone(), "content", "itens") : pastaEmbutida,
-      fs.existsSync(path.join(pastaClone(), "content", "itens")) ? "repositorio" : "embutido");
+    const raiz = raizValida();
+    if (!(raiz && carregar(itensDa(raiz), "repositorio"))) carregar(pastaEmbutida, "embutido");
     criarJanela();
     bandeja = new Tray(nativeImage.createFromPath(path.join(__dirname, "..", "build", "tray.png")));
     bandeja.on("click", mostrar);

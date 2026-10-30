@@ -58,7 +58,7 @@ function paraNotificar(itens, vistos, notificados) {
  * Clona ou atualiza o repositório de conteúdo usando o git instalado (e as credenciais
  * que o usuário já tem configuradas). Retorna a pasta de itens a usar.
  */
-async function sincronizar({ repoUrl, branch, pastaClone }) {
+async function sincronizar({ repoUrl, branch, pastaClone, pasta = "" }) {
   const marcador = `${pastaClone}.origem`;
   const origem = `${repoUrl}#${branch}`;
   const existe = fs.existsSync(path.join(pastaClone, ".git"));
@@ -77,7 +77,36 @@ async function sincronizar({ repoUrl, branch, pastaClone }) {
     fs.writeFileSync(marcador, origem);
   }
   const commit = (await run("git", ["-C", pastaClone, "log", "-1", "--format=%h %cI"])).trim();
-  return { pastaItens: path.join(pastaClone, "content", "itens"), commit, aviso };
+  const raiz = path.join(pastaClone, pasta);
+  return { raiz, pastaItens: path.join(raiz, "content", "itens"), commit, aviso };
 }
 
-module.exports = { carregarItens, naoVistos, paraNotificar, sincronizar, run };
+const chave = f => crypto.createHash("sha1").update(`${f.repoUrl}#${f.branch}`).digest("hex").slice(0, 8);
+const pastaDaFonte = (base, f) => `${base}-${chave(f)}`;
+
+/**
+ * Tenta cada fonte de conteúdo na ordem e usa a primeira que funcionar. Uma fonte que falhou
+ * só é tentada de novo depois de `pausaMs` (evita bater num repositório que ainda não existe
+ * a cada sincronização).
+ */
+async function sincronizarFontes({ fontes, base, falhas = {}, pausaMs = 6 * 3600000, agora = Date.now() }) {
+  const erros = [];
+  for (const f of fontes) {
+    const k = chave(f);
+    if (falhas[k] && agora - falhas[k] < pausaMs && f !== fontes[fontes.length - 1]) continue;
+    try {
+      const r = await sincronizar({ ...f, pastaClone: pastaDaFonte(base, f) });
+      if (!fs.existsSync(r.pastaItens)) throw new Error(`pasta de conteúdo não encontrada (${path.join(f.pasta || "", "content", "itens")})`);
+      delete falhas[k];
+      return { ...r, fonte: f, erros };
+    } catch (e) {
+      falhas[k] = agora;
+      erros.push(`${f.repoUrl} (${f.branch}): ${(e.stderr || e.message || "").trim().split("\n").pop()}`);
+    }
+  }
+  const err = new Error(erros.join(" | "));
+  err.erros = erros;
+  throw err;
+}
+
+module.exports = { carregarItens, naoVistos, paraNotificar, sincronizar, sincronizarFontes, pastaDaFonte, run };
