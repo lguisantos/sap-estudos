@@ -1,0 +1,93 @@
+{
+  "id": "base-co",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "CO",
+  "ordem": 5,
+  "titulo": "CO: centros de custo, ordens e rentabilidade",
+  "curto": "CO — Controladoria",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "FI responde “quanto gastamos”. CO responde “onde, por quê e com que resultado”. É a contabilidade gerencial: custos por área, por projeto, por produto e por cliente.",
+  "conceitos": [
+    {
+      "termo": "Centro de custo",
+      "explicacao": "Área que consome recursos sem gerar receita diretamente (ex.: RH, TI, manutenção)."
+    },
+    {
+      "termo": "Centro de lucro",
+      "explicacao": "Unidade avaliada por resultado (receita − custo), como uma linha de negócio ou filial."
+    },
+    {
+      "termo": "Ordem interna",
+      "explicacao": "Coletor temporário de custos para um evento ou projeto pequeno (ex.: feira, campanha)."
+    },
+    {
+      "termo": "Rateio / distribuição",
+      "explicacao": "Regra periódica que reparte custos de um centro de apoio para os que usam o serviço."
+    },
+    {
+      "termo": "Margem (CO-PA)",
+      "explicacao": "Análise de rentabilidade por cliente, produto, região. No S/4HANA, a versão recomendada é a por contas, na ACDOCA."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "KS01",
+      "descricao": "Criar centro de custo"
+    },
+    {
+      "codigo": "KO01",
+      "descricao": "Criar ordem interna"
+    },
+    {
+      "codigo": "KSB1",
+      "descricao": "Partidas reais por centro de custo"
+    },
+    {
+      "codigo": "KB11N",
+      "descricao": "Transferência manual de custos"
+    },
+    {
+      "codigo": "KSU5",
+      "descricao": "Executar rateio"
+    },
+    {
+      "codigo": "KE30",
+      "descricao": "Relatório de rentabilidade"
+    }
+  ],
+  "caso": {
+    "titulo": "Campanha de lançamento de produto",
+    "contexto": "O marketing gastará em agência, evento e mídia. A diretoria quer saber o custo total da campanha sem misturar com o orçamento normal do departamento.",
+    "passos": [
+      "Criar uma ordem interna “Lançamento Linha X” com orçamento aprovado.",
+      "Lançar as faturas de agência e mídia apontando para a ordem (não para o centro de custo).",
+      "Acompanhar real × orçado pela ordem durante a campanha.",
+      "Ao final, liquidar a ordem para o centro de lucro da linha X, que passa a carregar o custo no resultado."
+    ]
+  },
+  "armadilhas": [
+    "Usar centro de custo para tudo: custos temporários se misturam aos fixos.",
+    "Não liquidar ordens no fechamento: o custo fica parado e o resultado do produto aparece melhor do que é."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença prática entre centro de custo e ordem interna?",
+    "resposta": "O centro de custo é permanente e representa uma área da estrutura; a ordem interna é temporária, ligada a um evento ou projeto, e normalmente é liquidada para outro objeto ao final."
+  },
+  "links": [
+    {
+      "id": "base-fi",
+      "motivo": "Os custos chegam ao CO a partir de lançamentos FI."
+    },
+    {
+      "id": "base-pp",
+      "motivo": "Ordens de produção também são objetos de custo."
+    },
+    {
+      "id": "base-sd",
+      "motivo": "A receita das vendas alimenta a análise de margem."
+    }
+  ],
+  "fontes": []
+}

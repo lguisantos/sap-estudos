@@ -1,0 +1,97 @@
+{
+  "id": "base-mm",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "MM",
+  "ordem": 6,
+  "titulo": "MM: do pedido ao pagamento (Procure-to-Pay)",
+  "curto": "MM — Compras",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "O processo de compras liga quem precisa (requisição), quem negocia (pedido), quem recebe (entrada de mercadoria) e quem paga (fatura). O SAP confere essas três pontas antes de liberar o pagamento.",
+  "conceitos": [
+    {
+      "termo": "Requisição de compra",
+      "explicacao": "Pedido interno de necessidade, criado manualmente ou pelo MRP."
+    },
+    {
+      "termo": "Pedido de compra",
+      "explicacao": "Documento legal enviado ao fornecedor com preço, quantidade e prazo."
+    },
+    {
+      "termo": "Entrada de mercadoria",
+      "explicacao": "Registro do recebimento. Tipo de movimento 101 aumenta estoque e gera lançamento contábil."
+    },
+    {
+      "termo": "Verificação de fatura",
+      "explicacao": "Lançamento da nota do fornecedor, comparada com pedido e entrada."
+    },
+    {
+      "termo": "Three-way match",
+      "explicacao": "Pedido × entrada × fatura. Divergência acima da tolerância bloqueia o pagamento."
+    },
+    {
+      "termo": "Tipos de movimento",
+      "explicacao": "101 entrada por pedido, 122 devolução ao fornecedor, 201 consumo para centro de custo, 261 consumo para ordem, 311 transferência entre depósitos."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME51N",
+      "descricao": "Criar requisição"
+    },
+    {
+      "codigo": "ME21N",
+      "descricao": "Criar pedido de compra"
+    },
+    {
+      "codigo": "ME23N",
+      "descricao": "Exibir pedido e histórico"
+    },
+    {
+      "codigo": "MIGO",
+      "descricao": "Movimentos de mercadoria"
+    },
+    {
+      "codigo": "MIRO",
+      "descricao": "Verificação de faturas"
+    },
+    {
+      "codigo": "MMBE",
+      "descricao": "Visão de estoque"
+    }
+  ],
+  "caso": {
+    "titulo": "Fábrica comprando 1.000 kg de resina",
+    "contexto": "Chegaram 980 kg e a nota fiscal veio cobrando 1.000 kg. O sistema precisa impedir o pagamento a maior sem travar a operação.",
+    "passos": [
+      "ME21N: pedido de 1.000 kg a R$ 12/kg.",
+      "MIGO 101: entrada de 980 kg. Estoque sobe e o sistema lança débito em estoque, crédito em GR/IR (mercadoria recebida, a faturar).",
+      "MIRO: fatura de 1.000 kg. O sistema propõe 980 kg pela entrada; lançando 1.000 kg, a fatura fica bloqueada por quantidade.",
+      "Compras negocia com o fornecedor: chega a nota de débito/crédito ou os 20 kg restantes, e o bloqueio é liberado (MRBR)."
+    ]
+  },
+  "armadilhas": [
+    "Lançar fatura antes da entrada sem verificação baseada em entrada: perde-se o controle por recebimento.",
+    "Usar o tipo de movimento errado (ex.: 201 em vez de 261) e jogar o custo no objeto errado."
+  ],
+  "fixacao": {
+    "pergunta": "Para que serve a conta GR/IR (WE/RE)?",
+    "resposta": "É uma conta transitória entre a entrada de mercadoria e a fatura. A entrada credita GR/IR; a fatura debita. Saldo restante indica mercadoria recebida e não faturada (ou o contrário) e precisa ser analisado no fechamento."
+  },
+  "links": [
+    {
+      "id": "base-integra",
+      "motivo": "A entrada e a fatura geram lançamentos por determinação automática (OBYC)."
+    },
+    {
+      "id": "base-pp",
+      "motivo": "O MRP cria requisições de compra automaticamente."
+    },
+    {
+      "id": "base-fi",
+      "motivo": "A fatura gera a obrigação com o fornecedor em contas a pagar."
+    }
+  ],
+  "fontes": []
+}

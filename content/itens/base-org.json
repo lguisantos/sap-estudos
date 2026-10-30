@@ -1,0 +1,97 @@
+{
+  "id": "base-org",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "Base",
+  "ordem": 2,
+  "titulo": "Estrutura organizacional: o esqueleto da empresa no sistema",
+  "curto": "Estrutura organizacional",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "Antes de lançar qualquer documento, a empresa precisa ser desenhada no SAP: quem é a entidade legal, onde se produz, onde se estoca, quem vende e quem compra. Essas unidades são definidas uma vez e aparecem em todo documento.",
+  "conceitos": [
+    {
+      "termo": "Empresa (Company Code)",
+      "explicacao": "Entidade legal com balanço próprio (ex.: 1000). Toda contabilidade fecha por empresa."
+    },
+    {
+      "termo": "Centro (Plant)",
+      "explicacao": "Fábrica, depósito ou filial operacional. Estoque e produção são planejados por centro."
+    },
+    {
+      "termo": "Depósito (Storage Location)",
+      "explicacao": "Subdivisão física do centro onde o estoque fica (ex.: almoxarifado, expedição)."
+    },
+    {
+      "termo": "Organização de vendas",
+      "explicacao": "Responsável legal pela venda e pelas condições comerciais. Junto com canal e setor forma a área de vendas."
+    },
+    {
+      "termo": "Organização de compras",
+      "explicacao": "Negocia com fornecedores. Pode atender um ou vários centros."
+    },
+    {
+      "termo": "Área de contabilidade de custos",
+      "explicacao": "Unidade de CO que agrupa empresas para controle de custos."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "OX02",
+      "descricao": "Definir empresa"
+    },
+    {
+      "codigo": "OX10",
+      "descricao": "Definir centro"
+    },
+    {
+      "codigo": "OX09",
+      "descricao": "Definir depósito"
+    },
+    {
+      "codigo": "OVX5",
+      "descricao": "Definir organização de vendas"
+    },
+    {
+      "codigo": "OX08",
+      "descricao": "Definir organização de compras"
+    },
+    {
+      "codigo": "OX18",
+      "descricao": "Atribuir centro à empresa"
+    }
+  ],
+  "caso": {
+    "titulo": "Indústria de alimentos com fábrica em Goiânia e CD em São Paulo",
+    "contexto": "O desenho define como os relatórios vão sair pelos próximos anos. Uma decisão errada aqui (ex.: criar duas empresas sem necessidade legal) gera custo de manutenção em todos os módulos.",
+    "passos": [
+      "Uma empresa 1000 (CNPJ matriz) com dois centros: GO01 (fábrica) e SP01 (centro de distribuição).",
+      "Depósitos em GO01: MP (matéria-prima), PA (produto acabado). Em SP01: EXP (expedição).",
+      "Uma organização de vendas BR10 que vende a partir de SP01.",
+      "Uma organização de compras central que atende os dois centros."
+    ]
+  },
+  "armadilhas": [
+    "Criar centros demais: cada centro multiplica dados mestres de material e configurações.",
+    "Esquecer as atribuições (centro → empresa, org. vendas → empresa): sem elas, os documentos não lançam."
+  ],
+  "fixacao": {
+    "pergunta": "Uma filial nova sem CNPJ próprio deve virar nova empresa ou novo centro?",
+    "resposta": "Em geral, novo centro. Empresa (company code) representa uma entidade legal que fecha balanço; uma filial operacional da mesma pessoa jurídica é modelada como centro (no Brasil, normalmente com seu local de negócio para a parte fiscal)."
+  },
+  "links": [
+    {
+      "id": "base-dados",
+      "motivo": "Os dados mestres são criados nos níveis dessa estrutura (ex.: material por centro)."
+    },
+    {
+      "id": "base-mm",
+      "motivo": "Compras e estoque usam centro, depósito e organização de compras."
+    },
+    {
+      "id": "base-sd",
+      "motivo": "Vendas usam a área de vendas (org. vendas + canal + setor)."
+    }
+  ],
+  "fontes": []
+}

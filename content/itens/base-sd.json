@@ -1,0 +1,97 @@
+{
+  "id": "base-sd",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "SD",
+  "ordem": 7,
+  "titulo": "SD: da cotação ao recebimento (Order-to-Cash)",
+  "curto": "SD — Vendas",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "Vendas no SAP é uma cadeia de documentos: cotação, ordem, remessa, saída de mercadoria e faturamento. Cada passo copia dados do anterior, e o preço é calculado por um procedimento de condições.",
+  "conceitos": [
+    {
+      "termo": "Área de vendas",
+      "explicacao": "Organização de vendas + canal de distribuição + setor de atividade."
+    },
+    {
+      "termo": "Ordem de venda",
+      "explicacao": "Compromisso com o cliente: itens, preço, data de entrega, verificação de disponibilidade (ATP)."
+    },
+    {
+      "termo": "Remessa e saída de mercadoria",
+      "explicacao": "Separação e expedição. A saída (movimento 601) baixa o estoque e lança o custo."
+    },
+    {
+      "termo": "Faturamento",
+      "explicacao": "Gera a fatura ao cliente e o documento contábil de receita."
+    },
+    {
+      "termo": "Determinação de preço",
+      "explicacao": "Procedimento que soma condições: preço base (PPR0 no S/4HANA, PR00 no ECC), descontos, frete e impostos."
+    },
+    {
+      "termo": "Fluxo de documentos",
+      "explicacao": "Histórico ligando cada documento ao anterior e ao seguinte."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA21",
+      "descricao": "Criar cotação"
+    },
+    {
+      "codigo": "VA01",
+      "descricao": "Criar ordem de venda"
+    },
+    {
+      "codigo": "VL01N",
+      "descricao": "Criar remessa"
+    },
+    {
+      "codigo": "VL02N",
+      "descricao": "Picking e saída de mercadoria"
+    },
+    {
+      "codigo": "VF01",
+      "descricao": "Criar faturamento"
+    },
+    {
+      "codigo": "VK11",
+      "descricao": "Registros de condição (preços)"
+    }
+  ],
+  "caso": {
+    "titulo": "Cliente pede 200 caixas com desconto de 5%",
+    "contexto": "O comercial negociou desconto para um cliente específico. O preço precisa sair certo na ordem e na fatura sem ninguém digitar manualmente.",
+    "passos": [
+      "VK11: criar registro de desconto por cliente/material com 5% e validade.",
+      "VA01: a ordem busca o preço base e o desconto automaticamente; a ATP confirma a data.",
+      "VL01N/VL02N: separação e saída de mercadoria; estoque baixa e o CMV é lançado.",
+      "VF01: fatura com receita líquida; o cliente aparece em aberto em contas a receber até o pagamento."
+    ]
+  },
+  "armadilhas": [
+    "Alterar preço manualmente na ordem: some a rastreabilidade da negociação.",
+    "Cliente sem dados na área de vendas: a ordem não pode ser criada."
+  ],
+  "fixacao": {
+    "pergunta": "Em que momento do processo de vendas o estoque é baixado e em que momento a receita é reconhecida?",
+    "resposta": "O estoque baixa na saída de mercadoria (remessa, movimento 601), que lança o custo da mercadoria vendida. A receita é reconhecida no faturamento, que lança cliente contra receita."
+  },
+  "links": [
+    {
+      "id": "base-integra",
+      "motivo": "Saída de mercadoria e fatura geram lançamentos via OBYC e VKOA."
+    },
+    {
+      "id": "base-co",
+      "motivo": "A margem por cliente vem da receita (SD) contra o custo."
+    },
+    {
+      "id": "base-org",
+      "motivo": "A área de vendas vem da estrutura organizacional."
+    }
+  ],
+  "fontes": []
+}

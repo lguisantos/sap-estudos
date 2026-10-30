@@ -1,0 +1,93 @@
+{
+  "id": "base-abap",
+  "tipo": "fundamentos",
+  "trilha": "tecnico",
+  "area": "Técnico",
+  "ordem": 11,
+  "titulo": "ABAP, CDS e clean core: estender sem quebrar",
+  "curto": "ABAP e extensões",
+  "publicado": "2026-10-30",
+  "nivel": "intermediário",
+  "resumo": "Toda empresa precisa de algo que o padrão não tem. No S/4HANA, a regra é o clean core: estender pelos pontos liberados (APIs, BAdIs, campos customizados, BTP) em vez de alterar o código da SAP.",
+  "conceitos": [
+    {
+      "termo": "ABAP",
+      "explicacao": "Linguagem de programação do SAP. Moderno: ABAP Cloud, com objetos liberados apenas."
+    },
+    {
+      "termo": "CDS views",
+      "explicacao": "Modelos de dados declarativos sobre as tabelas. Base de relatórios, apps e APIs."
+    },
+    {
+      "termo": "RAP",
+      "explicacao": "ABAP RESTful Application Programming Model: forma atual de criar apps e serviços transacionais."
+    },
+    {
+      "termo": "Key user extensibility",
+      "explicacao": "Extensões sem código ou com pouco código: campos customizados, lógica simples, formulários."
+    },
+    {
+      "termo": "Side-by-side (BTP)",
+      "explicacao": "Apps e integrações fora do ERP, na SAP Business Technology Platform, falando por APIs."
+    },
+    {
+      "termo": "BAdI",
+      "explicacao": "Ponto de extensão oficial onde você insere sua lógica sem modificar o padrão."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ADT",
+      "descricao": "ABAP Development Tools (Eclipse): IDE oficial"
+    },
+    {
+      "codigo": "SE80",
+      "descricao": "Object Navigator (GUI)"
+    },
+    {
+      "codigo": "SE11",
+      "descricao": "Dicionário de dados"
+    },
+    {
+      "codigo": "SE18 / SE19",
+      "descricao": "Definir e implementar BAdI"
+    },
+    {
+      "codigo": "ST22",
+      "descricao": "Análise de dumps"
+    },
+    {
+      "codigo": "SAT",
+      "descricao": "Análise de performance"
+    }
+  ],
+  "caso": {
+    "titulo": "Vendas quer o campo “Origem do lead” na ordem",
+    "contexto": "O comercial quer saber se o pedido veio do site, da feira ou de indicação, e ver isso nos relatórios de margem.",
+    "passos": [
+      "Criar o campo com o app de campos customizados, contexto de documento de vendas.",
+      "Habilitar o campo na interface da ordem e nos relatórios analíticos.",
+      "Se precisar de validação (ex.: obrigatório para canal online), implementar a lógica no BAdI de key user.",
+      "Nenhuma tabela padrão foi modificada: o upgrade segue sem retrabalho."
+    ]
+  },
+  "armadilhas": [
+    "Modificar objetos SAP (modificação): cada upgrade vira um projeto de reajuste.",
+    "Usar SELECT direto em tabelas não liberadas em vez de CDS/APIs liberadas."
+  ],
+  "fixacao": {
+    "pergunta": "Por que a SAP insiste no clean core?",
+    "resposta": "Para que atualizações e upgrades sejam rápidos e seguros. Extensões feitas por pontos estáveis (APIs, BAdIs, CDS liberadas) não quebram quando o padrão muda."
+  },
+  "links": [
+    {
+      "id": "base-fiori",
+      "motivo": "Apps Fiori Elements são gerados sobre serviços RAP."
+    },
+    {
+      "id": "base-projeto",
+      "motivo": "O nível de customização impacta custo e prazo do projeto."
+    }
+  ],
+  "fontes": []
+}

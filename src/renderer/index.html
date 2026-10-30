@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'">
+<title>SAP Estudos</title>
+<link rel="stylesheet" href="../../node_modules/@fontsource/bricolage-grotesque/500.css">
+<link rel="stylesheet" href="../../node_modules/@fontsource/bricolage-grotesque/700.css">
+<link rel="stylesheet" href="../../node_modules/@fontsource/source-sans-3/400.css">
+<link rel="stylesheet" href="../../node_modules/@fontsource/source-sans-3/400-italic.css">
+<link rel="stylesheet" href="../../node_modules/@fontsource/source-sans-3/600.css">
+<link rel="stylesheet" href="../../node_modules/@fontsource/jetbrains-mono/500.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="mark" aria-hidden="true">S</span><span>SAP Estudos</span></div>
+  <nav class="views" aria-label="Visões">
+    <button data-view="estudo" aria-current="page">Estudo</button>
+    <button data-view="mapa">Mapa de conexões</button>
+    <button data-view="anotacoes">Anotações</button>
+    <button data-view="config">Configurações</button>
+  </nav>
+  <div class="tools">
+    <span class="sync" id="sync-status">Carregando…</span>
+    <button class="ghost" id="btn-sync" title="Buscar atualizações agora">Atualizar</button>
+    <div class="bellwrap">
+      <button class="bell" id="btn-bell" aria-haspopup="true" aria-expanded="false" title="Novidades não vistas">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.4A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.6L18 12.6V9a6 6 0 0 0-6-6Zm0 19a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 22Z" fill="currentColor"/></svg>
+        <span class="count" id="bell-count" hidden>0</span>
+      </button>
+      <div class="pop" id="pop-novidades" hidden>
+        <div class="pop-head"><b>Novidades não vistas</b><button class="link" id="btn-todos-vistos">Marcar todas como vistas</button></div>
+        <div id="pop-lista"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="banner" id="banner" hidden></div>
+
+<div class="layout" id="v-estudo">
+  <aside class="side">
+    <div class="filters" role="group" aria-label="Trilha">
+      <button data-trilha="todas" aria-pressed="true">Todas</button>
+      <button data-trilha="funcional" aria-pressed="false">Funcional</button>
+      <button data-trilha="tecnico" aria-pressed="false">Técnico</button>
+    </div>
+    <input type="search" id="busca" placeholder="Buscar tema, transação, conceito…">
+    <div id="lista"></div>
+  </aside>
+
+  <main class="reader" id="reader"></main>
+
+  <aside class="panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-caderno" aria-selected="true">Caderno</button>
+      <button role="tab" id="tab-chat" aria-selected="false">Perguntar ao Claude</button>
+    </div>
+    <section id="p-caderno" class="pbody">
+      <label class="check" for="nb-done"><input type="checkbox" id="nb-done"> Marcar como estudado</label>
+      <textarea id="nb-text" placeholder="O que você entendeu, dúvidas, exemplos do seu trabalho…&#10;&#10;Cite outro tema com [[MM — Compras]] ou [[Joule for Developers]]."></textarea>
+      <p class="hint">Salva sozinho. Use <code>[[nome do tema]]</code> para ligar a nota a outro tema.</p>
+      <div class="cited" id="nb-cited"></div>
+      <div class="status" id="nb-status"></div>
+    </section>
+    <section id="p-chat" class="pbody chat" hidden>
+      <div class="chat-head">
+        <span class="hint" id="chat-ctx"></span>
+        <button class="link" id="btn-nova">Nova conversa</button>
+      </div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <form id="chat-form" class="composer">
+        <textarea id="chat-in" rows="3" placeholder="Pergunte sobre o tema aberto, peça um exercício, um exemplo de código…"></textarea>
+        <div class="composer-row">
+          <span class="hint" id="chat-mode"></span>
+          <button type="button" class="ghost" id="btn-parar" hidden>Parar</button>
+          <button type="submit" id="btn-enviar">Enviar</button>
+        </div>
+      </form>
+    </section>
+  </aside>
+</div>
+
+<section class="full" id="v-mapa" hidden>
+  <h2>Mapa de conexões</h2>
+  <p class="sub">Fundamentos no anel interno, edições semanais no externo. Passe o mouse para ver as ligações; clique para abrir. Verde = estudado.</p>
+  <div class="mapbox"><svg id="mapsvg" viewBox="0 0 1000 760" role="img" aria-label="Grafo de conexões entre os temas"></svg></div>
+</section>
+
+<section class="full" id="v-anotacoes" hidden>
+  <h2>Minhas anotações</h2>
+  <p class="sub">Tudo o que você escreveu, das mais recentes para as mais antigas.</p>
+  <div id="notelist"></div>
+</section>
+
+<section class="full" id="v-config" hidden>
+  <h2>Configurações</h2>
+  <form id="cfg" class="cfg">
+    <fieldset>
+      <legend>Atualizações de conteúdo</legend>
+      <label for="cfg-repo">Repositório de conteúdo (Git)</label>
+      <input id="cfg-repo" type="text" spellcheck="false">
+      <label for="cfg-branch">Branch</label>
+      <input id="cfg-branch" type="text" spellcheck="false">
+      <label for="cfg-int">Verificar a cada (minutos)</label>
+      <input id="cfg-int" type="number" min="5" max="1440">
+      <p class="hint">O app usa o Git instalado no Windows e as suas credenciais do GitHub. O Claude publica a edição semanal toda sexta às 9h.</p>
+      <p class="hint" id="cfg-origem"></p>
+      <button type="button" class="ghost" id="btn-pasta">Abrir pasta do conteúdo</button>
+    </fieldset>
+    <fieldset>
+      <legend>Claude Code</legend>
+      <label for="cfg-claude">Comando ou caminho do Claude Code</label>
+      <input id="cfg-claude" type="text" spellcheck="false">
+      <label class="check" for="cfg-edit"><input type="checkbox" id="cfg-edit"> Permitir que o chat edite o conteúdo (criar e corrigir itens, commit e push)</label>
+      <div class="row"><button type="button" class="ghost" id="btn-testar">Testar conexão</button><span class="hint" id="cfg-claude-st"></span></div>
+    </fieldset>
+    <fieldset>
+      <legend>Windows</legend>
+      <label class="check" for="cfg-start"><input type="checkbox" id="cfg-start"> Iniciar com o Windows (minimizado na bandeja)</label>
+    </fieldset>
+    <div class="row"><button type="submit">Salvar configurações</button><span class="hint" id="cfg-st"></span></div>
+  </form>
+</section>
+
+<script src="markdown.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

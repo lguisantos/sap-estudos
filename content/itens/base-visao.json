@@ -1,0 +1,89 @@
+{
+  "id": "base-visao",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "Base",
+  "ordem": 1,
+  "titulo": "S/4HANA por dentro: o mapa antes da viagem",
+  "curto": "Visão geral",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "O SAP S/4HANA é um ERP: um único sistema onde compras, vendas, produção, estoque e contabilidade gravam no mesmo banco de dados. Entender essa ideia de “um registro, várias visões” explica quase tudo o que vem depois.",
+  "conceitos": [
+    {
+      "termo": "ERP",
+      "explicacao": "Sistema integrado de gestão. Um evento (ex.: entrada de mercadoria) atualiza estoque, contabilidade e custos ao mesmo tempo."
+    },
+    {
+      "termo": "SAP HANA",
+      "explicacao": "Banco de dados em memória e colunar. Permite relatórios em tempo real sobre os dados transacionais, sem tabelas de totais."
+    },
+    {
+      "termo": "Módulos",
+      "explicacao": "Áreas funcionais: FI (finanças), CO (controladoria), MM (materiais), SD (vendas), PP (produção), entre outras."
+    },
+    {
+      "termo": "Mandante (client)",
+      "explicacao": "Divisão lógica de um sistema SAP, com número de 3 dígitos (ex.: 100). Dados de negócio são separados por mandante."
+    },
+    {
+      "termo": "Landscape DEV → QAS → PRD",
+      "explicacao": "Configurações e desenvolvimentos nascem em desenvolvimento, são testados em qualidade e só então vão para produção via ordens de transporte."
+    },
+    {
+      "termo": "Transação (T-code)",
+      "explicacao": "Atalho para uma tela da interface clássica (SAP GUI). No Fiori, o equivalente são os apps."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "SPRO",
+      "descricao": "Guia de implementação (IMG): onde fica a configuração"
+    },
+    {
+      "codigo": "SE16N",
+      "descricao": "Visualizar dados de tabelas"
+    },
+    {
+      "codigo": "SU01",
+      "descricao": "Manutenção de usuários"
+    },
+    {
+      "codigo": "/UI2/FLP",
+      "descricao": "Abrir o Fiori Launchpad"
+    },
+    {
+      "codigo": "SE09",
+      "descricao": "Ordens de transporte"
+    }
+  ],
+  "caso": {
+    "titulo": "Distribuidora de peças com 3 filiais",
+    "contexto": "Antes do ERP, cada filial tinha sua planilha de estoque e a contabilidade fechava o mês com 10 dias de atraso. Com o S/4HANA, a venda feita em Campinas já baixa estoque, gera a receita e atualiza o resultado da filial no mesmo segundo.",
+    "passos": [
+      "Vendedor cria a ordem de venda (SD).",
+      "Expedição registra a saída de mercadoria (estoque cai em MM).",
+      "O documento contábil é gerado automaticamente (FI) com o custo da mercadoria vendida (CO).",
+      "O controller vê a margem do dia em um app Fiori, sem esperar o fechamento."
+    ]
+  },
+  "armadilhas": [
+    "Achar que módulos são sistemas separados: eles compartilham dados mestres e documentos.",
+    "Configurar direto em produção: sempre passe por DEV e QAS com transporte."
+  ],
+  "fixacao": {
+    "pergunta": "Por que uma única entrada de mercadoria afeta ao mesmo tempo MM, FI e CO?",
+    "resposta": "Porque o documento de material gera um documento contábil na mesma transação: o estoque (MM) é avaliado a um preço, esse valor vai para contas do razão (FI) e, quando há objeto de custo, para a controladoria (CO). É o princípio de integração do ERP."
+  },
+  "links": [
+    {
+      "id": "base-org",
+      "motivo": "A estrutura organizacional é o esqueleto onde todos os módulos se apoiam."
+    },
+    {
+      "id": "base-fiori",
+      "motivo": "A interface moderna pela qual você vai operar o sistema."
+    }
+  ],
+  "fontes": []
+}

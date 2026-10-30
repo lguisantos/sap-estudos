@@ -1,0 +1,63 @@
+{
+  "id": "2026-10-30-funcional-joule-agentes",
+  "tipo": "semanal",
+  "trilha": "funcional",
+  "area": "IA nos processos",
+  "titulo": "Joule e agentes de IA: o que muda no dia a dia do consultor funcional",
+  "curto": "Joule e agentes de IA",
+  "publicado": "2026-10-30",
+  "nivel": "intermediário",
+  "resumo": "Em 2026 a SAP passou a tratar os agentes Joule como uma camada de execução dos processos, e não só como um assistente de perguntas. Para o consultor funcional, isso muda a pergunta de \"qual transação o usuário roda\" para \"que parte do processo um agente pode conduzir, com que dados e sob que controle\". Esta edição liga o tema aos fundamentos de P2P, O2C e integração que você já estudou.",
+  "conceitos": [
+    { "termo": "Joule", "explicacao": "Assistente de IA da SAP presente nas aplicações (S/4HANA, SuccessFactors, Ariba etc.). Responde perguntas, navega para apps e executa ações por meio de skills." },
+    { "termo": "Joule Skill", "explicacao": "Ação específica que o Joule sabe executar, por exemplo exibir pedidos atrasados de um fornecedor. As notas de versão da SAP de 2026 falam em mais de 2.500 skills." },
+    { "termo": "Agente Joule", "explicacao": "Combinação de skills, dados e raciocínio para conduzir uma tarefa de ponta a ponta, como analisar uma divergência de fatura e propor a solução. Atua dentro das autorizações do usuário." },
+    { "termo": "Joule Studio", "explicacao": "Ferramenta para empresas criarem os próprios agentes e skills com o contexto de negócio SAP. Fica na SAP BTP." },
+    { "termo": "SAP Business Data Cloud (BDC)", "explicacao": "Camada de dados governados que junta dados SAP e de fora da SAP. A SAP passou a apresentá-la como base para a experiência de agentes do Joule." },
+    { "termo": "Humano no controle", "explicacao": "Princípio de que o agente propõe e o usuário aprova ações relevantes (lançar, liberar, pagar). As regras de aprovação e autorização continuam valendo." }
+  ],
+  "transacoes": [
+    { "codigo": "MIRO / MRBR", "descricao": "Faturas bloqueadas: um dos cenários mais citados para agentes de divergência" },
+    { "codigo": "VA05 / VA01", "descricao": "Consulta e criação de ordens; o Joule pode navegar e resumir" },
+    { "codigo": "PFCG", "descricao": "Papéis e autorizações: definem o que o Joule pode fazer em nome do usuário" },
+    { "codigo": "SAP Cloud ALM", "descricao": "Gestão de projeto e operação; a SAP anunciou integração com o AI Agent Hub" },
+    { "codigo": "Fiori Launchpad", "descricao": "Ponto de entrada do Joule dentro do S/4HANA" }
+  ],
+  "caso": {
+    "titulo": "Contas a pagar com 300 faturas bloqueadas por mês",
+    "contexto": "Uma indústria tem centenas de faturas bloqueadas por diferença de preço ou de quantidade (o three-way match que você viu em MM). Hoje um analista abre cada uma na MRBR, consulta o pedido, a entrada e o e-mail do comprador.",
+    "passos": [
+      "Mapear o processo atual: quais motivos de bloqueio mais aparecem (preço, quantidade, data) e quem decide cada um.",
+      "Identificar o que um agente pode fazer sem risco: reunir pedido, entrada (MIGO) e fatura, calcular a diferença e verificar tolerâncias.",
+      "Definir o que exige humano: liberar o pagamento ou pedir nota de débito/crédito ao fornecedor continua com o analista ou o comprador.",
+      "Revisar autorizações na PFCG: o agente só enxerga e executa o que o papel do usuário permite.",
+      "Medir antes e depois: tempo médio para liberar uma fatura bloqueada e quantidade de faturas pagas fora do prazo."
+    ]
+  },
+  "armadilhas": [
+    "Tratar o agente como mágica: se o dado mestre está errado (condição de pagamento, preço no info record), o agente só erra mais rápido.",
+    "Ignorar autorizações: um agente com papel amplo demais vira um risco de auditoria.",
+    "Planejar com base em funcionalidades anunciadas sem verificar disponibilidade e licenciamento para o seu produto e versão (público, privado ou on-premise)."
+  ],
+  "fixacao": {
+    "pergunta": "No caso das faturas bloqueadas, que parte do three-way match o agente pode automatizar e que decisão deve continuar com uma pessoa?",
+    "resposta": "O agente pode reunir pedido, entrada de mercadoria e fatura, calcular a diferença e verificar se está dentro da tolerância, preparando uma proposta. A decisão de liberar o pagamento ou cobrar o fornecedor continua com uma pessoa, porque tem impacto financeiro e de relacionamento e precisa de responsável."
+  },
+  "novidades": [
+    { "titulo": "Agentes Joule com conhecimento de domínio", "resumo": "Na cobertura da SAP Sapphire 2026, a SAP descreve a nova geração de agentes como treinada em conhecimento de processo, e não só no esquema de dados SAP.", "fonte": "Cobertura da SAP Sapphire 2026", "url": "https://www.savictech.com/insights/sap-sapphire-2026-announcements-indian-enterprise-leaders/" },
+    { "titulo": "Mais de 30 agentes e 2.500 skills", "resumo": "As notas de destaque da SAP Business AI do 1º trimestre de 2026 citam mais de 30 agentes especializados e mais de 2.500 Joule Skills.", "fonte": "SAP News", "url": "https://news.sap.com/2026/04/sap-business-ai-release-highlights-q1-2026/" },
+    { "titulo": "Governança de agentes no TechEd 2026", "resumo": "Matérias sobre o TechEd 2026 relatam a ligação entre AI Agent Hub, Cloud ALM e Signavio para descobrir, classificar e controlar agentes. Fontes secundárias; confirme no SAP News.", "fonte": "Ecosistema Startup", "url": "https://ecosistemastartup.com/?p=125484" }
+  ],
+  "links": [
+    { "id": "base-mm", "motivo": "O caso usa o three-way match e o bloqueio de faturas que você estudou em compras." },
+    { "id": "base-dados", "motivo": "A qualidade dos dados mestres define a qualidade do que o agente faz." },
+    { "id": "base-fiori", "motivo": "O Joule vive no Fiori Launchpad e respeita os papéis da PFCG." },
+    { "id": "2026-10-30-tecnico-joule-abap", "motivo": "O lado técnico: como o Joule ajuda a construir e migrar código ABAP." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Business AI release highlights Q1 2026", "url": "https://news.sap.com/2026/04/sap-business-ai-release-highlights-q1-2026/" },
+    { "titulo": "SAP Sapphire 2026 announcements (Savic Technologies)", "url": "https://www.savictech.com/insights/sap-sapphire-2026-announcements-indian-enterprise-leaders/" },
+    { "titulo": "SAP TechEd 2026: agentes de IA que ejecutan procesos", "url": "https://ecosistemastartup.com/?p=125484" },
+    { "titulo": "SAP enhances Business Suite AI agents (SiliconANGLE, 2025)", "url": "https://siliconangle.com/2025/10/06/sap-enhances-business-suite-ai-agents-expanded-data-cloud-ecosystem/" }
+  ]
+}

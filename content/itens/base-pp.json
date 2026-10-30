@@ -1,0 +1,97 @@
+{
+  "id": "base-pp",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "PP",
+  "ordem": 8,
+  "titulo": "PP: planejamento de necessidades e ordem de produção",
+  "curto": "PP — Produção",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "Produção começa no planejamento: o MRP olha a demanda, o estoque e as listas técnicas, e propõe o que comprar e o que produzir. A ordem de produção transforma componentes em produto acabado.",
+  "conceitos": [
+    {
+      "termo": "Lista técnica (BOM)",
+      "explicacao": "Quais componentes e em que quantidade formam um produto."
+    },
+    {
+      "termo": "Roteiro",
+      "explicacao": "Sequência de operações, centros de trabalho e tempos."
+    },
+    {
+      "termo": "Centro de trabalho",
+      "explicacao": "Máquina ou equipe onde a operação acontece, com capacidade e custo por hora."
+    },
+    {
+      "termo": "MRP",
+      "explicacao": "Cálculo de necessidades: demanda − estoque − entradas previstas = propostas (ordens planejadas ou requisições)."
+    },
+    {
+      "termo": "Ordem de produção",
+      "explicacao": "Executa a produção: consome componentes (261), confirma operações e dá entrada do acabado (101)."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "CS01",
+      "descricao": "Criar lista técnica"
+    },
+    {
+      "codigo": "CA01",
+      "descricao": "Criar roteiro"
+    },
+    {
+      "codigo": "CR01",
+      "descricao": "Criar centro de trabalho"
+    },
+    {
+      "codigo": "MD01N",
+      "descricao": "MRP Live"
+    },
+    {
+      "codigo": "MD04",
+      "descricao": "Lista de necessidades/estoque"
+    },
+    {
+      "codigo": "CO01",
+      "descricao": "Criar ordem de produção"
+    },
+    {
+      "codigo": "CO11N",
+      "descricao": "Confirmar operação"
+    }
+  ],
+  "caso": {
+    "titulo": "Pedido grande de bolos para uma rede de mercados",
+    "contexto": "Chega uma ordem de venda de 5.000 unidades. O planejador precisa saber, no mesmo dia, se há farinha e capacidade de forno.",
+    "passos": [
+      "A ordem de venda gera demanda no MD04 do produto acabado.",
+      "MD01N explode a BOM: falta farinha, então nasce uma requisição de compra; para o bolo, uma ordem planejada.",
+      "A ordem planejada vira ordem de produção (CO01); componentes são reservados.",
+      "No chão de fábrica, CO11N confirma as operações; o consumo e a entrada do acabado são lançados, e a ordem acumula custo real."
+    ]
+  },
+  "armadilhas": [
+    "BOM ou roteiro desatualizados: o MRP sugere quantidades erradas e o custo padrão fica distorcido.",
+    "Não confirmar operações: a ordem não acumula custo e a fábrica parece mais eficiente do que é."
+  ],
+  "fixacao": {
+    "pergunta": "Por que um erro na lista técnica afeta compras e custos?",
+    "resposta": "Porque o MRP usa a BOM para calcular quantos componentes comprar, e o cálculo de custo do produto usa a BOM e o roteiro. Um erro gera compras erradas e custo padrão errado."
+  },
+  "links": [
+    {
+      "id": "base-mm",
+      "motivo": "O MRP cria requisições que viram pedidos de compra."
+    },
+    {
+      "id": "base-co",
+      "motivo": "Ordens de produção são objetos de custo liquidados no fechamento."
+    },
+    {
+      "id": "base-sd",
+      "motivo": "A demanda de vendas dispara o planejamento."
+    }
+  ],
+  "fontes": []
+}

@@ -1,0 +1,97 @@
+{
+  "id": "base-integra",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "Integração",
+  "ordem": 9,
+  "titulo": "Integração entre módulos: a determinação automática de contas",
+  "curto": "Integração",
+  "publicado": "2026-10-30",
+  "nivel": "intermediário",
+  "resumo": "Quem domina a integração entende o SAP. Cada movimento logístico encontra sua conta contábil por regras: em MM, pela OBYC (chaves de operação); em SD, pela VKOA (contas de receita).",
+  "conceitos": [
+    {
+      "termo": "OBYC",
+      "explicacao": "Configuração MM → FI. Combina chave de operação, área de avaliação e classe de avaliação para achar a conta."
+    },
+    {
+      "termo": "BSX",
+      "explicacao": "Chave para a conta de estoque."
+    },
+    {
+      "termo": "WRX",
+      "explicacao": "Chave para a conta GR/IR (mercadoria recebida a faturar)."
+    },
+    {
+      "termo": "GBB",
+      "explicacao": "Contrapartidas diversas: consumo, CMV (com modificação VAX), perdas e ganhos de inventário."
+    },
+    {
+      "termo": "PRD",
+      "explicacao": "Diferença de preço (comum em preço standard)."
+    },
+    {
+      "termo": "VKOA",
+      "explicacao": "Configuração SD → FI. Define a conta de receita (ERL), descontos (ERS) e outras, por cliente, material e condição."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "OBYC",
+      "descricao": "Determinação de contas MM"
+    },
+    {
+      "codigo": "VKOA",
+      "descricao": "Determinação de contas SD"
+    },
+    {
+      "codigo": "OMWB",
+      "descricao": "Simulação da determinação de contas MM"
+    },
+    {
+      "codigo": "OKB9",
+      "descricao": "Objeto de custo padrão por conta"
+    },
+    {
+      "codigo": "FB03",
+      "descricao": "Exibir documento contábil"
+    }
+  ],
+  "caso": {
+    "titulo": "Seguindo o dinheiro de uma compra e uma venda",
+    "contexto": "Um item de preço standard R$ 10 é comprado a R$ 10,50 e depois vendido por R$ 18. Veja os lançamentos que o sistema faz sozinho.",
+    "passos": [
+      "Entrada (MIGO 101): D Estoque (BSX) 10,00 · C GR/IR (WRX) 10,50 · D Diferença de preço (PRD) 0,50.",
+      "Fatura (MIRO): D GR/IR (WRX) 10,50 · C Fornecedor 10,50.",
+      "Saída para o cliente (601): D CMV (GBB-VAX) 10,00 · C Estoque (BSX) 10,00.",
+      "Fatura de venda (VF01): D Cliente 18,00 · C Receita (ERL via VKOA) 18,00."
+    ]
+  },
+  "armadilhas": [
+    "Erro “conta não determinada” na entrada: quase sempre falta combinação na OBYC para a classe de avaliação.",
+    "Mudar a classe de avaliação de um material com estoque: o sistema impede, e com razão."
+  ],
+  "fixacao": {
+    "pergunta": "Uma entrada de mercadoria dá erro de determinação de conta. Por onde você começa a investigar?",
+    "resposta": "Pela classe de avaliação do material (MM03, visão contabilidade) e pela OBYC na chave BSX para essa área e classe. A OMWB ajuda a simular quais contas o sistema tentaria usar."
+  },
+  "links": [
+    {
+      "id": "base-mm",
+      "motivo": "Entradas e faturas de compra são a origem dos lançamentos."
+    },
+    {
+      "id": "base-sd",
+      "motivo": "Saída de mercadoria e faturamento usam GBB e VKOA."
+    },
+    {
+      "id": "base-fi",
+      "motivo": "O resultado de tudo isso é o documento contábil."
+    },
+    {
+      "id": "base-dados",
+      "motivo": "A classe de avaliação no material é a chave do processo."
+    }
+  ],
+  "fontes": []
+}

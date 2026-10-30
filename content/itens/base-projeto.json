@@ -1,0 +1,89 @@
+{
+  "id": "base-projeto",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "Projeto",
+  "ordem": 12,
+  "titulo": "SAP Activate: como um projeto S/4HANA acontece",
+  "curto": "Projetos SAP Activate",
+  "publicado": "2026-10-30",
+  "nivel": "intermediário",
+  "resumo": "Saber os módulos é metade do trabalho. A outra metade é entender como uma implantação é conduzida: fases, workshops com o negócio, migração de dados e go-live.",
+  "conceitos": [
+    {
+      "termo": "Fases Activate",
+      "explicacao": "Discover, Prepare, Explore, Realize, Deploy, Run."
+    },
+    {
+      "termo": "Fit-to-standard",
+      "explicacao": "Workshops que mostram o processo padrão e registram só as lacunas reais (gaps), em vez de redesenhar tudo do zero."
+    },
+    {
+      "termo": "Greenfield / Brownfield",
+      "explicacao": "Greenfield: implantação nova, processos redesenhados. Brownfield: conversão do ECC existente. Também há a transformação seletiva."
+    },
+    {
+      "termo": "Migration Cockpit",
+      "explicacao": "Ferramenta para carregar dados mestres e saldos (app Migrate Your Data)."
+    },
+    {
+      "termo": "Cutover",
+      "explicacao": "Plano detalhado da virada: congelamento, cargas finais, validações e liberação."
+    },
+    {
+      "termo": "Hypercare",
+      "explicacao": "Período de suporte intensivo logo após o go-live."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "Migrate Your Data",
+      "descricao": "App Fiori do Migration Cockpit"
+    },
+    {
+      "codigo": "LTMOM",
+      "descricao": "Modelagem de objetos de migração"
+    },
+    {
+      "codigo": "SE09",
+      "descricao": "Gestão de transportes"
+    },
+    {
+      "codigo": "Cloud ALM",
+      "descricao": "Gestão do projeto e testes (ferramenta SAP)"
+    }
+  ],
+  "caso": {
+    "titulo": "Indústria média migrando do ECC",
+    "contexto": "A empresa quer modernizar sem parar a fábrica. A escolha da abordagem define o projeto inteiro.",
+    "passos": [
+      "Discover/Prepare: avaliar o ECC atual (custom code, volume de dados) e escolher brownfield ou seletivo.",
+      "Explore: fit-to-standard por processo (P2P, O2C, produção), backlog de gaps aprovado pelo negócio.",
+      "Realize: configurar, desenvolver só os gaps, testar integrado e rodar ensaios de migração.",
+      "Deploy/Run: cutover num fim de semana, go-live na segunda, hypercare de 4 a 8 semanas."
+    ]
+  },
+  "armadilhas": [
+    "Tratar toda diferença do processo atual como gap: o projeto vira cópia do sistema antigo.",
+    "Deixar a qualidade dos dados mestres para o fim: é a causa mais comum de atraso no go-live."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre fit-to-standard e levantamento de requisitos tradicional?",
+    "resposta": "Fit-to-standard parte do processo padrão do S/4HANA demonstrado ao negócio e registra apenas o que não atende; o levantamento tradicional parte do processo atual e tenta replicá-lo no sistema."
+  },
+  "links": [
+    {
+      "id": "base-dados",
+      "motivo": "Migração de dados mestres é o caminho crítico do projeto."
+    },
+    {
+      "id": "base-abap",
+      "motivo": "Cada gap pode virar desenvolvimento: custo e risco."
+    },
+    {
+      "id": "base-visao",
+      "motivo": "Fecha a trilha: volte ao mapa com outro olhar."
+    }
+  ],
+  "fontes": []
+}

@@ -1,0 +1,89 @@
+{
+  "id": "base-fiori",
+  "tipo": "fundamentos",
+  "trilha": "tecnico",
+  "area": "UX",
+  "ordem": 10,
+  "titulo": "Fiori: a experiência do usuário no S/4HANA",
+  "curto": "Fiori",
+  "publicado": "2026-10-30",
+  "nivel": "intermediário",
+  "resumo": "Fiori é a interface web do S/4HANA, organizada por papéis. Em vez de decorar transações, o usuário entra no Launchpad e vê os apps do seu trabalho, com listas, indicadores e ações.",
+  "conceitos": [
+    {
+      "termo": "Fiori Launchpad",
+      "explicacao": "Portal de entrada com os apps do usuário, organizados em espaços e páginas."
+    },
+    {
+      "termo": "Catálogo",
+      "explicacao": "Conjunto de apps técnicos que um papel pode usar."
+    },
+    {
+      "termo": "Espaços e páginas",
+      "explicacao": "Organização visual do Launchpad, ligada ao papel do usuário."
+    },
+    {
+      "termo": "Papel (PFCG)",
+      "explicacao": "Junta catálogos, espaços e autorizações. É o que dá acesso a apps e dados."
+    },
+    {
+      "termo": "Tipos de app",
+      "explicacao": "Transacionais (ex.: Gerenciar pedidos), analíticos (indicadores), fact sheets (visão 360° de um objeto)."
+    },
+    {
+      "termo": "Fiori Elements",
+      "explicacao": "Apps gerados a partir de anotações em serviços OData, com padrão visual consistente."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/UI2/FLP",
+      "descricao": "Abrir o Launchpad"
+    },
+    {
+      "codigo": "/UI2/FLPD_CUST",
+      "descricao": "Designer do Launchpad"
+    },
+    {
+      "codigo": "PFCG",
+      "descricao": "Manutenção de papéis"
+    },
+    {
+      "codigo": "/IWFND/MAINT_SERVICE",
+      "descricao": "Ativar serviços OData"
+    },
+    {
+      "codigo": "SU53",
+      "descricao": "Analisar falta de autorização"
+    }
+  ],
+  "caso": {
+    "titulo": "Comprador que vive no SAP GUI",
+    "contexto": "O comprador abre ME2N, filtra, exporta para Excel e acompanha atrasos em planilha. No Fiori, a lista já vem filtrada e com alertas.",
+    "passos": [
+      "Dar ao usuário o papel de comprador com o espaço de compras.",
+      "Usar o app de gerenciamento de pedidos com filtro “entrega atrasada” salvo como variante.",
+      "Adicionar um bloco analítico de volume de compras por fornecedor na página inicial.",
+      "Quando faltar acesso a um app, analisar com SU53 e ajustar o papel na PFCG."
+    ]
+  },
+  "armadilhas": [
+    "Ativar o app mas esquecer o serviço OData ou a autorização: o bloco aparece e falha ao abrir.",
+    "Copiar catálogos padrão sem critério e deixar o Launchpad lotado."
+  ],
+  "fixacao": {
+    "pergunta": "Um usuário vê o bloco do app mas recebe erro ao abrir. Quais são as três causas mais comuns?",
+    "resposta": "Serviço OData não ativado (/IWFND/MAINT_SERVICE), falta de autorização no papel (SU53/PFCG) ou o app não estar no catálogo atribuído ao papel do usuário."
+  },
+  "links": [
+    {
+      "id": "base-visao",
+      "motivo": "Fiori é a camada de interface sobre o mesmo ERP."
+    },
+    {
+      "id": "base-abap",
+      "motivo": "Apps Fiori modernos são construídos sobre CDS e RAP."
+    }
+  ],
+  "fontes": []
+}

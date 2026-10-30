@@ -1,0 +1,89 @@
+{
+  "id": "base-dados",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "Base",
+  "ordem": 3,
+  "titulo": "Dados mestres: Business Partner, material e conta contábil",
+  "curto": "Dados mestres",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "Dados mestres são os cadastros que se repetem em milhares de documentos: clientes, fornecedores, materiais, contas. Um cadastro errado se multiplica em cada pedido, nota e lançamento.",
+  "conceitos": [
+    {
+      "termo": "Business Partner (BP)",
+      "explicacao": "No S/4HANA, cliente e fornecedor são o mesmo objeto BP com papéis diferentes (ex.: FLCU01 cliente, FLVN01 fornecedor)."
+    },
+    {
+      "termo": "Mestre de material",
+      "explicacao": "Cadastro do item com visões por área: dados básicos, compras, vendas, MRP, contabilidade (preço e classe de avaliação)."
+    },
+    {
+      "termo": "Classe de avaliação",
+      "explicacao": "Campo da visão contábil que decide em qual conta de estoque o material é lançado."
+    },
+    {
+      "termo": "Controle de preço S / V",
+      "explicacao": "S = preço standard (fixo, diferenças vão para conta de variação). V = preço médio móvel."
+    },
+    {
+      "termo": "Conta do razão",
+      "explicacao": "Criada por plano de contas e por empresa. No S/4HANA, contas de custo (elementos de custo) também são contas do razão."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "BP",
+      "descricao": "Criar/alterar Business Partner"
+    },
+    {
+      "codigo": "MM01",
+      "descricao": "Criar material"
+    },
+    {
+      "codigo": "MM03",
+      "descricao": "Exibir material"
+    },
+    {
+      "codigo": "FS00",
+      "descricao": "Conta do razão (central)"
+    },
+    {
+      "codigo": "MM60",
+      "descricao": "Lista de materiais cadastrados"
+    }
+  ],
+  "caso": {
+    "titulo": "Novo fornecedor de embalagens",
+    "contexto": "Compras precisa emitir pedido amanhã. Sem o fornecedor no sistema, nada anda; com o cadastro mal feito (condição de pagamento errada), o financeiro paga antes do prazo.",
+    "passos": [
+      "Criar o BP com o papel de fornecedor financeiro (FLVN00) e de compras (FLVN01).",
+      "Informar CNPJ, endereço, banco, condição de pagamento (ex.: 30 dias) e conta de reconciliação (fornecedores nacionais).",
+      "Ampliar para a organização de compras com moeda e condições.",
+      "Validar com um pedido de teste em QAS antes de liberar o processo."
+    ]
+  },
+  "armadilhas": [
+    "Duplicar BP por falta de busca antes de criar.",
+    "Material sem visão de contabilidade: a entrada de mercadoria falha por falta de preço/classe de avaliação."
+  ],
+  "fixacao": {
+    "pergunta": "Qual campo do mestre de material liga o estoque às contas contábeis?",
+    "resposta": "A classe de avaliação (visão Contabilidade 1). Junto com a chave de operação BSX na OBYC, ela determina a conta de estoque usada nos lançamentos."
+  },
+  "links": [
+    {
+      "id": "base-fi",
+      "motivo": "A conta de reconciliação do BP liga o fornecedor/cliente ao razão."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "A classe de avaliação alimenta a determinação automática de contas."
+    },
+    {
+      "id": "base-mm",
+      "motivo": "Pedidos de compra usam BP e material."
+    }
+  ],
+  "fontes": []
+}

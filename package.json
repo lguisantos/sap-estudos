@@ -1,0 +1,47 @@
+{
+  "name": "sap-estudos",
+  "productName": "SAP Estudos",
+  "version": "1.0.0",
+  "description": "Ambiente de estudos SAP com conteúdo semanal atualizado pelo Claude",
+  "main": "src/main.js",
+  "author": "Lucas Guimarães Santos",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "validar": "node scripts/validar.mjs",
+    "test": "node --test",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@fontsource/bricolage-grotesque": "5.1.1",
+    "@fontsource/jetbrains-mono": "5.1.2",
+    "@fontsource/source-sans-3": "5.1.1"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "br.lguisantos.sapestudos",
+    "productName": "SAP Estudos",
+    "directories": { "output": "dist" },
+    "files": [
+      "src/**",
+      "content/**",
+      "CLAUDE.md",
+      "build/icon.png",
+      "build/tray.png"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "SAP Estudos"
+    }
+  }
+}

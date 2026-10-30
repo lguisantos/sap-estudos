@@ -1,0 +1,97 @@
+{
+  "id": "base-fi",
+  "tipo": "fundamentos",
+  "trilha": "funcional",
+  "area": "FI",
+  "ordem": 4,
+  "titulo": "FI: contabilidade financeira e o Universal Journal",
+  "curto": "FI — Finanças",
+  "publicado": "2026-10-30",
+  "nivel": "básico",
+  "resumo": "FI registra o que a empresa deve, tem e ganha. No S/4HANA, todos os lançamentos (FI, CO, ativos, material) caem em uma única tabela de linhas, a ACDOCA, o chamado Universal Journal.",
+  "conceitos": [
+    {
+      "termo": "Razão geral (GL)",
+      "explicacao": "Contas de balanço e de resultado. Todo documento tem débito = crédito."
+    },
+    {
+      "termo": "Contas a pagar (AP)",
+      "explicacao": "Fornecedores: faturas, pagamentos, compensação."
+    },
+    {
+      "termo": "Contas a receber (AR)",
+      "explicacao": "Clientes: faturas, recebimentos, cobrança."
+    },
+    {
+      "termo": "Conta de reconciliação",
+      "explicacao": "Conta do razão que espelha o saldo do subrazão de clientes ou fornecedores. Não aceita lançamento direto."
+    },
+    {
+      "termo": "ACDOCA",
+      "explicacao": "Tabela do Universal Journal. Uma linha por item de lançamento, com todas as dimensões (centro de custo, centro de lucro, segmento)."
+    },
+    {
+      "termo": "Período contábil",
+      "explicacao": "Mês aberto ou fechado para lançamentos, controlado por variante de período."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "FB50",
+      "descricao": "Lançamento no razão"
+    },
+    {
+      "codigo": "FB60",
+      "descricao": "Fatura de fornecedor (sem pedido)"
+    },
+    {
+      "codigo": "FB70",
+      "descricao": "Fatura de cliente (sem venda)"
+    },
+    {
+      "codigo": "F110",
+      "descricao": "Programa de pagamento automático"
+    },
+    {
+      "codigo": "FAGLL03",
+      "descricao": "Partidas individuais do razão"
+    },
+    {
+      "codigo": "OB52",
+      "descricao": "Abrir/fechar períodos"
+    }
+  ],
+  "caso": {
+    "titulo": "Fechamento mensal de uma empresa de serviços",
+    "contexto": "O analista precisa pagar fornecedores na sexta, provisionar aluguel e fechar o mês até o 3º dia útil.",
+    "passos": [
+      "Rodar F110 com data de vencimento até sexta: o sistema escolhe faturas vencidas, gera pagamentos e o arquivo bancário.",
+      "Lançar a provisão de aluguel em FB50: débito despesa de aluguel (com centro de custo), crédito provisão.",
+      "Conferir partidas em aberto de clientes e cobrar os atrasados.",
+      "Fechar o período anterior na OB52 para impedir lançamentos retroativos."
+    ]
+  },
+  "armadilhas": [
+    "Tentar lançar direto na conta de reconciliação: o sistema bloqueia, lance pelo cliente ou fornecedor.",
+    "Esquecer o objeto de custo em conta de despesa: o lançamento é recusado ou fica sem visão gerencial."
+  ],
+  "fixacao": {
+    "pergunta": "Por que no S/4HANA não é mais preciso reconciliar FI com CO no fim do mês?",
+    "resposta": "Porque FI e CO gravam na mesma linha da ACDOCA. Despesas e custos são a mesma informação, então não existe mais a diferença que antes era reconciliada entre os dois livros."
+  },
+  "links": [
+    {
+      "id": "base-co",
+      "motivo": "CO usa as mesmas linhas do FI para análise gerencial."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Compras e vendas geram documentos FI automaticamente."
+    },
+    {
+      "id": "base-dados",
+      "motivo": "Contas do razão e BP são cadastros mestres que o FI usa."
+    }
+  ],
+  "fontes": []
+}
