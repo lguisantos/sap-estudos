@@ -36,16 +36,9 @@ Passo "Baixando o código do app"
 $base = Join-Path $env:TEMP "sap-estudos-build"
 if (Test-Path $base) { Remove-Item $base -Recurse -Force }
 New-Item -ItemType Directory $base | Out-Null
-$fonte = $null
-# Repositório dedicado; se ainda não existir, usa a cópia guardada no beauty-control.
-git clone --depth 1 https://github.com/lguisantos/sap-estudos.git "$base\sap-estudos"
-if ($LASTEXITCODE -eq 0 -and (Test-Path "$base\sap-estudos\package.json")) {
-  $fonte = "$base\sap-estudos"
-} else {
-  git clone --depth 1 --branch claude/charming-franklin-xp5yun https://github.com/lguisantos/beauty-control.git "$base\beauty-control"
-  if ($LASTEXITCODE -ne 0) { throw "Não consegui clonar o código. Confira o login do GitHub e rode de novo." }
-  $fonte = "$base\beauty-control\sap-estudos"
-}
+$fonte = "$base\sap-estudos"
+git clone --depth 1 https://github.com/lguisantos/sap-estudos.git $fonte
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$fonte\package.json")) { throw "Não consegui clonar lguisantos/sap-estudos. Confira o login do GitHub e rode de novo." }
 Write-Host "Código em $fonte"
 
 Passo "Gerando o instalador (alguns minutos na primeira vez)"
