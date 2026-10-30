@@ -1,0 +1,134 @@
+{
+  "tipo": "guia",
+  "trilha": "funcional",
+  "publicado": "2026-10-30",
+  "id": "guia-sd-dados-mestres",
+  "modulo": "SD",
+  "area": "Dados mestres (SD)",
+  "nivel": "básico",
+  "titulo": "Dados mestres de vendas: cliente nas áreas de vendas, funções de parceiro e material para vendas",
+  "curto": "Dados mestres de vendas",
+  "resumo": "Uma ordem de venda copia quase tudo dos cadastros: do cliente vêm moeda, condição de pagamento, Incoterms, condição de expedição e grupo para contas de receita; do material vêm a categoria de item, o centro fornecedor e os grupos de preço e de carregamento. No S/4HANA o cliente é um Business Partner com o papel de cliente ampliado para cada área de vendas. Cadastro incompleto é a causa número 1 de ordens que não gravam, não expedem ou não contabilizam.",
+  "conceitos": [
+    {
+      "termo": "Business Partner como cliente",
+      "explicacao": "No S/4HANA cliente é um BP. O papel FLCU00 guarda os dados de contas a receber na empresa (conta de reconciliação, condição de pagamento); o papel FLCU01 guarda os dados de vendas. Sem FLCU01 o BP não pode ser usado em ordens."
+    },
+    {
+      "termo": "Área de vendas do cliente",
+      "explicacao": "Organização de vendas + canal de distribuição + setor de atividade. O cliente precisa ser ampliado para cada área de vendas em que vai comprar; os dados de vendas podem ser diferentes em cada uma."
+    },
+    {
+      "termo": "Aba Pedidos (vendas)",
+      "explicacao": "Grupo de clientes, esquema de cliente (usado na determinação do esquema de preço), moeda, lista de preços, escritório e equipe de vendas."
+    },
+    {
+      "termo": "Aba Remessa",
+      "explicacao": "Condição de expedição (influencia o ponto de expedição e o itinerário), centro fornecedor, regras de entrega parcial e completa."
+    },
+    {
+      "termo": "Aba Faturamento",
+      "explicacao": "Incoterms, condição de pagamento, grupo de classificação contábil do cliente (usado na VKOA para achar a conta de receita) e classificação fiscal."
+    },
+    {
+      "termo": "Funções de parceiro",
+      "explicacao": "Emissor da ordem (AG/SP), recebedor da mercadoria (WE/SH), recebedor da fatura (RE/BP) e pagador (RG/PY). São o mínimo para um processo de vendas padrão; um cliente pode ter vários recebedores, por exemplo uma loja para cada endereço."
+    },
+    {
+      "termo": "Material para vendas",
+      "explicacao": "Visões Vendas: org. vendas 1 (unidade de venda, centro fornecedor, impostos), Vendas: org. vendas 2 (grupo de categoria de item, como NORM, e grupo de classificação contábil do material) e Vendas: dados gerais/centro (grupo de carregamento, grupo de verificação de disponibilidade)."
+    },
+    {
+      "termo": "Registro info cliente-material",
+      "explicacao": "Guarda o código do material usado pelo cliente e dados específicos de entrega; útil em pedidos por EDI."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "BP",
+      "descricao": "Criar e manter o cliente (papéis FLCU00 e FLCU01)"
+    },
+    {
+      "codigo": "MM01 / MM02",
+      "descricao": "Ampliar o material com as visões de vendas"
+    },
+    {
+      "codigo": "VD51",
+      "descricao": "Registro info cliente-material"
+    },
+    {
+      "codigo": "VOR1 / VOR2",
+      "descricao": "Canal e setor comuns (compartilhar dados entre áreas de vendas)"
+    },
+    {
+      "codigo": "Manage Customer Master Data / Manage Business Partner Master Data",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "caso": {
+    "titulo": "Rede varejista com três lojas",
+    "contexto": "Uma rede compra pela matriz, recebe em três lojas e paga pela matriz. A primeira ordem deu erro: o cliente não estava definido na área de vendas.",
+    "passos": [
+      "BP da matriz com papéis FLCU00 (empresa 1000, conta de reconciliação de clientes nacionais, pagamento em 28 dias) e FLCU01.",
+      "Ampliar o FLCU01 para a área de vendas 1000/10/00: grupo de clientes, esquema de cliente, moeda BRL, condição de expedição padrão, Incoterms CIF, grupo de classificação contábil 01 (clientes nacionais).",
+      "Criar um BP para cada loja como recebedor da mercadoria.",
+      "Na matriz, funções de parceiro: AG e RG = matriz, RE = matriz, WE = as três lojas.",
+      "Conferir o material: visões de vendas na org. 1000/10 com grupo de categoria NORM e centro fornecedor.",
+      "Na ordem, o sistema pergunta para qual loja entregar; preço, impostos e conta de receita saem dos cadastros."
+    ]
+  },
+  "armadilhas": [
+    "Criar o BP só com o papel FLCU00: ele existe no financeiro, mas não pode ser usado em vendas.",
+    "Esquecer o grupo de classificação contábil do cliente ou do material: a fatura é criada mas não contabiliza (erro de determinação de contas na VKOA).",
+    "Grupo de categoria de item errado no material: a ordem determina uma categoria de item diferente (por exemplo, sem remessa ou sem faturamento).",
+    "Condição de expedição ou grupo de carregamento faltando: o ponto de expedição não é determinado e a remessa não pode ser criada."
+  ],
+  "fixacao": {
+    "pergunta": "Ao criar a ordem, aparece 'o cliente não foi criado para a área de vendas'. O que verificar?",
+    "resposta": "Se o BP tem o papel de cliente (FLCU01) ampliado para aquela organização de vendas, canal e setor. Se a empresa usa canal ou setor comum (VOR1/VOR2), também se a área de referência está correta. Resolve-se ampliando o BP para a área de vendas."
+  },
+  "links": [
+    {
+      "id": "base-dados",
+      "motivo": "Visão geral dos cadastros e do Business Partner."
+    },
+    {
+      "id": "base-org",
+      "motivo": "A área de vendas e a estrutura organizacional."
+    },
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "A ordem copia os dados deste cadastro."
+    },
+    {
+      "id": "proc-sd-04-preco",
+      "motivo": "Esquema de cliente e grupos usados no preço."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Condição de expedição e grupo de carregamento definem o ponto de expedição."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Grupo de classificação contábil e VKOA."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Business Partner Master Data Structure (SAP Help)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/776fbd534f22b44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Partner Functions (SAP Help)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/25a41481f62e469ba0e61015a0d39d20/806fbd534f22b44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Creating Customer Master Data – Sales Area Data (SAP Best Practices)",
+      "url": "https://help.sap.com/docs/s4hana-best-practices/create-customer-hierarchy-6n3/creating-customer-master-data-sales-area-data"
+    },
+    {
+      "titulo": "Customer/Vendor Master Data and SAP Business Partner (SAP Help)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/2240005993f2429088e42085ebf697c5/9aa2cf535b804808e10000000a174cb4.html"
+    }
+  ]
+}

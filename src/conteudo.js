@@ -32,13 +32,19 @@ function carregarItens(pasta) {
   return { itens, erros };
 }
 
-// Processos por módulo, depois edições semanais (mais novas primeiro), depois fundamentos.
-const PESO = { processo: 0, semanal: 1, fundamentos: 2 };
+// Guias e processos por módulo, depois edições semanais (mais novas primeiro), depois fundamentos.
+const PESO = { guia: 0, processo: 0, semanal: 1, fundamentos: 2 };
 function ordenar(a, b) {
   if (a.tipo !== b.tipo) return (PESO[a.tipo] ?? 3) - (PESO[b.tipo] ?? 3);
   if (a.tipo === "semanal") return (b.publicado || "").localeCompare(a.publicado || "") || a.trilha.localeCompare(b.trilha);
-  if (a.tipo === "processo") return (a.modulo || "").localeCompare(b.modulo || "") || (a.ordem || 0) - (b.ordem || 0);
+  if (a.tipo === "processo" || a.tipo === "guia") return (a.modulo || "").localeCompare(b.modulo || "") || (a.ordem || 0) - (b.ordem || 0);
   return (a.ordem || 0) - (b.ordem || 0);
+}
+
+/** Lê content/trilhas.json (irmão da pasta de itens). Retorna null se não houver. */
+function carregarTrilhas(pastaItens) {
+  try { return JSON.parse(fs.readFileSync(path.join(pastaItens, "..", "trilhas.json"), "utf8")); }
+  catch { return null; }
 }
 
 /**
@@ -109,4 +115,4 @@ async function sincronizarFontes({ fontes, base, falhas = {}, pausaMs = 6 * 3600
   throw err;
 }
 
-module.exports = { carregarItens, naoVistos, paraNotificar, sincronizar, sincronizarFontes, pastaDaFonte, run };
+module.exports = { carregarItens, carregarTrilhas, naoVistos, paraNotificar, sincronizar, sincronizarFontes, pastaDaFonte, run };

@@ -1,0 +1,430 @@
+{
+  "principio": "A ordem segue o caminho de quem chega num projeto: primeiro entender o terreno (estrutura e cadastros), depois operar o processo principal de ponta a ponta, em seguida dominar os controles e as determinações que fazem o sistema decidir sozinho, depois a integração com finanças e fiscal, os processos especiais e, por fim, configurar, investigar erros e participar de um projeto. Cada nível só usa o que veio antes.",
+  "trilhas": [
+    {
+      "id": "mm",
+      "modulo": "MM",
+      "titulo": "MM · Materiais e compras",
+      "objetivo": "Sair de usuário que acompanha compras para consultor júnior/pleno que configura o básico, entende o reflexo contábil e consegue investigar problemas de Procure-to-Pay num projeto.",
+      "niveis": [
+        {
+          "id": "mm-1",
+          "nome": "Nível 1 · Entender o terreno",
+          "perfil": "Júnior",
+          "meta": "Saber onde as coisas ficam: estrutura da empresa, cadastros e o desenho geral do Procure-to-Pay.",
+          "etapas": [
+            {
+              "item": "base-visao",
+              "porque": "Tudo no SAP é integrado; sem essa visão, cada transação parece isolada.",
+              "consegue": "Explicar o que é ERP, mandante e o caminho DEV → QAS → PRD."
+            },
+            {
+              "item": "base-org",
+              "porque": "Todo documento de MM pede empresa, centro, depósito e organização de compras.",
+              "consegue": "Desenhar a estrutura organizacional de uma empresa e dizer o que é cada unidade."
+            },
+            {
+              "item": "base-dados",
+              "porque": "Fornecedor (BP) e material são usados em todos os documentos; erro de cadastro vira erro em cadeia.",
+              "consegue": "Criar um fornecedor e um material e explicar as visões principais."
+            },
+            {
+              "item": "guia-mm-mestre-material",
+              "tipo": "guia",
+              "tema": "Mestre de material para MM: tipos de material, visões, unidades e classe de avaliação",
+              "porque": "É o cadastro que mais causa erro em compras, estoque e contabilidade.",
+              "consegue": "Escolher o tipo de material certo e preencher as visões de compras, MRP e contabilidade."
+            },
+            {
+              "item": "base-mm",
+              "porque": "Ver o Procure-to-Pay inteiro antes dos detalhes evita estudar passos soltos.",
+              "consegue": "Contar a história de uma compra da necessidade ao pagamento."
+            }
+          ]
+        },
+        {
+          "id": "mm-2",
+          "nome": "Nível 2 · Operar o ciclo de compras",
+          "perfil": "Júnior",
+          "meta": "Executar sozinho o fluxo principal: requisição, pedido, entrada, fatura e estoque.",
+          "etapas": [
+            {
+              "item": "proc-mm-01-requisicao",
+              "porque": "É onde a necessidade nasce; tudo começa aqui.",
+              "consegue": "Criar requisição com classificação contábil correta e acompanhar seu status."
+            },
+            {
+              "item": "proc-mm-04-pedido",
+              "porque": "O pedido é o centro do processo: entrada, fatura e pagamento dependem dele.",
+              "consegue": "Criar pedido a partir de requisição, com condições e impostos revisados."
+            },
+            {
+              "item": "proc-mm-09-entrada",
+              "porque": "É o primeiro movimento físico e contábil do processo.",
+              "consegue": "Lançar entrada na MIGO e explicar o lançamento estoque × GR/IR."
+            },
+            {
+              "item": "proc-mm-12-fatura",
+              "porque": "Fecha o three-way match e é onde mais aparecem bloqueios.",
+              "consegue": "Lançar fatura na MIRO, entender tolerâncias e liberar bloqueios."
+            },
+            {
+              "item": "proc-mm-10-movimentos",
+              "porque": "No dia a dia, saídas, transferências e estornos são tão comuns quanto entradas.",
+              "consegue": "Escolher o tipo de movimento certo para cada situação e estornar com segurança."
+            },
+            {
+              "item": "proc-mm-06-monitoramento",
+              "porque": "O usuário pergunta 'cadê meu pedido?' todo dia.",
+              "consegue": "Usar ME2N/ME80FN e o histórico do pedido para responder qualquer dúvida de status."
+            }
+          ]
+        },
+        {
+          "id": "mm-3",
+          "nome": "Nível 3 · Controles e dados de compras",
+          "perfil": "Pleno",
+          "meta": "Entender o que faz o sistema decidir sozinho: aprovações, fontes de suprimento e inventário.",
+          "etapas": [
+            {
+              "item": "proc-mm-05-liberacao",
+              "porque": "Quase todo cliente tem alçada de aprovação; é um dos primeiros chamados de suporte.",
+              "consegue": "Explicar por que um pedido caiu numa estratégia e como destravá-lo."
+            },
+            {
+              "item": "proc-mm-02-fontes",
+              "porque": "Registro info, lista de fontes e cotas automatizam a compra; sem eles o MRP não funciona bem.",
+              "consegue": "Configurar fornecedor fixo e explicar a ordem de determinação de fontes."
+            },
+            {
+              "item": "proc-mm-03-cotacao",
+              "porque": "Concorrência e negociação alimentam o registro info.",
+              "consegue": "Conduzir uma cotação e transformar a vencedora em pedido."
+            },
+            {
+              "item": "proc-mm-11-inventario",
+              "porque": "Auditoria e fechamento anual dependem dele.",
+              "consegue": "Executar um inventário completo e explicar o lançamento das diferenças."
+            }
+          ]
+        },
+        {
+          "id": "mm-4",
+          "nome": "Nível 4 · Integração com finanças e fiscal",
+          "perfil": "Pleno",
+          "meta": "Entender o reflexo contábil e fiscal de cada passo: é o que separa o operador do consultor.",
+          "etapas": [
+            {
+              "item": "base-integra",
+              "porque": "Determinação automática de contas (OBYC) explica cada lançamento de MM.",
+              "consegue": "Dizer qual conta cada movimento usa e investigar 'conta não determinada'."
+            },
+            {
+              "item": "guia-mm-avaliacao",
+              "tipo": "guia",
+              "tema": "Avaliação de material: preço standard × preço médio móvel e reavaliação",
+              "porque": "O controle de preço muda o resultado de toda entrada e fatura.",
+              "consegue": "Prever o lançamento de uma entrada e de uma fatura com diferença de preço."
+            },
+            {
+              "item": "proc-mm-13-nf-entrada",
+              "porque": "No Brasil, nenhuma compra fecha sem nota fiscal correta.",
+              "consegue": "Lançar uma fatura com dados fiscais e entender CFOP e utilização do material."
+            },
+            {
+              "item": "guia-mm-fechamento",
+              "tipo": "guia",
+              "tema": "Fechamento mensal de MM: períodos, GR/IR e conciliação com FI",
+              "porque": "Todo mês o consultor é chamado para explicar saldos de GR/IR e estoque.",
+              "consegue": "Abrir e fechar períodos, analisar a GR/IR e conciliar estoque com a contabilidade."
+            }
+          ]
+        },
+        {
+          "id": "mm-5",
+          "nome": "Nível 5 · Processos especiais",
+          "perfil": "Pleno/Sênior",
+          "meta": "Conhecer as variações do processo que aparecem em quase todo cliente.",
+          "etapas": [
+            {
+              "item": "proc-mm-07-contrato",
+              "porque": "Acordos de longo prazo são comuns em compras recorrentes.",
+              "consegue": "Criar contrato e pedidos de liberação, acompanhando o saldo."
+            },
+            {
+              "item": "proc-mm-16-transferencia",
+              "porque": "Empresas com filiais transferem estoque com nota fiscal.",
+              "consegue": "Executar uma transferência entre centros com entrega e NF."
+            },
+            {
+              "item": "proc-mm-14-subcontratacao",
+              "porque": "Industrialização por terceiros é muito comum no Brasil.",
+              "consegue": "Montar o fluxo de remessa e retorno de industrialização."
+            },
+            {
+              "item": "proc-mm-15-consignacao",
+              "porque": "Reduz estoque próprio; tem regras contábeis diferentes.",
+              "consegue": "Explicar quando nasce a dívida e liquidar a consignação."
+            },
+            {
+              "item": "proc-mm-08-programa-remessa",
+              "porque": "Fornecimento contínuo (indústria, automotivo).",
+              "consegue": "Usar programa de remessa com o MRP gerando as linhas."
+            },
+            {
+              "item": "guia-mm-servicos",
+              "tipo": "guia",
+              "tema": "Compra de serviços: pedido de serviço e folha de registro de serviço",
+              "porque": "Serviços são boa parte das compras de qualquer empresa.",
+              "consegue": "Comprar e aceitar um serviço até a fatura."
+            }
+          ]
+        },
+        {
+          "id": "mm-6",
+          "nome": "Nível 6 · Configurar e se virar no projeto",
+          "perfil": "Consultor",
+          "meta": "Configurar o essencial, investigar erros com método e atuar nas fases de um projeto.",
+          "etapas": [
+            {
+              "item": "guia-mm-customizing",
+              "tipo": "guia",
+              "tema": "Customizing essencial de MM: tipos de documento, tipos de movimento, tolerâncias e contas",
+              "porque": "É o mínimo que se espera de um consultor em qualquer projeto.",
+              "consegue": "Achar e ajustar no SPRO as configurações que mais aparecem em chamados."
+            },
+            {
+              "item": "guia-mm-investigar",
+              "tipo": "guia",
+              "tema": "Como investigar erros em MM: mensagens, tabelas-chave e onde olhar",
+              "porque": "Saber investigar vale mais do que decorar transações.",
+              "consegue": "Partir de uma mensagem de erro e chegar à causa usando SE16N, histórico e configuração."
+            },
+            {
+              "item": "base-projeto",
+              "porque": "Entender as fases e o fit-to-standard muda a forma de conversar com o cliente.",
+              "consegue": "Participar de workshops e saber o que se espera em cada fase."
+            },
+            {
+              "item": "guia-mm-projeto",
+              "tipo": "guia",
+              "tema": "MM no projeto: fit-to-standard, migração de dados mestres e testes integrados",
+              "porque": "É onde o consultor iniciante mais precisa de roteiro.",
+              "consegue": "Preparar cenários de teste e a carga de fornecedores, materiais e registros info."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sd",
+      "modulo": "SD",
+      "titulo": "SD · Vendas e distribuição",
+      "objetivo": "Sair de usuário que acompanha pedidos para consultor júnior/pleno que entende as determinações, o reflexo contábil e fiscal e consegue investigar problemas de Order-to-Cash num projeto.",
+      "niveis": [
+        {
+          "id": "sd-1",
+          "nome": "Nível 1 · Entender o terreno",
+          "perfil": "Júnior",
+          "meta": "Saber onde as coisas ficam: estrutura de vendas, cadastros e o desenho geral do Order-to-Cash.",
+          "etapas": [
+            {
+              "item": "base-visao",
+              "porque": "Tudo no SAP é integrado; sem essa visão, cada transação parece isolada.",
+              "consegue": "Explicar o que é ERP, mandante e o caminho DEV → QAS → PRD."
+            },
+            {
+              "item": "base-org",
+              "porque": "A área de vendas (organização, canal, setor) aparece em todo documento de SD.",
+              "consegue": "Desenhar a estrutura de vendas e expedição de uma empresa."
+            },
+            {
+              "item": "base-dados",
+              "porque": "Cliente (BP) e material são a base de preço, impostos e expedição.",
+              "consegue": "Criar um cliente com dados de vendas, expedição e faturamento."
+            },
+            {
+              "item": "guia-sd-dados-mestres",
+              "tipo": "guia",
+              "tema": "Dados mestres de vendas: cliente nas áreas de vendas, funções de parceiro e material para vendas",
+              "porque": "A maioria dos erros de ordem vem de cadastro incompleto.",
+              "consegue": "Diagnosticar por que um cliente não pode ser usado numa área de vendas."
+            },
+            {
+              "item": "base-sd",
+              "porque": "Ver o Order-to-Cash inteiro antes dos detalhes.",
+              "consegue": "Contar a história de uma venda do pedido ao recebimento."
+            }
+          ]
+        },
+        {
+          "id": "sd-2",
+          "nome": "Nível 2 · Operar o ciclo de vendas",
+          "perfil": "Júnior",
+          "meta": "Executar sozinho o fluxo principal: ordem, remessa, saída e fatura.",
+          "etapas": [
+            {
+              "item": "proc-sd-02-ordem",
+              "porque": "A ordem é o centro do processo; tudo depois copia dados dela.",
+              "consegue": "Criar ordens, tratar incompletude e entender categoria de item e divisão."
+            },
+            {
+              "item": "proc-sd-09-remessa",
+              "porque": "É onde o pedido vira movimento físico.",
+              "consegue": "Criar remessa, separar e embalar."
+            },
+            {
+              "item": "proc-sd-10-saida",
+              "porque": "Baixa o estoque e lança o custo; libera a fatura.",
+              "consegue": "Lançar e estornar saída de mercadoria e explicar o lançamento."
+            },
+            {
+              "item": "proc-sd-11-faturamento",
+              "porque": "Gera a receita e o título do cliente.",
+              "consegue": "Faturar, cancelar e resolver faturas não contabilizadas."
+            },
+            {
+              "item": "proc-sd-06-monitoramento",
+              "porque": "O usuário pergunta 'por que não faturou?' todo dia.",
+              "consegue": "Usar VA05, fluxo de documentos e listas de bloqueio para achar onde a ordem parou."
+            },
+            {
+              "item": "proc-sd-01-consulta-cotacao",
+              "porque": "Pré-venda completa o ciclo comercial.",
+              "consegue": "Criar cotação e convertê-la em ordem com referência."
+            }
+          ]
+        },
+        {
+          "id": "sd-3",
+          "nome": "Nível 3 · As determinações (o coração do SD)",
+          "perfil": "Pleno",
+          "meta": "Entender como o sistema decide preço, disponibilidade, crédito e dados de expedição.",
+          "etapas": [
+            {
+              "item": "proc-sd-04-preco",
+              "porque": "Preço é o tema número 1 de chamados em SD.",
+              "consegue": "Ler a análise de preço de uma ordem e explicar de onde veio cada valor."
+            },
+            {
+              "item": "proc-sd-03-disponibilidade",
+              "porque": "Promessa de entrega errada gera reclamação de cliente.",
+              "consegue": "Explicar a data confirmada e o que entra na verificação."
+            },
+            {
+              "item": "proc-sd-05-credito",
+              "porque": "Ordens bloqueadas por crédito param o faturamento.",
+              "consegue": "Explicar um bloqueio de crédito e o caminho de liberação."
+            },
+            {
+              "item": "guia-sd-determinacoes",
+              "tipo": "guia",
+              "tema": "Determinações de SD: parceiros, categoria de item, ponto de expedição, itinerário e mensagens",
+              "porque": "Essas regras explicam a maior parte dos comportamentos 'estranhos' da ordem.",
+              "consegue": "Explicar por que o sistema escolheu cada dado da ordem e da remessa."
+            }
+          ]
+        },
+        {
+          "id": "sd-4",
+          "nome": "Nível 4 · Integração com finanças e fiscal",
+          "perfil": "Pleno",
+          "meta": "Entender o reflexo contábil e fiscal de cada passo.",
+          "etapas": [
+            {
+              "item": "base-integra",
+              "porque": "VKOA e GBB explicam a receita e o custo de cada venda.",
+              "consegue": "Dizer qual conta cada documento usa e investigar erros de determinação."
+            },
+            {
+              "item": "proc-sd-12-nf-saida",
+              "porque": "No Brasil, sem NF-e autorizada a mercadoria não sai.",
+              "consegue": "Acompanhar uma NF-e no J1BNFE, tratar rejeição e cancelar."
+            },
+            {
+              "item": "proc-sd-13-devolucao",
+              "porque": "Devoluções e créditos mexem em estoque, receita e fiscal ao mesmo tempo.",
+              "consegue": "Executar uma devolução completa com nota de crédito."
+            },
+            {
+              "item": "guia-sd-fechamento",
+              "tipo": "guia",
+              "tema": "Fechamento de SD: faturas não contabilizadas, receita e conciliação com FI",
+              "porque": "No fim do mês o consultor é chamado para explicar o que não chegou na contabilidade.",
+              "consegue": "Garantir que tudo o que saiu foi faturado e contabilizado."
+            }
+          ]
+        },
+        {
+          "id": "sd-5",
+          "nome": "Nível 5 · Processos especiais",
+          "perfil": "Pleno/Sênior",
+          "meta": "Conhecer as variações que aparecem em quase todo cliente.",
+          "etapas": [
+            {
+              "item": "proc-sd-07-contrato",
+              "porque": "Acordos com clientes grandes.",
+              "consegue": "Criar contrato e ordens de liberação."
+            },
+            {
+              "item": "proc-sd-14-terceiros",
+              "porque": "Venda sem estoque próprio é comum em distribuidores.",
+              "consegue": "Montar a venda com entrega pelo fornecedor."
+            },
+            {
+              "item": "proc-sd-15-consignacao",
+              "porque": "Estoque no cliente com regras próprias.",
+              "consegue": "Executar os quatro processos de consignação."
+            },
+            {
+              "item": "proc-sd-08-programa-remessa",
+              "porque": "Fornecimento contínuo para indústria.",
+              "consegue": "Receber programas do cliente e expedir pelas linhas."
+            },
+            {
+              "item": "guia-sd-intercompany",
+              "tipo": "guia",
+              "tema": "Venda entre empresas do grupo (intercompany)",
+              "porque": "Grupos com várias empresas vendem entre si o tempo todo.",
+              "consegue": "Explicar o fluxo de venda e compra entre empresas e suas notas."
+            }
+          ]
+        },
+        {
+          "id": "sd-6",
+          "nome": "Nível 6 · Configurar e se virar no projeto",
+          "perfil": "Consultor",
+          "meta": "Configurar o essencial, investigar erros com método e atuar nas fases de um projeto.",
+          "etapas": [
+            {
+              "item": "guia-sd-customizing",
+              "tipo": "guia",
+              "tema": "Customizing essencial de SD: tipos de documento, categorias de item e de divisão, controle de cópia",
+              "porque": "É o mínimo que se espera de um consultor de SD.",
+              "consegue": "Criar um tipo de ordem novo copiando o padrão e ajustando o fluxo."
+            },
+            {
+              "item": "guia-sd-investigar",
+              "tipo": "guia",
+              "tema": "Como investigar erros em SD: incompletude, análise de preço, fluxo de documentos e tabelas",
+              "porque": "Saber investigar vale mais do que decorar transações.",
+              "consegue": "Partir de uma reclamação e chegar à causa usando as ferramentas certas."
+            },
+            {
+              "item": "base-projeto",
+              "porque": "Fases, workshops e papéis do consultor no projeto.",
+              "consegue": "Saber o que se espera de você em cada fase."
+            },
+            {
+              "item": "guia-sd-projeto",
+              "tipo": "guia",
+              "tema": "SD no projeto: fit-to-standard, migração de clientes e preços e testes do Order-to-Cash",
+              "porque": "É onde o consultor iniciante mais precisa de roteiro.",
+              "consegue": "Preparar cenários de teste O2C e a carga de clientes e condições."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

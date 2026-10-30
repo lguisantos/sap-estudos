@@ -4,10 +4,12 @@ const $ = id => document.getElementById(id);
 
 const st = {
   itens: [], porId: {}, naoVistos: new Set(), notas: {}, config: {}, chat: [],
-  atual: null, view: "estudo", trilha: "todas", busca: "", respondendo: false, fechados: new Set(),
+  atual: null, view: "trilha", trilhas: null, tmod: lerPref("tmod", "mm"), trilha: "todas", busca: "", respondendo: false, fechados: new Set(),
 };
 
 /* ---------- utilidades ---------- */
+function lerPref(k, padrao) { try { return localStorage.getItem("sapest-" + k) || padrao; } catch { return padrao; } }
+function gravarPref(k, v) { try { localStorage.setItem("sapest-" + k, v); } catch { /* sem armazenamento: só não lembra */ } }
 const dataBR = iso => {
   const [a, m, d] = String(iso).split("-").map(Number);
   return new Date(a, m - 1, d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).replace(".", "");
@@ -24,33 +26,134 @@ function indexar(lista) {
 const resolver = nome => st.alias[String(nome).toLowerCase().trim()] || null;
 const wikiLink = nome => { const id = resolver(nome); return id ? `<button class="chip" data-abrir="${id}">↗ ${esc(st.porId[id].curto)}</button>` : ""; };
 
+/* ---------- trilha de aprendizado ---------- */
+// Etapas de uma trilha em ordem, com número global, nível e se já existe conteúdo.
+function etapasDa(t) {
+  let n = 0;
+  return t.niveis.flatMap(nv => nv.etapas.map(e => ({ ...e, n: ++n, nivel: nv, existe: !!st.porId[e.item] })));
+}
+const trilhaAtiva = () => (st.trilhas && st.trilhas.trilhas.find(t => t.id === st.tmod)) || (st.trilhas && st.trilhas.trilhas[0]) || null;
+function proximaEtapa(t) {
+  const es = etapasDa(t);
+  return es.find(e => e.existe && !estudado(e.item)) || null;
+}
+// Onde um item está na trilha (prefere a trilha ativa, porque fundamentos aparecem nas duas).
+function posicao(id) {
+  if (!st.trilhas) return null;
+  const ordem = [trilhaAtiva(), ...st.trilhas.trilhas.filter(t => t !== trilhaAtiva())];
+  for (const t of ordem) {
+    const es = etapasDa(t);
+    const i = es.findIndex(e => e.item === id);
+    if (i < 0) continue;
+    const escritas = es.filter(e => e.existe);
+    const j = escritas.findIndex(e => e.item === id);
+    return { t, etapa: es[i], total: es.length, ant: escritas[j - 1] || null, prox: escritas[j + 1] || null };
+  }
+  return null;
+}
+const rotuloTipo = it => it.tipo === "processo" ? "Processo" : it.tipo === "guia" ? "Guia" : it.tipo === "semanal" ? "Edição semanal" : "Fundamento";
+
+function renderTrilha() {
+  const t = trilhaAtiva();
+  document.querySelectorAll(".tr-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tmod === st.tmod));
+  if (!t) { $("trilha-corpo").innerHTML = `<p class="empty">Trilhas ainda não disponíveis neste conteúdo.</p>`; return; }
+  const es = etapasDa(t);
+  const escritas = es.filter(e => e.existe);
+  const feitas = escritas.filter(e => estudado(e.item)).length;
+  const prox = proximaEtapa(t);
+  const card = prox ? (() => { const it = st.porId[prox.item]; return `
+    <div class="tr-next">
+      <p class="tr-eyebrow">Próximo passo · etapa ${prox.n} de ${es.length} · ${esc(prox.nivel.nome)}</p>
+      <h3>${esc(it.titulo)}</h3>
+      <p><b>Por que agora:</b> ${esc(prox.porque)}</p>
+      <p><b>Ao final você consegue:</b> ${esc(prox.consegue)}</p>
+      <button class="tr-go" data-abrir="${prox.item}">Estudar agora →</button>
+    </div>`; })() : `<div class="tr-next"><h3>Você estudou todas as etapas já publicadas desta trilha.</h3><p>As etapas marcadas como "em breve" chegam nas próximas sextas.</p></div>`;
+  const niveis = t.niveis.map(nv => {
+    const lista = es.filter(e => e.nivel === nv);
+    const ok = lista.filter(e => e.existe && estudado(e.item)).length;
+    const disp = lista.filter(e => e.existe).length;
+    return `<section class="tr-nivel">
+      <header><div><h3>${esc(nv.nome)}</h3><p>${esc(nv.meta)}</p></div><span class="tr-perfil">${esc(nv.perfil)}</span><span class="tr-cont">${ok}/${disp}</span></header>
+      <ol>${lista.map(e => {
+        const it = st.porId[e.item];
+        const estado = !e.existe ? "gap" : estudado(e.item) ? "done" : prox && e.item === prox.item ? "next" : "";
+        const titulo = it ? it.titulo : e.tema;
+        const tipo = it ? rotuloTipo(it) : "Em breve";
+        const tag = it ? "button" : "div";
+        return `<li><${tag} class="tr-etapa ${estado}"${it ? ` data-abrir="${e.item}"` : ""}>
+          <span class="tr-n">${estado === "done" ? "✓" : e.n}</span>
+          <span class="tr-txt"><span class="tr-tit">${esc(titulo)}<span class="tr-tipo ${it ? "" : "breve"}">${tipo}</span></span>
+          <span class="tr-why">${esc(e.porque)}</span>
+          <span class="tr-can">Você vai conseguir: ${esc(e.consegue)}</span></span>
+        </${tag}></li>`;
+      }).join("")}</ol></section>`;
+  }).join("");
+  $("trilha-corpo").innerHTML = `
+    <div class="tr-head">
+      <div><h2>${esc(t.titulo)}</h2><p class="sub">${esc(t.objetivo)}</p></div>
+      <div class="tr-prog"><b>${feitas} de ${escritas.length}</b> etapas publicadas estudadas
+        <progress max="${escritas.length || 1}" value="${feitas}"></progress>
+        <small>${es.length - escritas.length} etapa(s) chegam nas próximas edições</small></div>
+    </div>
+    ${card}
+    <details class="tr-principio"><summary>Por que essa ordem?</summary><p>${esc(st.trilhas.principio)}</p></details>
+    ${niveis}`;
+}
+document.querySelectorAll(".tr-tabs button").forEach(b => (b.onclick = () => { st.tmod = b.dataset.tmod; gravarPref("tmod", st.tmod); renderTrilha(); renderLista(); }));
+
+// Barra de navegação da trilha dentro do leitor.
+function barraTrilha(it) {
+  const p = posicao(it.id);
+  if (!p) return { topo: "", base: "" };
+  const topo = `<div class="tr-bar">
+    <span><b>${esc(p.t.modulo)}</b> · ${esc(p.etapa.nivel.nome)} · etapa ${p.etapa.n} de ${p.total}</span>
+    <span class="tr-bar-why"><b>Por que agora:</b> ${esc(p.etapa.porque)} <b>Objetivo:</b> ${esc(p.etapa.consegue)}</span></div>`;
+  const base = `<div class="tr-pager">
+    ${p.ant ? `<button class="ghost" data-abrir="${p.ant.item}">← ${esc(st.porId[p.ant.item].curto)}</button>` : "<span></span>"}
+    ${p.prox ? `<button class="tr-go" id="btn-concluir" data-prox="${p.prox.item}">${estudado(it.id) ? "" : "Marcar como estudado e "}seguir: ${esc(st.porId[p.prox.item].curto)} →</button>` : `<button class="ghost" data-view-ir="trilha">Voltar à trilha</button>`}
+  </div>`;
+  return { topo, base };
+}
+
 /* ---------- lista lateral ---------- */
 function filtrados() {
   const q = st.busca.toLowerCase();
   const passa = it => st.trilha === "todas" || it.trilha === st.trilha || it.modulo === st.trilha;
   return st.itens.filter(it => passa(it) && (!q || JSON.stringify(it).toLowerCase().includes(q)));
 }
-function linha(it) {
+function linha(it, num) {
   const novo = st.naoVistos.has(it.id);
   const cls = ["it", estudado(it.id) ? "done" : "", novo ? "novo" : ""].join(" ");
-  const sub = it.tipo === "semanal" ? `${dataBR(it.publicado)}` : it.tipo === "processo" ? `${esc(it.area)}` : `fundamento ${it.ordem}`;
+  const sub = it.tipo === "semanal" ? `${dataBR(it.publicado)}` : `${rotuloTipo(it).toLowerCase()} · ${esc(it.area)}`;
   return `<button class="${cls}" data-abrir="${it.id}" aria-current="${it.id === st.atual}">
-    <span class="dot" aria-hidden="true"></span>
+    ${num ? `<span class="tr-mini" aria-hidden="true">${estudado(it.id) ? "✓" : num}</span>` : '<span class="dot" aria-hidden="true"></span>'}
     <span><span class="t">${esc(it.curto)}${novo ? '<span class="pill novo">novo</span>' : ""}</span>
-    <span class="d">${sub}${it.tipo === "processo" ? "" : `<span class="pill ${it.trilha}">${rotulo(it.trilha)}</span>`}</span></span></button>`;
+    <span class="d">${sub}${it.tipo === "semanal" ? `<span class="pill ${it.trilha}">${rotulo(it.trilha)}</span>` : ""}</span></span></button>`;
 }
 function renderLista() {
   const its = filtrados();
-  const grupos = [
-    ["proc-MM", "Processos MM · Materiais", its.filter(i => i.tipo === "processo" && i.modulo === "MM")],
-    ["proc-SD", "Processos SD · Vendas", its.filter(i => i.tipo === "processo" && i.modulo === "SD")],
-    ["semanal", "Edições semanais", its.filter(i => i.tipo === "semanal")],
-    ["fund", "Fundamentos", its.filter(i => i.tipo === "fundamentos")],
-  ];
+  const visiveis = new Set(its.map(i => i.id));
+  const naTrilha = new Set();
+  const grupos = [];
+  // Uma seção por trilha, na ordem de estudo; etapas futuras aparecem como "em breve".
+  for (const t of (st.trilhas ? st.trilhas.trilhas : [])) {
+    const es = etapasDa(t);
+    es.forEach(e => naTrilha.add(e.item));
+    const linhas = es.filter(e => visiveis.has(e.item) || (!e.existe && !st.busca && (st.trilha === "todas" || st.trilha === t.modulo || st.trilha === "funcional")));
+    grupos.push([`tr-${t.id}`, `Trilha ${t.titulo}`, linhas.length, linhas.map(e => e.existe
+      ? linha(st.porId[e.item], e.n)
+      : `<div class="it gap"><span class="tr-mini">${e.n}</span><span><span class="t">${esc(e.tema)}</span><span class="d">em breve</span></span></div>`).join("")]);
+  }
+  const fora = its.filter(i => !naTrilha.has(i.id));
+  const sem = fora.filter(i => i.tipo === "semanal");
+  const outros = fora.filter(i => i.tipo !== "semanal");
+  grupos.push(["semanal", "Edições semanais", sem.length, sem.map(i => linha(i)).join("")]);
+  grupos.push(["outros", "Outros temas", outros.length, outros.map(i => linha(i)).join("")]);
   // Grupos recolhíveis; a busca abre todos para mostrar os resultados.
-  const html = grupos.filter(g => g[2].length).map(([k, nome, lista]) => {
-    const aberto = st.busca || !st.fechados.has(k) || lista.some(i => i.id === st.atual);
-    return `<details class="grupo" data-grupo="${k}"${aberto ? " open" : ""}><summary class="grp">${nome} <span class="cnt">${lista.length}</span></summary>${lista.map(linha).join("")}</details>`;
+  const html = grupos.filter(g => g[2]).map(([k, nome, qtd, corpo]) => {
+    const aberto = st.busca || !st.fechados.has(k);
+    return `<details class="grupo" data-grupo="${k}"${aberto ? " open" : ""}><summary class="grp">${nome} <span class="cnt">${qtd}</span></summary>${corpo}</details>`;
   }).join("");
   $("lista").innerHTML = html || `<p class="empty">Nada encontrado.</p>`;
   $("lista").querySelectorAll("details.grupo").forEach(d => d.addEventListener("toggle", () => {
@@ -87,8 +190,9 @@ function renderItem() {
   const bl = backlinks(it.id);
   const sec = (titulo, corpo) => `<section class="blk"><h3>${titulo}</h3>${corpo}</section>`;
   const onde = it.tipo === "semanal" ? "Edição de " + dataBR(it.publicado)
-    : it.tipo === "processo" ? `Processo ${esc(it.modulo)} · ${esc(it.area)}` : "Fundamento " + it.ordem + " de 12";
-  let h = `<div class="meta"><span class="area">${esc(it.tipo === "processo" ? it.modulo : it.area)}</span><span>${rotulo(it.trilha)} · ${esc(it.nivel)}</span>
+    : it.tipo === "processo" ? `Processo ${esc(it.modulo)} · ${esc(it.area)}` : it.tipo === "guia" ? `Guia ${esc(it.modulo)}` : "Fundamento";
+  const nav = barraTrilha(it);
+  let h = nav.topo + `<div class="meta"><span class="area">${esc(it.tipo === "processo" || it.tipo === "guia" ? it.modulo : it.area)}</span><span>${rotulo(it.trilha)} · ${esc(it.nivel)}</span>
     <span>${onde}</span></div>
     <h2>${esc(it.titulo)}</h2><p class="lede">${esc(it.resumo)}</p>`;
   if (it.novidades && it.novidades.length) h += sec("O que há de novo no mercado", `<div class="news">${it.novidades.map(n => `<div class="news-i"><b>${esc(n.titulo)}</b><p>${esc(n.resumo)}</p><button class="ext" data-url="${esc(n.url)}">${esc(n.fonte || "Fonte")}</button></div>`).join("")}</div>`);
@@ -106,8 +210,13 @@ function renderItem() {
   h += sec("Conexões com outros temas", `<div class="links">${links.map(l => `<button class="lnk" data-abrir="${l.id}"><b>${esc(st.porId[l.id].curto)} →</b><span>${esc(l.motivo)}</span></button>`).join("") || '<p class="empty">Sem conexões declaradas.</p>'}</div>
     ${bl.length ? `<div class="backl">Citado por: ${bl.map(b => `<button class="chip" data-abrir="${b.id}">${esc(b.curto)}</button>`).join("")}</div>` : ""}`);
   if (it.fontes && it.fontes.length) h += sec("Fontes", `<ul class="sources">${it.fontes.map(f => `<li><button class="ext" data-url="${esc(f.url)}">${esc(f.titulo)}</button></li>`).join("")}</ul>`);
-  $("reader").innerHTML = h;
+  $("reader").innerHTML = h + nav.base;
   $("reader").scrollTop = 0;
+  const conc = $("btn-concluir");
+  if (conc) conc.onclick = async () => {
+    if (!estudado(it.id)) { st.notas[it.id] = await window.sap.salvarNota(it.id, { ...(st.notas[it.id] || {}), estudado: true }); }
+    abrir(conc.dataset.prox);
+  };
   $("btn-quiz").onclick = () => { abrirAba("chat"); $("chat-in").value = `Minha resposta para a pergunta de fixação "${it.fixacao.pergunta}":\n\n`; $("chat-in").focus(); };
 }
 
@@ -142,7 +251,7 @@ async function salvarNota() {
   $("nb-status").textContent = "Salvo às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 $("nb-text").addEventListener("input", () => { renderCitados(); $("nb-status").textContent = "Digitando…"; clearTimeout(tNota); tNota = setTimeout(salvarNota, 700); });
-$("nb-done").addEventListener("change", async () => { await salvarNota(); renderLista(); });
+$("nb-done").addEventListener("change", async () => { await salvarNota(); renderLista(); renderItem(); });
 
 /* ---------- chat ---------- */
 function abrirAba(qual) {
@@ -214,7 +323,7 @@ function renderMapa() {
   const svg = $("mapsvg"), cx = 500, cy = 380;
   const fund = st.itens.filter(i => i.tipo === "fundamentos").sort((a, b) => a.ordem - b.ordem);
   const sem = st.itens.filter(i => i.tipo === "semanal").sort((a, b) => a.publicado.localeCompare(b.publicado));
-  const proc = st.itens.filter(i => i.tipo === "processo");
+  const proc = st.itens.filter(i => i.tipo === "processo" || i.tipo === "guia");
   const pos = {};
   const anel = (lista, r, giro) => lista.forEach((it, k) => {
     const a = -Math.PI / 2 + giro + k * 2 * Math.PI / Math.max(lista.length, 1);
@@ -295,7 +404,9 @@ function mostrarView(v) {
   for (const b of document.querySelectorAll(".views button")) {
     if (b.dataset.view === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   }
+  $("v-trilha").hidden = v !== "trilha";
   $("v-estudo").hidden = v !== "estudo"; $("v-mapa").hidden = v !== "mapa"; $("v-anotacoes").hidden = v !== "anotacoes"; $("v-config").hidden = v !== "config";
+  if (v === "trilha") renderTrilha();
   if (v === "mapa") renderMapa();
   if (v === "anotacoes") renderAnotacoes();
   if (v === "config") renderConfig();
@@ -310,6 +421,8 @@ $("busca").addEventListener("input", e => { st.busca = e.target.value; renderLis
 
 // Cliques delegados: abrir item, links externos, sugestões do chat.
 document.addEventListener("click", e => {
+  const vi = e.target.closest("[data-view-ir]");
+  if (vi) { mostrarView(vi.dataset.viewIr); return; }
   const a = e.target.closest("[data-abrir]");
   if (a) { fecharPop(); abrir(a.dataset.abrir); return; }
   const u = e.target.closest("[data-url]");
@@ -333,9 +446,14 @@ function renderStatus(b) {
 function aplicarBiblioteca(b) {
   const antes = new Set(st.naoVistos);
   indexar(b.itens);
+  st.trilhas = b.trilhas || null;
   st.naoVistos = new Set(b.naoVistos);
-  if (!st.atual || !st.porId[st.atual]) st.atual = (b.itens.find(i => st.naoVistos.has(i.id)) || b.itens[0] || {}).id;
+  if (!st.atual || !st.porId[st.atual]) {
+    const t = trilhaAtiva(), p = t && proximaEtapa(t);
+    st.atual = (p && p.item) || (b.itens[0] || {}).id;
+  }
   renderLista(); renderSino(); renderStatus(b);
+  if (st.view === "trilha") renderTrilha();
   if (st.view === "estudo") { renderItem(); renderCaderno(); renderChatCtx(); }
   if (st.view === "mapa") renderMapa();
   return [...st.naoVistos].filter(id => !antes.has(id));
@@ -349,6 +467,6 @@ window.sap.aoAbrir(id => abrir(id));
   st.notas = ini.notas || {}; st.config = ini.config || {};
   st.chat = (ini.chat || []).map(m => ({ ...m }));
   aplicarBiblioteca(ini);
-  if (st.atual && st.naoVistos.has(st.atual)) abrir(st.atual);
+  mostrarView("trilha");
   renderChatCtx();
 })();

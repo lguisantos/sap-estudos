@@ -1,0 +1,138 @@
+{
+  "tipo": "guia",
+  "trilha": "funcional",
+  "publicado": "2026-10-30",
+  "id": "guia-mm-mestre-material",
+  "modulo": "MM",
+  "area": "Dados mestres (MM)",
+  "nivel": "básico",
+  "titulo": "Mestre de material para MM: tipos de material, visões, unidades e classe de avaliação",
+  "curto": "Mestre de material",
+  "resumo": "O mestre de material é o cadastro mais usado em MM: todo pedido, entrada, saída e inventário aponta para ele. O tipo de material decide quais visões precisam ser preenchidas, se o item tem estoque avaliado e qual controle de preço e classe de avaliação são permitidos. A classe de avaliação, por sua vez, decide em qual conta contábil o estoque é lançado. Entender essa cadeia evita a maioria dos erros que um júnior encontra na MIGO e na MIRO.",
+  "conceitos": [
+    {
+      "termo": "Material (produto)",
+      "explicacao": "Cadastro único de um item comprado, produzido ou vendido. No S/4HANA os apps chamam o material de produto (Manage Product Master Data) e o número pode ter até 40 caracteres."
+    },
+    {
+      "termo": "Tipo de material",
+      "explicacao": "Classifica o item e controla o cadastro: quais visões existem, numeração, se há atualização de quantidade e valor de estoque, o controle de preço permitido e as classes de avaliação possíveis. Exemplos padrão: ROH (matéria-prima), HALB (semiacabado), FERT (produto acabado), HAWA (mercadoria para revenda), ERSA (peça de reposição), NLAG (não estocável), DIEN (serviço)."
+    },
+    {
+      "termo": "Visões",
+      "explicacao": "Telas do cadastro por área: Dados básicos, Compras, Contabilidade 1 e 2, MRP 1 a 4, Vendas, Armazenagem, Qualidade, Custos. Cada área preenche a sua; o tipo de material define quais aparecem."
+    },
+    {
+      "termo": "Níveis organizacionais",
+      "explicacao": "Cada visão vale para um nível: dados básicos para todo o mandante; compras, MRP e armazenagem por centro; dados de depósito por depósito; vendas por organização de vendas e canal; contabilidade por área de avaliação (normalmente o centro)."
+    },
+    {
+      "termo": "Unidade de medida básica",
+      "explicacao": "Unidade em que o estoque é controlado (ex.: PC, KG). Pode haver unidade de pedido diferente (ex.: CX com 12 PC) com fator de conversão. Mudar a unidade básica depois de haver movimentos é muito difícil."
+    },
+    {
+      "termo": "Grupo de mercadorias",
+      "explicacao": "Agrupa materiais parecidos para relatórios, estratégias de liberação e compras sem cadastro de material."
+    },
+    {
+      "termo": "Classe de avaliação",
+      "explicacao": "Campo da visão Contabilidade 1. Junto com a chave de operação BSX, define a conta de estoque usada nos lançamentos. Os valores permitidos dependem do tipo de material (pela referência de categoria de conta)."
+    },
+    {
+      "termo": "Controle de preço S ou V",
+      "explicacao": "S = preço standard (fixo; diferenças vão para conta de variação, chave PRD). V = preço médio móvel (recalculado a cada entrada). Preenchido em Contabilidade 1; o tipo de material traz o padrão."
+    },
+    {
+      "termo": "Status de material",
+      "explicacao": "Bloqueia o uso do material para compras, MRP ou todos os processos, por centro ou para todo o mandante. Útil para materiais descontinuados."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "MM01 / MM02 / MM03",
+      "descricao": "Criar, modificar e exibir material"
+    },
+    {
+      "codigo": "MMSC",
+      "descricao": "Ampliar o material para novos depósitos"
+    },
+    {
+      "codigo": "MM60",
+      "descricao": "Lista de materiais cadastrados"
+    },
+    {
+      "codigo": "MM06",
+      "descricao": "Marcar material para eliminação"
+    },
+    {
+      "codigo": "MM17",
+      "descricao": "Modificação em massa"
+    },
+    {
+      "codigo": "Manage Product Master Data",
+      "descricao": "App Fiori equivalente"
+    }
+  ],
+  "caso": {
+    "titulo": "Cadastrar um parafuso comprado para a produção",
+    "contexto": "A fábrica (centro 1000) vai comprar o parafuso M8 para usar na montagem. O comprador tentou criar o pedido e o sistema disse que o material não existe no centro.",
+    "passos": [
+      "MM01 com tipo ROH (matéria-prima), setor industrial e as visões Dados básicos, Compras, MRP 1–4, Contabilidade 1 e Armazenagem.",
+      "Níveis organizacionais: centro 1000 e depósito 0001.",
+      "Dados básicos: descrição, unidade básica PC, grupo de mercadorias 'Fixadores'.",
+      "Compras: grupo de compradores 001 e prazo de entrega. MRP: tipo de planejamento PD, planejador e tamanho de lote.",
+      "Contabilidade 1: classe de avaliação 3000 (matérias-primas), controle de preço V e preço médio inicial 0,35 BRL.",
+      "Resultado: o pedido pode ser criado e a entrada MIGO 101 lança D estoque de matéria-prima (conta da classe 3000) × C GR/IR."
+    ]
+  },
+  "armadilhas": [
+    "Criar o material sem a visão Contabilidade 1: o pedido até é criado, mas a entrada de mercadoria falha porque o material não tem preço nem classe de avaliação no centro.",
+    "Escolher o tipo de material errado (ex.: HAWA para matéria-prima): a classe de avaliação e as contas ficam erradas, e corrigir exige mudar o tipo com o estoque zerado.",
+    "Unidade de medida básica errada: depois que há estoque e documentos, a correção é complexa; confira antes de gravar.",
+    "Esquecer de ampliar o material para um centro novo: para o sistema, o material não existe naquele centro."
+  ],
+  "fixacao": {
+    "pergunta": "Um material foi criado com Dados básicos e Compras. O pedido foi aceito, mas a MIGO dá erro. Por quê, e como resolver?",
+    "resposta": "Falta a visão de Contabilidade 1 para a área de avaliação (centro): sem classe de avaliação e preço o estoque não pode ser avaliado. Resolve-se ampliando o material com MM01 (ou MM02) para incluir a visão de contabilidade no centro."
+  },
+  "links": [
+    {
+      "id": "base-dados",
+      "motivo": "Visão geral dos três grandes cadastros: BP, material e conta contábil."
+    },
+    {
+      "id": "base-org",
+      "motivo": "Os níveis organizacionais do material (centro, depósito, área de avaliação)."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "O pedido usa as visões de compras do material."
+    },
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "A entrada depende da visão de contabilidade."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Como a classe de avaliação vira conta contábil (OBYC/BSX)."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Material Master Data (SAP Help)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/3d7eb65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Material type (SAP Help)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/5e23dc8fe9be4fd496f8ab556667ea05/a294d7531a4d414de10000000a174cb4.html"
+    },
+    {
+      "titulo": "Valuation Structure (SAP Help)",
+      "url": "https://help.sap.com/docs/PRODUCT_ID/af9ef57f504840d2b81be8667206d485/585eb6531de6b64ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Control of Material Valuation (SAP Help)",
+      "url": "https://help.sap.com/docs/PRODUCT_ID/af9ef57f504840d2b81be8667206d485/435eb6531de6b64ce10000000a174cb4.html"
+    }
+  ]
+}

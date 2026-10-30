@@ -1,5 +1,9 @@
 # Plano de estudos
 
+A sequência principal de estudo está em `content/trilhas.json` (trilhas MM e SD, do júnior ao
+consultor). Toda sexta o Claude escreve a próxima etapa pendente de cada trilha. Este plano guarda
+os temas de atualidades e as ideias para novas etapas.
+
 O Claude segue este plano nas edições semanais. Marque `[x]` ao publicar e acrescente
 temas novos quando o mercado trouxer algo relevante.
 

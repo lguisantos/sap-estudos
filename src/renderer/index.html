@@ -16,7 +16,8 @@
 <header class="top">
   <div class="brand"><span class="mark" aria-hidden="true">S</span><span>SAP Estudos</span></div>
   <nav class="views" aria-label="Visões">
-    <button data-view="estudo" aria-current="page">Estudo</button>
+    <button data-view="trilha" aria-current="page">Trilha</button>
+    <button data-view="estudo">Estudo</button>
     <button data-view="mapa">Mapa de conexões</button>
     <button data-view="anotacoes">Anotações</button>
     <button data-view="config">Configurações</button>
@@ -39,7 +40,15 @@
 
 <div class="banner" id="banner" hidden></div>
 
-<div class="layout" id="v-estudo">
+<section class="full" id="v-trilha">
+  <div class="tr-tabs" role="tablist" aria-label="Módulo">
+    <button role="tab" data-tmod="mm">MM · Materiais</button>
+    <button role="tab" data-tmod="sd">SD · Vendas</button>
+  </div>
+  <div id="trilha-corpo"></div>
+</section>
+
+<div class="layout" id="v-estudo" hidden>
   <aside class="side">
     <div class="filters" role="group" aria-label="Trilha">
       <button data-trilha="todas" aria-pressed="true">Todas</button>

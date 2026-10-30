@@ -59,7 +59,8 @@ function carregar(pasta, origem) {
   if (!itens.length) return false;
   // Fundamentos não contam como novidade: marcados como vistos na primeira leitura.
   for (const it of itens) if (it.tipo === "fundamentos" && !estado.vistos[it.id]) estado.vistos[it.id] = it.versao;
-  biblioteca = { ...biblioteca, itens, origem, erro: erros.length ? `Itens ignorados: ${erros.join("; ")}` : "" };
+  const trilhas = conteudo.carregarTrilhas(pasta) || conteudo.carregarTrilhas(pastaEmbutida);
+  biblioteca = { ...biblioteca, itens, trilhas, origem, erro: erros.length ? `Itens ignorados: ${erros.join("; ")}` : "" };
   return true;
 }
 
@@ -107,6 +108,7 @@ const rotuloTrilha = t => (t === "tecnico" ? "Técnico" : "Funcional");
 function resumo() {
   return {
     itens: biblioteca.itens,
+    trilhas: biblioteca.trilhas,
     naoVistos: conteudo.naoVistos(biblioteca.itens, estado.vistos).map(i => i.id),
     origem: biblioteca.origem,
     commit: biblioteca.commit,

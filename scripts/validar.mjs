@@ -19,7 +19,9 @@ for (const f of files) {
   if (it.id !== f.replace(/\.json$/, "")) err(`id "${it.id}" deve ser igual ao nome do arquivo`);
   if (items.has(it.id)) err("id duplicado");
   items.set(it.id, it);
-  if (!["fundamentos", "semanal", "processo"].includes(it.tipo)) err("tipo deve ser fundamentos, semanal ou processo");
+  if (!["fundamentos", "semanal", "processo", "guia"].includes(it.tipo)) err("tipo deve ser fundamentos, semanal, processo ou guia");
+  if (it.tipo === "guia" && !["MM", "SD", "FI", "CO", "PP"].includes(it.modulo)) err("guia: modulo obrigatório");
+  if (it.tipo === "guia" && !arr(it.fontes)) err("guia precisa de fontes");
   if (!["funcional", "tecnico"].includes(it.trilha)) err("trilha deve ser funcional ou tecnico");
   for (const k of ["area", "titulo", "curto", "nivel", "resumo"]) if (!str(it[k])) err(`${k} obrigatório`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.publicado || "")) err("publicado deve ser AAAA-MM-DD");
@@ -56,5 +58,25 @@ for (const f of files) {
 for (const it of items.values())
   for (const l of it.links || []) if (!items.has(l.id)) errors.push(`${it.id}.json: link para id inexistente "${l.id}"`);
 
+// Trilhas de aprendizado: etapas escritas precisam existir; lacunas precisam de tema e tipo.
+const arqTrilhas = join(dir, "..", "trilhas.json");
+let lacunas = 0;
+try {
+  const { trilhas } = JSON.parse(readFileSync(arqTrilhas, "utf8"));
+  for (const t of trilhas) {
+    const vistos = new Set();
+    if (!str(t.id) || !str(t.modulo) || !str(t.titulo) || !arr(t.niveis)) errors.push(`trilhas.json: trilha ${t.id} incompleta`);
+    for (const n of t.niveis) for (const e of n.etapas || []) {
+      const onde = `trilhas.json [${t.id}/${n.id}] ${e.item}`;
+      if (vistos.has(e.item)) errors.push(`${onde}: etapa repetida`);
+      vistos.add(e.item);
+      if (!str(e.porque) || !str(e.consegue)) errors.push(`${onde}: porque e consegue obrigatórios`);
+      if (items.has(e.item)) continue;
+      if (!str(e.tema) || !["guia", "processo"].includes(e.tipo)) errors.push(`${onde}: item inexistente (lacunas precisam de tema e tipo guia/processo)`);
+      else lacunas++;
+    }
+  }
+} catch (e) { errors.push(`trilhas.json: ${e.message}`); }
+
 if (errors.length) { console.error(errors.join("\n")); console.error(`\n${errors.length} problema(s) em ${files.length} itens.`); process.exit(1); }
-console.log(`OK: ${files.length} itens válidos.`);
+console.log(`OK: ${files.length} itens válidos; trilhas com ${lacunas} etapa(s) ainda por escrever.`);
