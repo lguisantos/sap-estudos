@@ -26,10 +26,17 @@ Pré-requisitos, uma vez só:
 
 1. **Git para Windows**: https://git-scm.com/download/win (o app usa o Git e suas credenciais do
    GitHub para baixar o conteúdo deste repositório privado).
-2. **Claude Code**, para o chat: siga https://docs.claude.com/claude-code e rode `claude` uma vez
+2. **Claude Code**, para o chat: siga https://code.claude.com/docs e rode `claude` uma vez
    no terminal para fazer login.
 
-Instalador:
+Instalação automática: rode `scripts/instalar-windows.ps1` no PowerShell. Ele instala Git, Node.js e
+Claude Code se faltarem, gera o instalador, instala o app em silêncio e o abre:
+
+```bash
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Downloads\instalar-windows.ps1"
+```
+
+Instalador manual:
 
 - **Opção A, pronto**: em *Actions → Instalador Windows → Run workflow* (ou criando uma tag `v1.0.0`),
   o GitHub gera `SAP Estudos Setup 1.0.0.exe`. Baixe em *Artifacts* (ou em *Releases* quando for tag).
