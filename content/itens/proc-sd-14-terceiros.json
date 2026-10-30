@@ -1,0 +1,202 @@
+{
+  "id": "proc-sd-14-terceiros",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 14,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Venda com entrega por terceiros",
+  "nivel": "avançado",
+  "titulo": "Venda com entrega por terceiros (third-party)",
+  "resumo": "Na venda por terceiros, a empresa vende, mas quem entrega é o fornecedor, direto ao cliente. A ordem tem categoria TAS: gera uma requisição de compra automática, o pedido vai ao fornecedor com endereço do cliente e não há movimento de estoque próprio.",
+  "quando": [
+    "Itens que a empresa não estoca.",
+    "Entrega direta do fabricante (drop shipping)."
+  ],
+  "prerequisitos": [
+    "Material com grupo de categoria que determine TAS (ex.: BANS) ou alteração manual.",
+    "Fornecedor/fonte para o material."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar a ordem",
+      "papel": "Vendedor",
+      "transacao": "VA01 (item TAS)",
+      "descricao": "Item com categoria TAS e divisão CS.",
+      "detalhes": [
+        "Sem verificação de disponibilidade de estoque próprio.",
+        "Gera requisição de compra automaticamente."
+      ],
+      "resultado": "Ordem e requisição."
+    },
+    {
+      "titulo": "Converter em pedido",
+      "papel": "Comprador",
+      "transacao": "ME57 / ME21N",
+      "descricao": "Pedido ao fornecedor com endereço de entrega do cliente.",
+      "detalhes": [
+        "Classificação contábil vinculada à ordem.",
+        "Alterações na ordem refletem na requisição."
+      ],
+      "resultado": "Fornecedor acionado."
+    },
+    {
+      "titulo": "Fornecedor entrega ao cliente",
+      "papel": "Fornecedor",
+      "transacao": "—",
+      "descricao": "Entrega física direta.",
+      "detalhes": [
+        "Opcional: entrada estatística para registrar a entrega.",
+        "Sem movimento no estoque próprio."
+      ],
+      "resultado": "Cliente recebe."
+    },
+    {
+      "titulo": "Receber a fatura do fornecedor",
+      "papel": "Contas a pagar",
+      "transacao": "MIRO",
+      "descricao": "Fatura do fornecedor lançada contra o pedido.",
+      "detalhes": [
+        "Custo vai para a ordem de venda.",
+        "Base para faturar o cliente."
+      ],
+      "resultado": "Custo registrado."
+    },
+    {
+      "titulo": "Faturar o cliente",
+      "papel": "Faturamento",
+      "transacao": "VF01",
+      "descricao": "Relevância F: fatura pela quantidade faturada pelo fornecedor.",
+      "detalhes": [
+        "Ou pela entrada estatística, conforme configuração.",
+        "Receita × custo compõem a margem."
+      ],
+      "resultado": "Receita reconhecida."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Ordem (TAS)",
+      "tabelas": "VBAP",
+      "descricao": "Item de terceiros."
+    },
+    {
+      "nome": "Requisição/pedido",
+      "tabelas": "EBAN / EKPO",
+      "descricao": "Ligados à ordem."
+    },
+    {
+      "nome": "Fatura do fornecedor",
+      "tabelas": "RBKP",
+      "descricao": "Custo."
+    },
+    {
+      "nome": "Fatura ao cliente",
+      "tabelas": "VBRK",
+      "descricao": "Receita."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "TAS",
+      "explicacao": "Categoria de item de terceiros."
+    },
+    {
+      "termo": "CS",
+      "explicacao": "Divisão que gera requisição de compra."
+    },
+    {
+      "termo": "Relevância F",
+      "explicacao": "Faturar pela quantidade da fatura do fornecedor."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA01",
+      "descricao": "Ordem"
+    },
+    {
+      "codigo": "ME57 / ME21N",
+      "descricao": "Pedido"
+    },
+    {
+      "codigo": "MIRO",
+      "descricao": "Fatura do fornecedor"
+    },
+    {
+      "codigo": "VF01",
+      "descricao": "Fatura ao cliente"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Categoria TAS",
+      "onde": "VOV7",
+      "explicacao": "Relevância de faturamento F."
+    },
+    {
+      "item": "Divisão CS",
+      "onde": "VOV6",
+      "explicacao": "Tipo de requisição e classificação."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM",
+      "explicacao": "Compra automática."
+    },
+    {
+      "com": "CO",
+      "explicacao": "Custo vinculado à ordem."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Com entrada estatística",
+      "explicacao": "Registra a entrega para faturar antes da fatura do fornecedor."
+    }
+  ],
+  "caso": {
+    "titulo": "Equipamento sob encomenda",
+    "contexto": "Fabricante entrega direto ao cliente.",
+    "passos": [
+      "VA01 TAS.",
+      "Requisição → pedido.",
+      "Fabricante entrega.",
+      "MIRO da fatura.",
+      "VF01 ao cliente."
+    ]
+  },
+  "armadilhas": [
+    "Faturar o cliente antes da fatura do fornecedor com relevância F: não é possível."
+  ],
+  "fixacao": {
+    "pergunta": "Por que a venda por terceiros não movimenta estoque próprio?",
+    "resposta": "Porque o fornecedor entrega direto ao cliente; a empresa só intermedeia a compra e a venda."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "Ordem com item TAS."
+    },
+    {
+      "id": "proc-mm-01-requisicao",
+      "motivo": "Requisição automática."
+    },
+    {
+      "id": "proc-mm-12-fatura",
+      "motivo": "Fatura do fornecedor."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Item Categories",
+      "url": "https://help.sap.com/docs/SAP_ERP/78e0627c34ef43879d72718e21ea517b/c864b65334e6b54ce10000000a174cb4.html"
+    }
+  ]
+}

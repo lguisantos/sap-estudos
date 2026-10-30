@@ -1,0 +1,223 @@
+{
+  "id": "proc-mm-16-transferencia",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 16,
+  "publicado": "2026-10-30",
+  "area": "Gestão de estoque (MM-IM)",
+  "curto": "Pedido de transferência (STO)",
+  "nivel": "avançado",
+  "titulo": "Transferência entre centros com pedido de transferência (STO)",
+  "resumo": "O pedido de transferência (stock transport order) movimenta estoque entre centros com planejamento, transporte e, entre empresas ou CNPJs diferentes, nota fiscal e faturamento. Pode ser feito sem entrega (351/101) ou com entrega de saída de SD (641/101).",
+  "quando": [
+    "Reabastecer um CD a partir da fábrica.",
+    "Transferências entre filiais com NF.",
+    "Transferências entre empresas do grupo (intercompany)."
+  ],
+  "prerequisitos": [
+    "Centro fornecedor configurado para o centro destinatário.",
+    "Tipo de entrega e ponto de expedição para STO com entrega.",
+    "No Brasil, configuração fiscal da transferência."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar o pedido de transferência",
+      "papel": "Comprador",
+      "transacao": "ME21N (tipo UB, categoria U)",
+      "descricao": "O fornecedor é o centro de origem; o item tem centro destino.",
+      "detalhes": [
+        "Intercompany usa tipo NB com centro fornecedor de outra empresa.",
+        "O MRP pode gerar a necessidade."
+      ],
+      "resultado": "STO criado.",
+      "exemplo": "UB 4500013000: 1.000 PC de 1000 (fábrica) para 2000 (CD)."
+    },
+    {
+      "titulo": "Criar a entrega de saída",
+      "papel": "Almoxarifado",
+      "transacao": "VL10B / VL04",
+      "descricao": "Com entrega, o STO vira entrega de saída no centro de origem.",
+      "detalhes": [
+        "Tipo de entrega NL (mesma empresa) ou NLCC (intercompany).",
+        "Picking e transporte iguais à venda."
+      ],
+      "resultado": "Entrega de saída."
+    },
+    {
+      "titulo": "Saída de mercadoria",
+      "papel": "Almoxarifado",
+      "transacao": "VL02N (Saída) · 641 / 351",
+      "descricao": "O estoque sai da origem e fica em trânsito.",
+      "detalhes": [
+        "641: com entrega, duas etapas.",
+        "351: sem entrega, via MIGO.",
+        "647: uma etapa com entrega (entrada automática)."
+      ],
+      "resultado": "Estoque em trânsito."
+    },
+    {
+      "titulo": "Emitir NF / faturar",
+      "papel": "Fiscal",
+      "transacao": "VF01 / NF de transferência",
+      "descricao": "Entre CNPJs diferentes, emite-se NF de transferência; intercompany gera fatura (IV).",
+      "detalhes": [
+        "Em intercompany, o centro destino recebe fatura e paga como compra.",
+        "CFOP de transferência (5.152/6.152)."
+      ],
+      "resultado": "Documentação fiscal."
+    },
+    {
+      "titulo": "Entrada no destino",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO 101",
+      "descricao": "O centro destino recebe com referência ao STO ou à entrega.",
+      "detalhes": [
+        "Estoque em trânsito é baixado.",
+        "Diferenças de quantidade são tratadas na entrada."
+      ],
+      "resultado": "Estoque no destino."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Pedido de transferência",
+      "tabelas": "EKKO (UB) · EKPO",
+      "descricao": "Necessidade entre centros."
+    },
+    {
+      "nome": "Entrega de saída",
+      "tabelas": "LIKP · LIPS",
+      "descricao": "Movimento físico."
+    },
+    {
+      "nome": "Documentos de material",
+      "tabelas": "MATDOC (641/101)",
+      "descricao": "Saída e entrada."
+    },
+    {
+      "nome": "NF / fatura",
+      "tabelas": "J_1BNFDOC · VBRK",
+      "descricao": "Fiscal e intercompany."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "STO",
+      "explicacao": "Stock Transport Order: pedido entre centros."
+    },
+    {
+      "termo": "Estoque em trânsito",
+      "explicacao": "Entre a saída e a entrada; visível em MB5T."
+    },
+    {
+      "termo": "Intercompany",
+      "explicacao": "Transferência entre empresas com venda e compra."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME21N (UB)",
+      "descricao": "Criar STO"
+    },
+    {
+      "codigo": "VL10B",
+      "descricao": "Entregas para STO"
+    },
+    {
+      "codigo": "VL02N",
+      "descricao": "Saída de mercadoria"
+    },
+    {
+      "codigo": "MB5T",
+      "descricao": "Estoque em trânsito"
+    },
+    {
+      "codigo": "MIGO",
+      "descricao": "Entrada no destino"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Configurar STO",
+      "onde": "SPRO › MM › Compras › Pedido › Configurar pedido de transferência",
+      "explicacao": "Centro fornecedor, tipo de entrega, verificação de disponibilidade."
+    },
+    {
+      "item": "Movimentos",
+      "onde": "OMJJ",
+      "explicacao": "641/643/645/647, 351."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "SD / LE",
+      "explicacao": "Entrega e transporte."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "NF de transferência."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Intercompany com fatura e pagamento."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Sem entrega",
+      "explicacao": "351/101 via MIGO, mais simples, sem SD."
+    },
+    {
+      "nome": "Com entrega",
+      "explicacao": "641/101 com controle de expedição."
+    }
+  ],
+  "caso": {
+    "titulo": "Reabastecimento do CD",
+    "contexto": "CD 2000 precisa de 1.000 PC da fábrica 1000.",
+    "passos": [
+      "MRP gera requisição; ME21N UB.",
+      "VL10B cria entrega.",
+      "Picking e saída 641.",
+      "NF de transferência 6.152.",
+      "Entrada 101 no CD."
+    ]
+  },
+  "armadilhas": [
+    "Usar 301 quando há transporte e NF: perde-se rastreio.",
+    "Estoque em trânsito antigo sem entrada: investigar em MB5T."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre STO com 351 e com 641?",
+    "resposta": "351 é saída sem entrega via MIGO; 641 é saída com entrega de SD (picking, transporte, NF). Ambos terminam com entrada 101 no destino."
+  },
+  "links": [
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Transferências simples."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Entrega de saída usada pelo STO."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "O STO é um tipo de pedido."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Stock Transfer Using a Stock Transport Order",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/91b21005dded4984bcccf4a69ae1300c/5213b953495bb44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Stock Transfer Using Stock Transport Order (Sales)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/2d95c3180a974e0aad07556ee4d28e94/f060b6531de6b64ce10000000a174cb4.html"
+    }
+  ]
+}

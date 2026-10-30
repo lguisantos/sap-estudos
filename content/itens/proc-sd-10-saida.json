@@ -1,0 +1,198 @@
+{
+  "id": "proc-sd-10-saida",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 10,
+  "publicado": "2026-10-30",
+  "area": "Expedição (LE-SHP)",
+  "curto": "Saída de mercadoria",
+  "nivel": "básico",
+  "titulo": "Saída de mercadoria (post goods issue)",
+  "resumo": "A saída de mercadoria encerra a expedição: baixa o estoque, lança o custo da mercadoria vendida, atualiza a ordem e torna a remessa relevante para faturamento. A partir daqui, a propriedade passa ao cliente (em geral) e a fatura pode ser emitida.",
+  "quando": [
+    "Mercadoria carregada e saindo do armazém."
+  ],
+  "prerequisitos": [
+    "Remessa com picking completo.",
+    "Período de estoque aberto.",
+    "Com WM/Lean WM, a saída é lançada no sistema de armazém."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Conferir a remessa",
+      "papel": "Expedição",
+      "transacao": "VL02N",
+      "descricao": "Verificar quantidades, embalagem e documentos.",
+      "detalhes": [
+        "Data real de saída pode ser informada; vazia = hoje.",
+        "Ajustar quantidade se o armazém confirmou menos (não há remessa parcial em recontagem)."
+      ],
+      "resultado": "Remessa conferida."
+    },
+    {
+      "titulo": "Lançar a saída",
+      "papel": "Expedição",
+      "transacao": "VL02N (Lançar saída) / VL06G",
+      "descricao": "Botão 'Lançar saída de mercadoria' ou em massa pelo monitor.",
+      "detalhes": [
+        "Movimento 601 (definido na categoria de divisão).",
+        "Lançamento: D CMV (GBB-VAX) × C Estoque (BSX)."
+      ],
+      "resultado": "Estoque baixado e custo lançado.",
+      "exemplo": "Doc. material 4900001234."
+    },
+    {
+      "titulo": "Atualizar documentos",
+      "papel": "Sistema",
+      "transacao": "—",
+      "descricao": "Ordem: status de remessa concluído; remessa: status de movimentação C; índice de faturamento atualizado.",
+      "detalhes": [
+        "Necessidade de vendas eliminada.",
+        "Fluxo de documentos ganha a linha de saída."
+      ],
+      "resultado": "Pronta para fatura."
+    },
+    {
+      "titulo": "Imprimir documentos",
+      "papel": "Sistema",
+      "transacao": "Output",
+      "descricao": "Romaneio e etiquetas; no Brasil, a NF-e precisa estar autorizada antes do transporte.",
+      "detalhes": [
+        "NF-e nasce no faturamento, por isso muitos fazem fatura antes da saída física.",
+        "DANFE acompanha a carga."
+      ],
+      "resultado": "Carga documentada."
+    },
+    {
+      "titulo": "Estornar se necessário",
+      "papel": "Expedição",
+      "transacao": "VL09",
+      "descricao": "Cancela a saída (602), devolvendo estoque e revertendo o custo.",
+      "detalhes": [
+        "Só se a fatura ainda não foi criada (ou foi cancelada).",
+        "Gera novo documento de material."
+      ],
+      "resultado": "Situação anterior restaurada."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC (601)",
+      "descricao": "Saída de estoque."
+    },
+    {
+      "nome": "Documento contábil",
+      "tabelas": "ACDOCA",
+      "descricao": "CMV × estoque."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Movimento 601",
+      "explicacao": "Saída por remessa."
+    },
+    {
+      "termo": "CMV",
+      "explicacao": "Custo da mercadoria vendida, chave GBB modificador VAX."
+    },
+    {
+      "termo": "VL09",
+      "explicacao": "Estorno de saída."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VL02N",
+      "descricao": "Lançar saída"
+    },
+    {
+      "codigo": "VL06G",
+      "descricao": "Saídas em massa"
+    },
+    {
+      "codigo": "VL09",
+      "descricao": "Estornar saída"
+    },
+    {
+      "codigo": "Post Goods Issue / Manage Outbound Deliveries",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Movimento por categoria de divisão",
+      "onde": "VOV6",
+      "explicacao": "601 para CP."
+    },
+    {
+      "item": "Contas",
+      "onde": "OBYC (GBB-VAX, BSX)",
+      "explicacao": "CMV e estoque."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI/CO",
+      "explicacao": "CMV para margem (CO-PA)."
+    },
+    {
+      "com": "MM-IM",
+      "explicacao": "Baixa de estoque."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Saída em WM/EWM",
+      "explicacao": "Lançada no sistema de armazém."
+    }
+  ],
+  "caso": {
+    "titulo": "Carga noturna",
+    "contexto": "Várias remessas saem à noite.",
+    "passos": [
+      "VL06G seleciona remessas com picking completo.",
+      "Saída em massa.",
+      "Estoque e CMV atualizados.",
+      "Faturamento em lote VF04.",
+      "NF-e autorizadas antes de liberar o caminhão."
+    ]
+  },
+  "armadilhas": [
+    "Saída com quantidade errada exige estorno e nova saída.",
+    "No Brasil, caminhão sair antes da autorização da NF-e."
+  ],
+  "fixacao": {
+    "pergunta": "Qual o lançamento contábil da saída de mercadoria?",
+    "resposta": "Débito no custo da mercadoria vendida (GBB-VAX) e crédito no estoque (BSX), pelo preço do material."
+  },
+  "links": [
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Remessa pronta para a saída."
+    },
+    {
+      "id": "proc-sd-11-faturamento",
+      "motivo": "Fatura após a saída."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Lançamento GBB-VAX/BSX."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Posting Goods Issue for Individual Deliveries",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c7894a248ca14f74aca67f97528e5ad7/ec3fbb536b13b44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Goods Movements via Shipping",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/91b21005dded4984bcccf4a69ae1300c/dc64bd534f22b44ce10000000a174cb4.html"
+    }
+  ]
+}

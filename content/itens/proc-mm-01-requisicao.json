@@ -1,0 +1,301 @@
+{
+  "id": "proc-mm-01-requisicao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 1,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Requisição de compra",
+  "nivel": "básico",
+  "titulo": "Requisição de compra: do pedido interno à necessidade aprovada",
+  "resumo": "A requisição de compra (purchase requisition) é o documento interno em que uma área pede ao Compras que adquira um material ou serviço. Ela não vai para o fornecedor: serve para registrar a necessidade, passar por aprovação e virar um pedido de compra ou uma solicitação de cotação. Pode ser criada à mão por qualquer área ou automaticamente pelo MRP.",
+  "quando": [
+    "Uma área precisa de um material ou serviço e não tem autonomia para comprar direto (ex.: manutenção pede um rolamento).",
+    "O MRP calcula falta de estoque de um material comprado e gera a necessidade automaticamente.",
+    "A empresa quer controle de orçamento e aprovação antes de qualquer compromisso com fornecedor."
+  ],
+  "prerequisitos": [
+    "Material cadastrado com visão de compras no centro (ou descrição em texto livre + grupo de mercadorias para itens sem cadastro).",
+    "Centro, grupo de compradores e, se houver, estratégia de liberação configurados.",
+    "Para itens de consumo: objeto de classificação contábil válido (centro de custo, ordem, elemento PEP)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Identificar a necessidade",
+      "papel": "Solicitante",
+      "transacao": "—",
+      "descricao": "A área percebe a falta (estoque mínimo, manutenção, projeto) ou o MRP identifica a necessidade a partir de demanda e estoque.",
+      "detalhes": [
+        "Necessidade manual: consumo para um centro de custo, projeto ou estoque.",
+        "Necessidade automática: o MRP (MD01N) cria requisições para materiais com tipo de suprimento externo (F).",
+        "A data de remessa desejada é a data em que o material precisa estar disponível."
+      ],
+      "resultado": "Necessidade definida: o quê, quanto, quando, onde e para quem.",
+      "exemplo": "Manutenção precisa de 4 rolamentos 6205 até 15/11 para a linha 2."
+    },
+    {
+      "titulo": "Criar a requisição",
+      "papel": "Solicitante",
+      "transacao": "ME51N · Fiori: Create Purchase Requisition",
+      "descricao": "O solicitante informa tipo de documento (padrão NB), material, quantidade, data de remessa, centro, depósito e grupo de compradores.",
+      "detalhes": [
+        "Categoria de classificação contábil: em branco (estoque), K (centro de custo), F (ordem), P (projeto).",
+        "Categoria de item: padrão, L (subcontratação), K (consignação), D (serviço), U (transferência).",
+        "Textos do item e anexos ajudam o comprador a entender a especificação.",
+        "Sem cadastro de material: descrição curta + grupo de mercadorias + preço de avaliação."
+      ],
+      "resultado": "Requisição gravada com número (ex.: 10001234), status 'aberta'.",
+      "exemplo": "Item 10: material 100-200, 4 PC, data 15/11, centro 1000, centro de custo 4110 (classificação K)."
+    },
+    {
+      "titulo": "Verificar e completar dados",
+      "papel": "Sistema",
+      "transacao": "ME51N (verificações)",
+      "descricao": "Ao gravar, o sistema valida a classificação contábil, o orçamento (se houver controle), o preço de avaliação e determina a estratégia de liberação.",
+      "detalhes": [
+        "O preço de avaliação vem do registro info, do último pedido ou do mestre de material.",
+        "O valor total da requisição é usado nas condições de liberação.",
+        "Mensagens de erro de classificação contábil impedem a gravação."
+      ],
+      "resultado": "Requisição consistente; se exigir aprovação, fica bloqueada para conversão."
+    },
+    {
+      "titulo": "Aprovar (liberar) a requisição",
+      "papel": "Aprovador",
+      "transacao": "ME54N / ME55 · Fiori: My Inbox",
+      "descricao": "Se uma estratégia de liberação foi encontrada, cada aprovador aplica seu código de liberação na sequência definida.",
+      "detalhes": [
+        "Requisições podem ser liberadas por item ou para o documento inteiro, conforme a configuração.",
+        "Enquanto não liberada, a requisição não pode virar pedido.",
+        "Recusar devolve ao solicitante para ajuste."
+      ],
+      "resultado": "Requisição liberada e pronta para compras.",
+      "exemplo": "Valor 1.280,00 BRL > limite de 1.000 BRL: gestor do centro de custo aprova com código G1."
+    },
+    {
+      "titulo": "Atribuir fonte de suprimento",
+      "papel": "Comprador",
+      "transacao": "ME57 / ME56 · aba Fonte de suprimento",
+      "descricao": "O comprador ou o sistema define de quem comprar: fornecedor fixo, contrato, registro info ou cotação.",
+      "detalhes": [
+        "Na aba Fonte de suprimento, 'Atribuir fonte' lista as fontes válidas para escolha.",
+        "ME56 e ME57 fazem a atribuição em massa e geram pedidos a partir da lista.",
+        "Requisição sem fonte atribuída não é convertida automaticamente pelo ME59N."
+      ],
+      "resultado": "Requisição com fornecedor/contrato atribuído.",
+      "exemplo": "Fonte: registro info do fornecedor 300100, 31,50 BRL/PC."
+    },
+    {
+      "titulo": "Converter em pedido ou RFQ",
+      "papel": "Comprador",
+      "transacao": "ME21N (referência) / ME59N / ME41",
+      "descricao": "A requisição é referenciada num pedido de compra, convertida em massa (ME59N) ou usada para uma solicitação de cotação se o preço precisar ser negociado.",
+      "detalhes": [
+        "ME21N: arrastar a requisição do 'Document overview' para o pedido.",
+        "ME59N: cria pedidos automáticos para requisições liberadas com fonte atribuída.",
+        "Uma requisição pode ser atendida parcialmente por vários pedidos."
+      ],
+      "resultado": "Pedido de compra criado com referência à requisição; histórico atualizado.",
+      "exemplo": "Pedido 4500012345 criado a partir da requisição 10001234."
+    },
+    {
+      "titulo": "Acompanhar o status",
+      "papel": "Solicitante",
+      "transacao": "ME53N / ME5A",
+      "descricao": "O solicitante acompanha se a requisição já virou pedido, a quantidade pedida e a entrada.",
+      "detalhes": [
+        "ME5A lista requisições por centro, material, status de processamento.",
+        "Status: N (não editada), B (pedido criado), A (RFQ criada).",
+        "Requisições antigas e não atendidas podem ser encerradas (indicador 'encerrado')."
+      ],
+      "resultado": "Necessidade rastreada até o recebimento."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Requisição de compra",
+      "tabelas": "EBAN · EBKN",
+      "descricao": "Documento interno com itens (EBAN) e classificação contábil (EBKN).",
+      "exemplo": "10001234 / item 10"
+    },
+    {
+      "nome": "Liberação",
+      "tabelas": "EBAN-FRGZU",
+      "descricao": "Status de liberação gravado no item ou cabeçalho.",
+      "exemplo": "FRGZU = X (liberado)"
+    },
+    {
+      "nome": "Pedido de compra",
+      "tabelas": "EKKO · EKPO",
+      "descricao": "Gerado com referência à requisição; EBAN-BANPR muda.",
+      "exemplo": "4500012345"
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Tipo de documento",
+      "explicacao": "NB (padrão). Controla numeração, campos e quais categorias de item são permitidas."
+    },
+    {
+      "termo": "Categoria de classificação contábil",
+      "explicacao": "Define para onde vai o custo: estoque (em branco), centro de custo (K), ordem (F), projeto (P), ativo (A)."
+    },
+    {
+      "termo": "Grupo de compradores",
+      "explicacao": "Comprador ou equipe responsável; filtra listas de trabalho e define quem converte a requisição."
+    },
+    {
+      "termo": "Requisição gerada pelo MRP",
+      "explicacao": "Proposta automática a partir do cálculo de necessidades; pode ser firmada ou recriada no próximo planejamento."
+    },
+    {
+      "termo": "Atribuição de fonte",
+      "explicacao": "Ligação da requisição a um fornecedor, contrato ou registro info; pré-requisito da conversão automática."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME51N",
+      "descricao": "Criar requisição"
+    },
+    {
+      "codigo": "ME52N",
+      "descricao": "Modificar requisição"
+    },
+    {
+      "codigo": "ME53N",
+      "descricao": "Exibir requisição"
+    },
+    {
+      "codigo": "ME54N",
+      "descricao": "Liberar requisição individual"
+    },
+    {
+      "codigo": "ME55",
+      "descricao": "Liberação coletiva"
+    },
+    {
+      "codigo": "ME56 / ME57",
+      "descricao": "Atribuir fontes e processar requisições"
+    },
+    {
+      "codigo": "ME59N",
+      "descricao": "Criar pedidos automaticamente"
+    },
+    {
+      "codigo": "ME5A",
+      "descricao": "Lista de requisições"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de documento",
+      "onde": "SPRO › MM › Compras › Requisição de compra › Definir tipos de documento",
+      "explicacao": "Intervalo de números, categorias de item permitidas e controle de campos por tipo."
+    },
+    {
+      "item": "Seleção de campos",
+      "onde": "SPRO › MM › Compras › Requisição › Definir layout de tela no nível de documento",
+      "explicacao": "Torna campos obrigatórios, opcionais ou ocultos (ex.: grupo de compradores obrigatório)."
+    },
+    {
+      "item": "Procedimento de liberação",
+      "onde": "SPRO › MM › Compras › Requisição › Procedimento de liberação",
+      "explicacao": "Com classificação (características como valor, centro, grupo de mercadorias) ou workflow flexível."
+    },
+    {
+      "item": "Grupos de compradores",
+      "onde": "SPRO › MM › Compras › Criar grupos de compradores",
+      "explicacao": "Cadastro dos compradores/equipes usados na requisição e no pedido."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "PP (MRP)",
+      "explicacao": "O MRP cria requisições para materiais comprados quando há falta projetada."
+    },
+    {
+      "com": "CO",
+      "explicacao": "Requisições com classificação K/F/P geram compromisso (commitment) no objeto de custo, visível no controle de orçamento."
+    },
+    {
+      "com": "PS / PM",
+      "explicacao": "Ordens de manutenção e projetos geram requisições para componentes não estocáveis."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Requisição de serviço",
+      "explicacao": "Item com categoria D e linhas de serviço; o recebimento é feito por folha de registro de serviço."
+    },
+    {
+      "nome": "Requisição de subcontratação",
+      "explicacao": "Categoria L com componentes a fornecer ao subcontratado."
+    },
+    {
+      "nome": "Compras centralizadas (Central Procurement)",
+      "explicacao": "Requisições de vários sistemas conectados processadas por um hub central de compras."
+    }
+  ],
+  "caso": {
+    "titulo": "Indústria com compras de manutenção descentralizadas",
+    "contexto": "Os técnicos pediam peças por e-mail e o comprador digitava pedidos sem rastreio. Com a requisição, cada pedido nasce com centro de custo e aprovação.",
+    "passos": [
+      "Técnico cria ME51N com classificação K e centro de custo da linha.",
+      "Requisição de 1.280 BRL cai na estratégia do gestor (> 1.000 BRL).",
+      "Gestor aprova no My Inbox.",
+      "Comprador roda ME57, atribui o fornecedor do registro info e gera o pedido.",
+      "Técnico acompanha em ME53N até a entrada."
+    ]
+  },
+  "armadilhas": [
+    "Esquecer a classificação contábil em material de consumo: o custo cai em estoque e não no centro de custo.",
+    "Requisição sem fonte atribuída esperando o ME59N: ela nunca será convertida automaticamente.",
+    "Alterar a requisição depois de liberada reinicia a estratégia se mudar campos de liberação (ex.: valor)."
+  ],
+  "fixacao": {
+    "pergunta": "Por que uma requisição liberada pode continuar parada sem virar pedido?",
+    "resposta": "Porque falta fonte de suprimento atribuída (ou ela não é única). O ME59N só converte requisições liberadas com fonte atribuída; nesses casos o comprador precisa atribuir em ME57 ou criar o pedido manualmente."
+  },
+  "links": [
+    {
+      "id": "proc-mm-02-fontes",
+      "motivo": "Como o sistema decide de qual fornecedor comprar."
+    },
+    {
+      "id": "proc-mm-05-liberacao",
+      "motivo": "A estratégia de liberação que aprova a requisição."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "O documento que nasce da requisição."
+    },
+    {
+      "id": "proc-mm-03-cotacao",
+      "motivo": "Quando o preço precisa ser negociado antes do pedido."
+    },
+    {
+      "id": "base-mm",
+      "motivo": "Visão geral do Procure-to-Pay."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Creating, Changing, and Displaying a Purchase Requisition (ME51N, ME52N, ME53N)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/c680b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Releasing Purchase Requisitions",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/5780b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "ME59N trouble-shooting guide (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/spmm/3362167730.html"
+    }
+  ]
+}

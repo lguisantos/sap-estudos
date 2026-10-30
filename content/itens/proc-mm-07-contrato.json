@@ -1,0 +1,251 @@
+{
+  "id": "proc-mm-07-contrato",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 7,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Contrato de compra",
+  "nivel": "intermediário",
+  "titulo": "Contratos de compra: quantidade, valor e pedidos de liberação",
+  "resumo": "O contrato é um acordo de longo prazo (outline agreement) em que o fornecedor se compromete com preço e condições por um período. Não há datas de entrega: as entregas acontecem por pedidos de liberação (release orders), que consomem a quantidade ou o valor do contrato.",
+  "quando": [
+    "Consumo recorrente com preço negociado anualmente.",
+    "Compras de vários centros com condições únicas.",
+    "Serviços com teto de valor."
+  ],
+  "prerequisitos": [
+    "Fornecedor e material cadastrados.",
+    "Tipos de contrato configurados (MK quantidade, WK valor)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar o contrato",
+      "papel": "Comprador",
+      "transacao": "ME31K · Fiori: Manage Purchase Contracts",
+      "descricao": "Escolher tipo MK (quantidade) ou WK (valor), validade, fornecedor e organização de compras.",
+      "detalhes": [
+        "MK: quantidade-alvo por item.",
+        "WK: valor-alvo no cabeçalho.",
+        "Itens podem ser material ou grupo de mercadorias (categoria M/W)."
+      ],
+      "resultado": "Contrato com validade.",
+      "exemplo": "MK 4600000050: 12.000 PC de 100-200 a 30,00 BRL em 2027."
+    },
+    {
+      "titulo": "Definir condições",
+      "papel": "Comprador",
+      "transacao": "ME31K (Condições)",
+      "descricao": "Preço, escalas e descontos válidos durante o contrato.",
+      "detalhes": [
+        "Condições com validade própria permitem reajuste no meio do contrato.",
+        "Condições de cabeçalho (ex.: desconto global) valem para todos os itens.",
+        "Condições do contrato são copiadas para cada pedido de liberação."
+      ],
+      "resultado": "Preço acordado registrado."
+    },
+    {
+      "titulo": "Liberar o contrato",
+      "papel": "Aprovador",
+      "transacao": "ME35K",
+      "descricao": "Se houver estratégia de liberação, o contrato é aprovado antes de uso.",
+      "detalhes": [
+        "Contratos só são liberados como um todo.",
+        "Enquanto não liberado, o contrato não pode ser referenciado por pedidos.",
+        "A estratégia usa as mesmas características de valor e grupo de compras."
+      ],
+      "resultado": "Contrato utilizável."
+    },
+    {
+      "titulo": "Registrar como fonte",
+      "papel": "Comprador",
+      "transacao": "ME01",
+      "descricao": "Incluir o contrato na lista de fontes para que requisições o proponham.",
+      "detalhes": [
+        "Com fonte fixa, o MRP e o ME57 sugerem o contrato.",
+        "Requisições recebem o contrato como fonte na aba Fonte de suprimento.",
+        "Um contrato pode ser fonte para vários centros se não tiver centro no item."
+      ],
+      "resultado": "Contrato proposto automaticamente."
+    },
+    {
+      "titulo": "Emitir pedido de liberação",
+      "papel": "Comprador",
+      "transacao": "ME21N (ref. contrato) / ME59N",
+      "descricao": "Cada necessidade vira um pedido com referência ao contrato; preço e condições são herdados.",
+      "detalhes": [
+        "O pedido de liberação é um pedido normal com vínculo ao contrato.",
+        "A documentação de liberação no contrato registra cada pedido."
+      ],
+      "resultado": "Pedido emitido e saldo do contrato consumido.",
+      "exemplo": "Pedido 4500012800 de 1.000 PC consome o contrato."
+    },
+    {
+      "titulo": "Acompanhar o consumo",
+      "papel": "Comprador",
+      "transacao": "ME33K (Documentação de liberação) · ME3N",
+      "descricao": "Ver quantidade/valor liberado e saldo.",
+      "detalhes": [
+        "ME3L/ME3M/ME3N listam contratos por fornecedor, material e número.",
+        "Quando a meta é atingida, o sistema pode avisar ou impedir novas liberações conforme a configuração.",
+        "Relatórios de consumo ajudam a negociar o próximo contrato com dados reais."
+      ],
+      "resultado": "Saldo conhecido.",
+      "exemplo": "Liberado 7.500 / saldo 4.500 PC."
+    },
+    {
+      "titulo": "Encerrar ou renovar",
+      "papel": "Comprador",
+      "transacao": "ME32K",
+      "descricao": "No fim da validade, renegociar e criar novo contrato ou estender.",
+      "detalhes": [
+        "Itens podem ser bloqueados ou encerrados.",
+        "Reajuste de preço: nova condição com validade a partir da data do reajuste, sem criar outro contrato.",
+        "Contratos vencidos continuam consultáveis para auditoria."
+      ],
+      "resultado": "Ciclo de contrato fechado."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Contrato",
+      "tabelas": "EKKO (BSTYP = K) · EKPO · EKAB",
+      "descricao": "EKAB guarda a documentação de liberação.",
+      "exemplo": "4600000050"
+    },
+    {
+      "nome": "Pedido de liberação",
+      "tabelas": "EKKO · EKPO (KONNR / KTPNR)",
+      "descricao": "Pedido com referência ao contrato e item.",
+      "exemplo": "4500012800"
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Outline agreement",
+      "explicacao": "Acordo-quadro: contrato ou programa de remessa."
+    },
+    {
+      "termo": "Contrato de quantidade (MK)",
+      "explicacao": "Meta de quantidade por item."
+    },
+    {
+      "termo": "Contrato de valor (WK)",
+      "explicacao": "Meta de valor total."
+    },
+    {
+      "termo": "Pedido de liberação",
+      "explicacao": "Pedido com referência ao contrato; consome o saldo."
+    },
+    {
+      "termo": "Contrato central",
+      "explicacao": "Contrato negociado centralmente e distribuído a vários sistemas/centros."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME31K / ME32K / ME33K",
+      "descricao": "Criar, modificar, exibir contrato"
+    },
+    {
+      "codigo": "ME35K",
+      "descricao": "Liberar contrato"
+    },
+    {
+      "codigo": "ME3L / ME3M / ME3N",
+      "descricao": "Listas de contratos"
+    },
+    {
+      "codigo": "Manage Purchase Contracts",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de contrato",
+      "onde": "SPRO › MM › Compras › Contrato › Definir tipos de documento",
+      "explicacao": "MK e WK, numeração, categorias."
+    },
+    {
+      "item": "Mensagem de valor atingido",
+      "onde": "SPRO › MM › Compras › Contrato / Controle de mensagens",
+      "explicacao": "Aviso ou erro ao ultrapassar meta."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "Lista de fontes / MRP",
+      "explicacao": "Contrato como fonte automática."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Pedidos de liberação seguem o fluxo normal de fatura e pagamento."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Contrato de valor para serviços",
+      "explicacao": "WK com categoria D e limites."
+    },
+    {
+      "nome": "Contrato com itens de grupo de mercadorias",
+      "explicacao": "Cobre qualquer material do grupo, preço no pedido."
+    }
+  ],
+  "caso": {
+    "titulo": "Acordo anual de embalagens",
+    "contexto": "Negociado 12.000 PC por ano a preço fixo.",
+    "passos": [
+      "ME31K tipo MK com 12.000 PC.",
+      "Contrato na lista de fontes com fonte fixa.",
+      "MRP gera requisições com o contrato atribuído.",
+      "ME59N cria pedidos de liberação mensalmente.",
+      "ME33K mostra o consumo para a renegociação."
+    ]
+  },
+  "armadilhas": [
+    "Criar pedido sem referência ao contrato: o saldo não baixa e o preço pode sair diferente.",
+    "Validade vencida: o contrato deixa de ser proposto como fonte."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre contrato e programa de remessa?",
+    "resposta": "O contrato não tem datas de entrega; as entregas vêm de pedidos de liberação. O programa de remessa tem linhas de remessa com datas e quantidades diretamente nele, sem pedido separado."
+  },
+  "links": [
+    {
+      "id": "proc-mm-08-programa-remessa",
+      "motivo": "O outro tipo de acordo-quadro."
+    },
+    {
+      "id": "proc-mm-02-fontes",
+      "motivo": "Contrato como fonte de suprimento."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "O pedido de liberação."
+    },
+    {
+      "id": "proc-sd-07-contrato",
+      "motivo": "O mesmo conceito do lado de vendas."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Contract (S/4HANA)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD_PE/af9ef57f504840d2b81be8667206d485/037fb65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Outline Purchase Agreement",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/f17eb65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Lists of Outline Purchase Agreements (MM-PUR)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/ba06b753128eb44ce10000000a174cb4.html"
+    }
+  ]
+}

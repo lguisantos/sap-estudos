@@ -1,0 +1,244 @@
+{
+  "id": "proc-sd-09-remessa",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 9,
+  "publicado": "2026-10-30",
+  "area": "Expedição (LE-SHP)",
+  "curto": "Remessa, picking e embalagem",
+  "nivel": "intermediário",
+  "titulo": "Remessa de saída: criação, picking e embalagem",
+  "resumo": "A remessa (outbound delivery) inicia a expedição: reúne itens de ordens vencidas por ponto de expedição, define o que separar (picking), como embalar e quando carregar. É o documento que, ao final, recebe a saída de mercadoria.",
+  "quando": [
+    "Toda venda com entrega física.",
+    "Pedidos de transferência entre centros com entrega."
+  ],
+  "prerequisitos": [
+    "Ordem completa, sem bloqueios e com quantidade confirmada.",
+    "Ponto de expedição determinado.",
+    "Depósito de picking determinado."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Selecionar ordens vencidas",
+      "papel": "Expedição",
+      "transacao": "VL10A / VL10C · Create Outbound Deliveries",
+      "descricao": "Lista de ordens com data de seleção de material até a data informada.",
+      "detalhes": [
+        "Agrupa por ponto de expedição, recebedor, itinerário.",
+        "Criação em massa ou individual (VL01N)."
+      ],
+      "resultado": "Ordens a expedir."
+    },
+    {
+      "titulo": "Criar a remessa",
+      "papel": "Expedição",
+      "transacao": "VL01N / VL10x",
+      "descricao": "A remessa copia itens da ordem, determina depósito de picking e verifica disponibilidade de novo.",
+      "detalhes": [
+        "Ponto de expedição: condição de expedição + grupo de carregamento + centro.",
+        "Itinerário define tempo de trânsito e transportadora.",
+        "Pode juntar várias ordens do mesmo recebedor."
+      ],
+      "resultado": "Remessa criada.",
+      "exemplo": "Remessa 80000123 com 200 cx."
+    },
+    {
+      "titulo": "Separar (picking)",
+      "papel": "Armazém",
+      "transacao": "VL02N / WM TO / EWM",
+      "descricao": "Separação física; a quantidade separada é registrada.",
+      "detalhes": [
+        "Com WM/EWM, gera ordem/tarefa de armazém; a confirmação atualiza a remessa.",
+        "Itens relevantes para picking são definidos por categoria de item."
+      ],
+      "resultado": "Quantidade separada = remessa."
+    },
+    {
+      "titulo": "Embalar (opcional)",
+      "papel": "Armazém",
+      "transacao": "VL02N (Embalagem) / HU",
+      "descricao": "Itens embalados em unidades de manuseio (HU) com material de embalagem.",
+      "detalhes": [
+        "Em depósitos com HU, embalagem é obrigatória.",
+        "Peso e volume para o transporte."
+      ],
+      "resultado": "Volumes definidos.",
+      "exemplo": "4 paletes de 50 cx."
+    },
+    {
+      "titulo": "Planejar transporte",
+      "papel": "Transporte",
+      "transacao": "VT01N / TM",
+      "descricao": "Remessas agrupadas em transporte com transportadora e veículo.",
+      "detalhes": [
+        "Com SAP TM, planejamento avançado.",
+        "Custos de frete calculados."
+      ],
+      "resultado": "Carga programada."
+    },
+    {
+      "titulo": "Liberar para saída",
+      "papel": "Expedição",
+      "transacao": "VL02N",
+      "descricao": "Com picking completo (e embalagem, se obrigatória), a remessa está pronta para saída de mercadoria.",
+      "detalhes": [
+        "Status de picking C (completo).",
+        "Documentos de transporte impressos."
+      ],
+      "resultado": "Pronta para a saída."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Remessa de saída",
+      "tabelas": "LIKP · LIPS",
+      "descricao": "Cabeçalho e itens.",
+      "exemplo": "80000123"
+    },
+    {
+      "nome": "Ordem/tarefa de armazém",
+      "tabelas": "LTAK (WM) / EWM",
+      "descricao": "Separação."
+    },
+    {
+      "nome": "Unidade de manuseio",
+      "tabelas": "VEKP · VEPO",
+      "descricao": "Embalagens."
+    },
+    {
+      "nome": "Transporte",
+      "tabelas": "VTTK",
+      "descricao": "Carga."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Ponto de expedição",
+      "explicacao": "Local de onde sai a mercadoria."
+    },
+    {
+      "termo": "Itinerário (route)",
+      "explicacao": "Caminho e tempo de trânsito."
+    },
+    {
+      "termo": "Status de picking",
+      "explicacao": "A, B, C (não, parcial, completo)."
+    },
+    {
+      "termo": "HU",
+      "explicacao": "Unidade de manuseio: embalagem rastreável."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VL10A / VL10C",
+      "descricao": "Lista de remessas devidas"
+    },
+    {
+      "codigo": "VL01N / VL02N / VL03N",
+      "descricao": "Remessa"
+    },
+    {
+      "codigo": "VL06O",
+      "descricao": "Monitor de remessas de saída"
+    },
+    {
+      "codigo": "VT01N",
+      "descricao": "Transporte"
+    },
+    {
+      "codigo": "Create Outbound Deliveries / Manage Outbound Deliveries",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Determinação de ponto de expedição",
+      "onde": "OVL2",
+      "explicacao": "Condição de expedição + grupo de carga + centro."
+    },
+    {
+      "item": "Determinação de itinerário",
+      "onde": "0VRF",
+      "explicacao": "Zona de partida/destino, condição, grupo de transporte."
+    },
+    {
+      "item": "Relevância para picking",
+      "onde": "SPRO › LE › Expedição › Picking › Definir categorias de item relevantes",
+      "explicacao": "Quais itens precisam de picking."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "WM/EWM",
+      "explicacao": "Separação e confirmação."
+    },
+    {
+      "com": "TM",
+      "explicacao": "Planejamento de transporte."
+    },
+    {
+      "com": "MM-IM",
+      "explicacao": "A saída é um movimento de estoque."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Picking descentralizado",
+      "explicacao": "Separação em sistema de armazém externo com confirmação."
+    }
+  ],
+  "caso": {
+    "titulo": "Expedição de 200 caixas",
+    "contexto": "Cliente de outro estado, transportadora contratada.",
+    "passos": [
+      "VL10A seleciona a ordem.",
+      "Remessa criada com itinerário de 2 dias.",
+      "EWM gera tarefas de picking.",
+      "4 HUs embaladas.",
+      "Transporte agrupado com outra remessa da mesma rota."
+    ]
+  },
+  "armadilhas": [
+    "Picking incompleto impede a saída.",
+    "Ponto de expedição errado por grupo de carregamento ausente no material."
+  ],
+  "fixacao": {
+    "pergunta": "O que é necessário para lançar a saída de mercadoria de uma remessa?",
+    "resposta": "Que todos os itens relevantes para picking estejam completamente separados (e embalados, se o depósito exigir HU)."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "Origem da remessa."
+    },
+    {
+      "id": "proc-sd-10-saida",
+      "motivo": "Próximo passo: saída de mercadoria."
+    },
+    {
+      "id": "proc-mm-16-transferencia",
+      "motivo": "STO também usa remessa."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Picking Status",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c7894a248ca14f74aca67f97528e5ad7/901bbf53d25ab64ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Packing for an Outbound Delivery",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/95f56a29a41e4861ba3424598848ee2b/8b9ccf535b804808e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Sales Order Outbound Delivery Scenario",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/25a41481f62e469ba0e61015a0d39d20/610fb16c6f8341e0a0725eeb3abb00ed.html"
+    }
+  ]
+}

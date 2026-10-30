@@ -1,0 +1,222 @@
+{
+  "id": "proc-mm-06-monitoramento",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 6,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Monitoramento de pedidos",
+  "nivel": "intermediário",
+  "titulo": "Monitoramento de pedidos: atrasos, histórico e cobrança",
+  "resumo": "Depois de enviado, o pedido precisa ser acompanhado: o fornecedor confirmou? Está atrasado? Já entrou? Já foi faturado? O SAP oferece listas e apps para cada pergunta, além de cobrança automática de atrasos.",
+  "quando": [
+    "Rotina diária do comprador.",
+    "Fechamento do mês (pedidos recebidos não faturados).",
+    "Gestão de fornecedores (pontualidade)."
+  ],
+  "prerequisitos": [
+    "Pedidos com datas de remessa corretas.",
+    "Chaves de controle de confirmação e níveis de cobrança no pedido/registro info."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Listar pedidos em aberto",
+      "papel": "Comprador",
+      "transacao": "ME2N / ME2L / ME2M · Monitor Purchase Order Items",
+      "descricao": "Seleção por grupo de compradores, fornecedor ou material com escopo 'a fornecer' (WE101) ou 'a faturar' (RE101).",
+      "detalhes": [
+        "ME2N: por número; ME2L: por fornecedor; ME2M: por material.",
+        "Escopo de lista define colunas e filtros (ex.: só itens com quantidade a fornecer)."
+      ],
+      "resultado": "Visão dos itens pendentes."
+    },
+    {
+      "titulo": "Verificar confirmações",
+      "papel": "Comprador",
+      "transacao": "ME2A · ME92F",
+      "descricao": "Itens sem confirmação do fornecedor ou com data confirmada diferente da solicitada.",
+      "detalhes": [
+        "ME92F cobra confirmações pendentes.",
+        "Confirmações podem chegar por EDI (ORDRSP), portal ou ser digitadas pelo comprador em ME22N.",
+        "Itens com chave de confirmação obrigatória e sem confirmação aparecem como pendentes."
+      ],
+      "resultado": "Lista de confirmações a cobrar."
+    },
+    {
+      "titulo": "Identificar atrasos",
+      "papel": "Comprador",
+      "transacao": "ME2N (escopo atrasados) · ME80FN",
+      "descricao": "Itens com data de remessa vencida e quantidade em aberto.",
+      "detalhes": [
+        "ME80FN permite análise flexível com histórico.",
+        "App: Monitor Purchase Order Items com filtro de atraso."
+      ],
+      "resultado": "Lista de atrasos.",
+      "exemplo": "Pedido 4500012345 item 10: 400 PC vencidos em 27/11."
+    },
+    {
+      "titulo": "Cobrar o fornecedor",
+      "papel": "Sistema",
+      "transacao": "ME91F",
+      "descricao": "A cobrança envia lembretes conforme os níveis de cobrança (ex.: 3, 7, 14 dias).",
+      "detalhes": [
+        "Níveis vêm do registro info ou do pedido.",
+        "Contador de cobranças fica no item."
+      ],
+      "resultado": "Fornecedor notificado."
+    },
+    {
+      "titulo": "Analisar o histórico",
+      "papel": "Comprador",
+      "transacao": "ME23N (aba Histórico)",
+      "descricao": "Mostra entradas, devoluções e faturas lançadas contra o item.",
+      "detalhes": [
+        "Diferenças entre quantidade recebida e faturada indicam pendência na GR/IR.",
+        "Colunas do histórico: tipo de movimento, quantidade, valor, documento de material e de fatura.",
+        "Devoluções (122) aparecem como linhas negativas."
+      ],
+      "resultado": "Situação completa do item."
+    },
+    {
+      "titulo": "Encerrar ou ajustar",
+      "papel": "Comprador",
+      "transacao": "ME22N",
+      "descricao": "Item com saldo que não virá: marcar 'remessa final' ou reduzir quantidade; marcar 'fatura final' quando aplicável.",
+      "detalhes": [
+        "Remessa final remove o item das listas de aberto e do MRP.",
+        "Fatura final indica que não virão mais faturas; útil para fechar diferenças de GR/IR.",
+        "Itens totalmente entregues e faturados saem das listas WE101/RE101 automaticamente."
+      ],
+      "resultado": "Pedido coerente com a realidade."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Histórico do pedido",
+      "tabelas": "EKBE",
+      "descricao": "Cada entrada e fatura contra o item."
+    },
+    {
+      "nome": "Confirmações",
+      "tabelas": "EKES",
+      "descricao": "Datas e quantidades confirmadas pelo fornecedor."
+    },
+    {
+      "nome": "Divisões",
+      "tabelas": "EKET",
+      "descricao": "Datas solicitadas e quantidades recebidas."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Escopo de lista",
+      "explicacao": "Pré-seleção das listas ME2x (ex.: WE101 a fornecer, RE101 a faturar)."
+    },
+    {
+      "termo": "Remessa final",
+      "explicacao": "Indicador que fecha o item para entradas e MRP."
+    },
+    {
+      "termo": "Níveis de cobrança",
+      "explicacao": "Dias após o vencimento para cada lembrete."
+    },
+    {
+      "termo": "Confirmação",
+      "explicacao": "Retorno do fornecedor com data e quantidade."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME2N / ME2L / ME2M",
+      "descricao": "Listas de pedidos"
+    },
+    {
+      "codigo": "ME80FN",
+      "descricao": "Análise geral de documentos de compras"
+    },
+    {
+      "codigo": "ME91F",
+      "descricao": "Cobrança de pedidos"
+    },
+    {
+      "codigo": "ME92F",
+      "descricao": "Cobrança de confirmações"
+    },
+    {
+      "codigo": "Monitor Purchase Order Items",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Escopos de lista",
+      "onde": "SPRO › MM › Compras › Relatórios › Manter funções de lista de compras",
+      "explicacao": "Definição de escopos e filtros."
+    },
+    {
+      "item": "Chaves de confirmação",
+      "onde": "SPRO › MM › Compras › Confirmações › Definir chaves de controle",
+      "explicacao": "Tipos de confirmação esperados."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI",
+      "explicacao": "Itens recebidos e não faturados compõem o saldo GR/IR no fechamento."
+    },
+    {
+      "com": "PP",
+      "explicacao": "Atrasos afetam o MRP e a disponibilidade de produção."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Monitoramento em apps",
+      "explicacao": "Overview e KPIs de compras (ex.: entregas atrasadas, valor pendente) em Fiori."
+    }
+  ],
+  "caso": {
+    "titulo": "Rotina de segunda-feira do comprador",
+    "contexto": "Comprador cuida de 300 pedidos.",
+    "passos": [
+      "ME2N com escopo de atrasados para seu grupo.",
+      "ME92F cobra confirmações.",
+      "Liga para os 5 piores atrasos.",
+      "Marca remessa final em itens cancelados pelo fornecedor.",
+      "Envia ao financeiro a lista de recebidos não faturados (RE101)."
+    ]
+  },
+  "armadilhas": [
+    "Não marcar remessa final: o MRP continua esperando entradas que não virão.",
+    "Usar só ME2N sem escopo: lista inclui itens já fechados."
+  ],
+  "fixacao": {
+    "pergunta": "Por que marcar remessa final num item com saldo em aberto?",
+    "resposta": "Para tirar o saldo das listas de pendência e do MRP, que deixa de contar com aquela entrada e passa a planejar nova compra."
+  },
+  "links": [
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "O documento monitorado."
+    },
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "Entradas atualizam o histórico."
+    },
+    {
+      "id": "proc-mm-12-fatura",
+      "motivo": "Faturas atualizam o histórico e a GR/IR."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Lists of Outline Purchase Agreements (MM-PUR)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/ba06b753128eb44ce10000000a174cb4.html"
+    }
+  ]
+}

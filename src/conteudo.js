@@ -32,19 +32,21 @@ function carregarItens(pasta) {
   return { itens, erros };
 }
 
-// Edições semanais mais novas primeiro; depois os fundamentos na ordem da trilha.
+// Processos por módulo, depois edições semanais (mais novas primeiro), depois fundamentos.
+const PESO = { processo: 0, semanal: 1, fundamentos: 2 };
 function ordenar(a, b) {
-  if (a.tipo !== b.tipo) return a.tipo === "semanal" ? -1 : 1;
+  if (a.tipo !== b.tipo) return (PESO[a.tipo] ?? 3) - (PESO[b.tipo] ?? 3);
   if (a.tipo === "semanal") return (b.publicado || "").localeCompare(a.publicado || "") || a.trilha.localeCompare(b.trilha);
+  if (a.tipo === "processo") return (a.modulo || "").localeCompare(b.modulo || "") || (a.ordem || 0) - (b.ordem || 0);
   return (a.ordem || 0) - (b.ordem || 0);
 }
 
 /**
- * Itens que contam como atualização não vista: edições semanais novas ou alteradas
- * desde a última leitura. Fundamentos nunca geram notificação.
+ * Itens que contam como atualização não vista: edições semanais e processos novos ou
+ * alterados desde a última leitura. Fundamentos nunca geram notificação.
  */
 function naoVistos(itens, vistos) {
-  return itens.filter(it => it.tipo === "semanal" && vistos[it.id] !== it.versao);
+  return itens.filter(it => it.tipo !== "fundamentos" && vistos[it.id] !== it.versao);
 }
 
 /** Itens que ainda não geraram notificação nativa (evita repetir a cada sincronização). */

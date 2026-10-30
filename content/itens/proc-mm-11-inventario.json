@@ -1,0 +1,241 @@
+{
+  "id": "proc-mm-11-inventario",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 11,
+  "publicado": "2026-10-30",
+  "area": "Gestão de estoque (MM-IM)",
+  "curto": "Inventário físico",
+  "nivel": "intermediário",
+  "titulo": "Inventário físico: contagem e ajuste de diferenças",
+  "resumo": "O inventário compara o estoque do sistema com a contagem real e lança as diferenças. Tem três etapas: criar o documento de inventário, registrar a contagem e lançar as diferenças, que valoram o ajuste e vão para contas de perda ou ganho.",
+  "quando": [
+    "Inventário anual obrigatório.",
+    "Inventário rotativo (cycle counting) por classe ABC.",
+    "Suspeita de divergência num material."
+  ],
+  "prerequisitos": [
+    "Movimentações do período lançadas.",
+    "Tolerâncias por grupo de usuários para lançar diferenças."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar documento de inventário",
+      "papel": "Almoxarifado",
+      "transacao": "MI01 / MI31 · Create Physical Inventory Documents",
+      "descricao": "Seleciona materiais, depósito e data planejada; pode bloquear movimentações (bloqueio de lançamento).",
+      "detalhes": [
+        "MI31 cria em massa por seleção.",
+        "Com o bloqueio, o material não pode ser movimentado até a contagem ser registrada."
+      ],
+      "resultado": "Documento de inventário criado.",
+      "exemplo": "Doc. 0100000050, 120 itens, depósito 0001."
+    },
+    {
+      "titulo": "Imprimir e contar",
+      "papel": "Almoxarifado",
+      "transacao": "MI21",
+      "descricao": "A lista de contagem vai para as equipes; recomenda-se contagem às cegas (sem quantidade de sistema).",
+      "detalhes": [
+        "Contagens por lote e unidade de medida.",
+        "Coletores móveis ou apps reduzem erro."
+      ],
+      "resultado": "Contagem física feita."
+    },
+    {
+      "titulo": "Registrar a contagem",
+      "papel": "Almoxarifado",
+      "transacao": "MI04 / MI05",
+      "descricao": "As quantidades contadas são digitadas; registrar a contagem é uma alteração do documento.",
+      "detalhes": [
+        "Item não encontrado: quantidade zero.",
+        "MI04/MI05 não permitem incluir novos itens; para isso, MI01/MI09 ou novo documento."
+      ],
+      "resultado": "Contagem gravada."
+    },
+    {
+      "titulo": "Analisar diferenças",
+      "papel": "Controladoria",
+      "transacao": "MI20",
+      "descricao": "Lista de diferenças com quantidade e valor; itens suspeitos podem ser recontados.",
+      "detalhes": [
+        "Recontagem gera novo documento (MI11).",
+        "Diferença acima da tolerância do usuário não pode ser lançada por ele."
+      ],
+      "resultado": "Diferenças validadas.",
+      "exemplo": "Material 100-200: sistema 500, contagem 492, diferença -8 (252,00 BRL)."
+    },
+    {
+      "titulo": "Lançar as diferenças",
+      "papel": "Controladoria",
+      "transacao": "MI07 / MI20",
+      "descricao": "O saldo contábil passa a ser o contado. O sistema gera documento de material (701/702) e lançamento em perdas/ganhos de inventário.",
+      "detalhes": [
+        "Diferença valorada pelo preço do material (standard ou médio).",
+        "Lançamento: D Perdas de inventário (GBB-INV) × C Estoque (BSX), ou o inverso."
+      ],
+      "resultado": "Estoque ajustado."
+    },
+    {
+      "titulo": "Arquivar e analisar",
+      "papel": "Controladoria",
+      "transacao": "MI24 / MIDO",
+      "descricao": "Relatórios de documentos e histórico para auditoria e indicadores.",
+      "detalhes": [
+        "Acompanhar materiais com diferença recorrente.",
+        "Ajustar processos de recebimento e saída."
+      ],
+      "resultado": "Inventário encerrado."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Documento de inventário",
+      "tabelas": "IKPF · ISEG",
+      "descricao": "Cabeçalho e itens com contagem."
+    },
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC (701/702)",
+      "descricao": "Ajuste de quantidade."
+    },
+    {
+      "nome": "Documento contábil",
+      "tabelas": "ACDOCA",
+      "descricao": "Perdas ou ganhos de inventário."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Bloqueio de lançamento",
+      "explicacao": "Impede movimentos do material até a contagem."
+    },
+    {
+      "termo": "Inventário rotativo",
+      "explicacao": "Contagens frequentes por classe ABC (indicador CC no material)."
+    },
+    {
+      "termo": "Tolerância por grupo de usuário",
+      "explicacao": "Valor máximo de diferença que cada usuário pode lançar."
+    },
+    {
+      "termo": "Recontagem",
+      "explicacao": "Novo documento para itens duvidosos."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "MI01 / MI31",
+      "descricao": "Criar documento"
+    },
+    {
+      "codigo": "MI21",
+      "descricao": "Imprimir"
+    },
+    {
+      "codigo": "MI04 / MI05",
+      "descricao": "Registrar / alterar contagem"
+    },
+    {
+      "codigo": "MI20",
+      "descricao": "Lista de diferenças"
+    },
+    {
+      "codigo": "MI07",
+      "descricao": "Lançar diferenças"
+    },
+    {
+      "codigo": "MI11",
+      "descricao": "Recontagem"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tolerâncias",
+      "onde": "SPRO › MM › Gestão de estoque › Inventário físico › Definir tolerâncias para diferenças",
+      "explicacao": "Por grupo de tolerância do usuário."
+    },
+    {
+      "item": "Inventário rotativo",
+      "onde": "SPRO › MM › Gestão de estoque › Inventário físico › Inventário rotativo",
+      "explicacao": "Indicadores CC e frequência."
+    },
+    {
+      "item": "Contas",
+      "onde": "OBYC (GBB-INV, BSX)",
+      "explicacao": "Perdas/ganhos de inventário."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI",
+      "explicacao": "Diferenças afetam resultado."
+    },
+    {
+      "com": "EWM/WM",
+      "explicacao": "Com armazém gerenciado, o ajuste ocorre em duas etapas: posições e depois IM."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Inventário por amostragem",
+      "explicacao": "Contagem estatística de parte do estoque."
+    },
+    {
+      "nome": "Inventário de estoque especial",
+      "explicacao": "Consignação, estoque no fornecedor."
+    }
+  ],
+  "caso": {
+    "titulo": "Inventário anual de dezembro",
+    "contexto": "Fechamento exige inventário completo do depósito 0001.",
+    "passos": [
+      "MI31 cria documentos com bloqueio.",
+      "Equipes contam às cegas com MI21.",
+      "MI04 registra contagens.",
+      "MI20 aponta 6 itens fora do esperado; recontagem MI11.",
+      "MI07 lança diferenças aprovadas."
+    ]
+  },
+  "armadilhas": [
+    "Contar com movimentações pendentes de lançamento: diferença falsa.",
+    "Não usar bloqueio de lançamento em inventário com operação rodando."
+  ],
+  "fixacao": {
+    "pergunta": "Quais as três etapas do inventário no SAP?",
+    "resposta": "Criar o documento de inventário, registrar a contagem e lançar as diferenças."
+  },
+  "links": [
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Movimentos 701/702 de ajuste."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Contas GBB-INV e BSX."
+    },
+    {
+      "id": "base-fi",
+      "motivo": "Impacto no resultado."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Physical Inventory (MM-IM)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/4407b753128eb44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Physical Inventory",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/91b21005dded4984bcccf4a69ae1300c/b162bd534f22b44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Locks in Physical Inventory (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/erpscm/3362167886.html"
+    }
+  ]
+}

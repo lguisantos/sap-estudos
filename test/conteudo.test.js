@@ -8,19 +8,20 @@ const c = require("../src/conteudo");
 
 const ITENS = path.join(__dirname, "..", "content", "itens");
 
-test("carrega itens e ordena semanais antes dos fundamentos", () => {
+test("carrega itens e ordena processos, semanais e fundamentos", () => {
   const { itens, erros } = c.carregarItens(ITENS);
   assert.deepStrictEqual(erros, []);
   assert.ok(itens.length >= 14);
-  assert.strictEqual(itens[0].tipo, "semanal");
+  const tipos = itens.map(i => i.tipo);
+  assert.deepStrictEqual(tipos, [...tipos].sort((a, b) => ["processo", "semanal", "fundamentos"].indexOf(a) - ["processo", "semanal", "fundamentos"].indexOf(b)));
   const fund = itens.filter(i => i.tipo === "fundamentos").map(i => i.ordem);
   assert.deepStrictEqual(fund, [...fund].sort((a, b) => a - b));
   assert.ok(itens.every(i => /^[0-9a-f]{12}$/.test(i.versao)));
 });
 
-test("não vistos: só semanais, e voltam a aparecer quando o conteúdo muda", () => {
+test("não vistos: tudo menos fundamentos, e voltam a aparecer quando o conteúdo muda", () => {
   const { itens } = c.carregarItens(ITENS);
-  const sem = itens.filter(i => i.tipo === "semanal");
+  const sem = itens.filter(i => i.tipo !== "fundamentos");
   assert.deepStrictEqual(c.naoVistos(itens, {}).map(i => i.id), sem.map(i => i.id));
   const vistos = Object.fromEntries(itens.map(i => [i.id, i.versao]));
   assert.strictEqual(c.naoVistos(itens, vistos).length, 0);

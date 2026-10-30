@@ -28,7 +28,7 @@
     },
     {
       "termo": "Determinação de preço",
-      "explicacao": "Procedimento que soma condições: preço base (PPR0 no S/4HANA, PR00 no ECC), descontos, frete e impostos."
+      "explicacao": "Procedimento que soma condições: preço base (PR00 no padrão clássico; PPR0 nas SAP Best Practices do S/4HANA), descontos, frete e impostos."
     },
     {
       "termo": "Fluxo de documentos",

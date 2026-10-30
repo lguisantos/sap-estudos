@@ -1,0 +1,243 @@
+{
+  "id": "proc-mm-13-nf-entrada",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 13,
+  "publicado": "2026-10-30",
+  "area": "Localização Brasil",
+  "curto": "Nota fiscal de entrada",
+  "nivel": "avançado",
+  "titulo": "Nota fiscal de entrada (NF-e) no recebimento e na fatura",
+  "resumo": "No Brasil, toda compra chega com uma NF-e autorizada pela SEFAZ. No SAP, a nota fiscal de entrada é criada a partir da MIRO (ou da MIGO, em alguns cenários) e grava os dados fiscais (CFOP, impostos, chave de acesso). Com o SAP Electronic Invoicing for Brazil (NFE/GRC), o XML recebido é validado e pode automatizar entrada e fatura.",
+  "quando": [
+    "Toda compra com NF-e de fornecedor.",
+    "Devoluções, remessas para industrialização e transferências entre filiais.",
+    "Escrituração fiscal (SPED) a partir dos dados do SAP."
+  ],
+  "prerequisitos": [
+    "Configuração de localização Brasil: tipos de NF, CFOP, leis fiscais, códigos de imposto.",
+    "Fornecedor com CNPJ, região e regime fiscal.",
+    "Material com NCM, origem e utilização."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Receber o XML da NF-e",
+      "papel": "Sistema",
+      "transacao": "SAP Electronic Invoicing for Brazil (Inbound)",
+      "descricao": "O XML enviado pelo fornecedor chega à solução de NF-e, que valida assinatura e autorização na SEFAZ.",
+      "detalhes": [
+        "Processamento automático quando o documento traz dados suficientes; senão, monitores de trabalho manual.",
+        "Portaria (gatekeeper) permite conferir NF-e e CT-e na chegada do caminhão."
+      ],
+      "resultado": "NF-e validada.",
+      "exemplo": "Chave de acesso de 44 dígitos validada."
+    },
+    {
+      "titulo": "Associar ao pedido",
+      "papel": "Fiscal",
+      "transacao": "Monitor de NF-e de entrada",
+      "descricao": "Itens do XML são associados aos itens do pedido; vários itens da NF podem ir para o mesmo item do pedido.",
+      "detalhes": [
+        "Divergências (preço, NCM, CFOP) são tratadas antes do lançamento.",
+        "Sem pedido, a nota fica pendente de tratamento."
+      ],
+      "resultado": "NF-e ligada ao pedido."
+    },
+    {
+      "titulo": "Lançar a entrada",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO 101 (ou automática pela solução)",
+      "descricao": "A entrada é lançada com referência ao pedido e à NF-e.",
+      "detalhes": [
+        "Em cenários como consignação, a solução cria o aviso de recebimento e dispara a entrada.",
+        "Notas fiscais de movimentos sem fatura são geradas pela integração com a gestão de estoque."
+      ],
+      "resultado": "Estoque atualizado com vínculo fiscal."
+    },
+    {
+      "titulo": "Lançar a fatura com dados fiscais",
+      "papel": "Contas a pagar",
+      "transacao": "MIRO (aba Dados NF)",
+      "descricao": "Na MIRO, informar tipo de NF, número, série e chave; o sistema calcula ICMS, IPI, PIS, COFINS e cria a nota fiscal.",
+      "detalhes": [
+        "CFOP determinado por tipo de operação, região do fornecedor e utilização do material.",
+        "Simular mostra impostos e contas antes de gravar.",
+        "Divergência de impostos com o XML deve ser resolvida antes."
+      ],
+      "resultado": "Nota fiscal criada no SAP.",
+      "exemplo": "NF 12345-1, CFOP 1.101, ICMS 18%, IPI 5%."
+    },
+    {
+      "titulo": "Conferir a nota fiscal",
+      "papel": "Fiscal",
+      "transacao": "J1BNFE / J1B3N",
+      "descricao": "A nota gravada pode ser exibida com cabeçalho, itens, impostos e documentos de origem.",
+      "detalhes": [
+        "J_1BNFDOC (cabeçalho), J_1BNFLIN (itens), J_1BNFSTX (impostos).",
+        "Correções fora do processo devem ser evitadas para não desalinhar fiscal e contábil."
+      ],
+      "resultado": "Dados fiscais consistentes."
+    },
+    {
+      "titulo": "Escriturar",
+      "papel": "Fiscal",
+      "transacao": "SPED / livros fiscais",
+      "descricao": "Os dados das notas alimentam a escrituração fiscal (EFD ICMS/IPI, EFD Contribuições).",
+      "detalhes": [
+        "Créditos de ICMS/IPI/PIS/COFINS dependem do CFOP e da utilização.",
+        "A reforma tributária (IBS/CBS) traz novos campos e regras de transição a partir de 2026."
+      ],
+      "resultado": "Obrigações acessórias atendidas."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "XML da NF-e",
+      "tabelas": "Solução NF-e (GRC/DRC)",
+      "descricao": "Documento oficial autorizado pela SEFAZ."
+    },
+    {
+      "nome": "Nota fiscal SAP",
+      "tabelas": "J_1BNFDOC · J_1BNFLIN · J_1BNFSTX",
+      "descricao": "Registro fiscal da entrada."
+    },
+    {
+      "nome": "Fatura MM",
+      "tabelas": "RBKP · RSEG",
+      "descricao": "Fatura de logística que gerou a nota."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "CFOP",
+      "explicacao": "Código fiscal da operação (ex.: 1.101 compra para industrialização dentro do estado)."
+    },
+    {
+      "termo": "Utilização do material",
+      "explicacao": "Industrialização, consumo, revenda: muda créditos e CFOP."
+    },
+    {
+      "termo": "Tipo de nota fiscal",
+      "explicacao": "Controla numeração, se é eletrônica, e o tipo de documento (ex.: compra, devolução)."
+    },
+    {
+      "termo": "Chave de acesso",
+      "explicacao": "Identificador de 44 dígitos da NF-e."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "MIRO",
+      "descricao": "Fatura com dados de NF"
+    },
+    {
+      "codigo": "J1B1N / J1B2N / J1B3N",
+      "descricao": "Criar, modificar, exibir nota fiscal (writer)"
+    },
+    {
+      "codigo": "J1BNFE",
+      "descricao": "Monitor de NF-e (principalmente saída)"
+    },
+    {
+      "codigo": "Monitores de NF-e de entrada",
+      "descricao": "SAP Electronic Invoicing for Brazil"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de nota fiscal",
+      "onde": "SPRO › Componentes multinacionais › Brasil › Nota fiscal › Tipos de NF",
+      "explicacao": "Numeração, eletrônica, categoria."
+    },
+    {
+      "item": "Determinação de CFOP",
+      "onde": "SPRO › Brasil › Determinação de CFOP",
+      "explicacao": "Por tipo de operação, região, utilização."
+    },
+    {
+      "item": "Leis fiscais e impostos",
+      "onde": "SPRO › Brasil › Impostos (ICMS, IPI, PIS, COFINS)",
+      "explicacao": "Códigos de lei e condições de imposto."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM-IV",
+      "explicacao": "A MIRO é o ponto de criação da NF de compra."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Impostos recuperáveis viram crédito."
+    },
+    {
+      "com": "SAP NF-e (DRC/GRC)",
+      "explicacao": "Validação do XML e automação."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Remessa para industrialização",
+      "explicacao": "Saída e retorno com CFOPs próprios (5.901/1.902)."
+    },
+    {
+      "nome": "Consignação",
+      "explicacao": "Entrada e cobrança com notas específicas."
+    }
+  ],
+  "caso": {
+    "titulo": "Compra interestadual de resina",
+    "contexto": "Fornecedor de SP, comprador em GO, material para industrialização.",
+    "passos": [
+      "XML validado na entrada.",
+      "Associado ao pedido 4500012345.",
+      "MIGO 101.",
+      "MIRO com CFOP 2.101, ICMS interestadual e IPI.",
+      "Nota disponível para o SPED."
+    ]
+  },
+  "armadilhas": [
+    "Utilização do material errada no pedido: CFOP e créditos errados.",
+    "Divergência de imposto entre XML e SAP: lançamento bloqueado ou escrituração inconsistente."
+  ],
+  "fixacao": {
+    "pergunta": "Em que transação a nota fiscal de compra normalmente nasce no SAP?",
+    "resposta": "Na MIRO, ao lançar a fatura com os dados da NF (tipo, número, chave); a integração cria o registro J_1BNFDOC/J_1BNFLIN."
+  },
+  "links": [
+    {
+      "id": "proc-mm-12-fatura",
+      "motivo": "A MIRO que gera a nota."
+    },
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "Entrada com referência à NF."
+    },
+    {
+      "id": "proc-sd-12-nf-saida",
+      "motivo": "O lado da emissão da NF-e."
+    },
+    {
+      "id": "proc-mm-14-subcontratacao",
+      "motivo": "Remessa para industrialização."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Nota Fiscal Integration into Inventory Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c5e66d2df826499d9b8c76b8355601c3/cd0e9d52129c6656e10000000a445394.html"
+    },
+    {
+      "titulo": "What Is Inbound Nota Fiscal",
+      "url": "https://help.sap.com/docs/r/75478ef83fbe47b6836f33609268796b/Cloud/en-US/ffaf0ea3291d4ddd9be5e5ba2c641e27.html"
+    },
+    {
+      "titulo": "NF-e Goods Receipt Consignment Process",
+      "url": "https://help.sap.com/docs/SAP_ELECTRONIC_INVOICING_FOR_BRAZIL/e04cbb64541548f1bee0e4cb30fada56/6bef89ee5d694a5bb3f52518e29739e5.html"
+    }
+  ]
+}

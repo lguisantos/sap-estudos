@@ -1,0 +1,258 @@
+{
+  "id": "proc-mm-10-movimentos",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 10,
+  "publicado": "2026-10-30",
+  "area": "Gestão de estoque (MM-IM)",
+  "curto": "Movimentações de estoque",
+  "nivel": "intermediário",
+  "titulo": "Movimentações de estoque: saídas, transferências, reservas e devoluções",
+  "resumo": "Além da entrada por pedido, o estoque muda por consumo, transferências entre depósitos e centros, mudança de tipo de estoque e devoluções. Cada situação tem um tipo de movimento que decide o efeito em quantidade, valor e contabilidade.",
+  "quando": [
+    "Retirada para produção, manutenção ou centro de custo.",
+    "Mudança de local (depósito ou centro).",
+    "Mudança de status (qualidade → livre, livre → bloqueado).",
+    "Devolução de material ao fornecedor."
+  ],
+  "prerequisitos": [
+    "Estoque disponível no tipo e local de origem.",
+    "Objeto de custo válido para consumo.",
+    "Período de estoque aberto."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Planejar com reserva (opcional)",
+      "papel": "Solicitante",
+      "transacao": "MB21 · ordens PP/PM",
+      "descricao": "A reserva garante que o material estará disponível na data. Ordens de produção e manutenção criam reservas automaticamente.",
+      "detalhes": [
+        "MB24/MB25 listam reservas.",
+        "Reservas entram no MRP como necessidade."
+      ],
+      "resultado": "Necessidade registrada.",
+      "exemplo": "Reserva 0000123 de 10 PC para o centro de custo 4110."
+    },
+    {
+      "titulo": "Saída para consumo",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO (A07 Saída) · 201 / 261 / 221",
+      "descricao": "Retirada de estoque para centro de custo (201), ordem (261), projeto (221) ou sucata (551).",
+      "detalhes": [
+        "Com referência à reserva, quantidade e objeto vêm prontos.",
+        "Lançamento: D Consumo (GBB-VBR) × C Estoque (BSX)."
+      ],
+      "resultado": "Estoque reduzido e custo no objeto.",
+      "exemplo": "201: 10 PC para o centro de custo 4110, 315,00 BRL."
+    },
+    {
+      "titulo": "Transferir entre depósitos",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO (A08 Transferência) · 311",
+      "descricao": "Muda o depósito dentro do mesmo centro, sem efeito contábil.",
+      "detalhes": [
+        "Uma etapa (311) ou duas (313 sai / 315 entra) quando há tempo de trânsito.",
+        "Sem lançamento contábil porque a avaliação é no centro."
+      ],
+      "resultado": "Material no novo depósito."
+    },
+    {
+      "titulo": "Transferir entre centros",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO · 301 (1 etapa) / 303-305 (2 etapas)",
+      "descricao": "Muda o centro; pode gerar lançamento se os centros tiverem avaliação diferente.",
+      "detalhes": [
+        "Para controle de transporte e NF, usa-se o pedido de transferência (STO).",
+        "Material para material: 309."
+      ],
+      "resultado": "Estoque no centro de destino."
+    },
+    {
+      "titulo": "Mudar o tipo de estoque",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO · 321 / 343 / 349 / 344",
+      "descricao": "Qualidade → livre (321), bloqueado → livre (343), livre → bloqueado (344).",
+      "detalhes": [
+        "Com QM ativo, a liberação de qualidade é feita pela decisão de uso, não por 321 manual.",
+        "Estoque especial para próprio: 411 com indicador especial (ex.: 411 K para consignação)."
+      ],
+      "resultado": "Status do estoque correto."
+    },
+    {
+      "titulo": "Devolver ao fornecedor",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO (Devolução) · 122 / 161",
+      "descricao": "122: devolução referenciando a entrada; 161: devolução com pedido de devolução (item de devolução).",
+      "detalhes": [
+        "122 estorna a entrada e reabre a quantidade no pedido.",
+        "No Brasil, a devolução exige NF de devolução de saída."
+      ],
+      "resultado": "Estoque e GR/IR ajustados."
+    },
+    {
+      "titulo": "Estornar um lançamento",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO (A03 Estorno) / MBST",
+      "descricao": "Cancela um documento de material com o movimento inverso (ex.: 102 para 101, 202 para 201).",
+      "detalhes": [
+        "O estorno gera novo documento; o original não é apagado.",
+        "Não é possível estornar se houver documento subsequente bloqueando (ex.: fatura em alguns casos)."
+      ],
+      "resultado": "Situação anterior restaurada."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Reserva",
+      "tabelas": "RESB",
+      "descricao": "Necessidade planejada de saída."
+    },
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC",
+      "descricao": "Cada movimento gera um documento."
+    },
+    {
+      "nome": "Documento contábil",
+      "tabelas": "ACDOCA",
+      "descricao": "Quando o movimento tem efeito de valor."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Movimento + estorno",
+      "explicacao": "Todo tipo de movimento tem o seu inverso (n+1)."
+    },
+    {
+      "termo": "Estoque especial",
+      "explicacao": "Indicador que separa estoques de terceiros ou vinculados: K consignação, O no fornecedor (subcontratação), E de ordem de cliente, Q de projeto, W consignação no cliente."
+    },
+    {
+      "termo": "Avaliação por centro",
+      "explicacao": "Por isso transferências entre depósitos não geram contabilidade."
+    },
+    {
+      "termo": "Chave de operação GBB",
+      "explicacao": "Contrapartida de consumo; o modificador de conta (VBR, VNG, VAX) diferencia o tipo de consumo."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "MIGO",
+      "descricao": "Todos os movimentos"
+    },
+    {
+      "codigo": "MB21 / MB22 / MB23",
+      "descricao": "Reservas"
+    },
+    {
+      "codigo": "MB51",
+      "descricao": "Documentos de material"
+    },
+    {
+      "codigo": "MMBE / MB52",
+      "descricao": "Estoques"
+    },
+    {
+      "codigo": "MBST",
+      "descricao": "Estornar documento"
+    },
+    {
+      "codigo": "MB5T",
+      "descricao": "Estoque em trânsito"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de movimento",
+      "onde": "OMJJ",
+      "explicacao": "Copiar e ajustar movimentos (ex.: Z01) e regras de conta."
+    },
+    {
+      "item": "Regras de reserva",
+      "onde": "SPRO › MM › Gestão de estoque › Reservas",
+      "explicacao": "Retenção, movimentos permitidos, dias para retirada."
+    },
+    {
+      "item": "Determinação de contas",
+      "onde": "OBYC (GBB, BSX)",
+      "explicacao": "Contas de consumo por modificador."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "CO",
+      "explicacao": "Consumo cai no centro de custo/ordem."
+    },
+    {
+      "com": "PP / PM",
+      "explicacao": "Ordens geram reservas e consomem com 261."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "Transferências entre centros com CNPJ diferente exigem NF."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Sucata (551)",
+      "explicacao": "Baixa por perda/obsoleto com conta de sucata."
+    },
+    {
+      "nome": "Amostra (333)",
+      "explicacao": "Retirada para amostra."
+    }
+  ],
+  "caso": {
+    "titulo": "Material reprovado e devolvido",
+    "contexto": "Parte do lote veio fora do padrão.",
+    "passos": [
+      "Entrada 101 em controle de qualidade.",
+      "Qualidade aprova 500 e bloqueia 100.",
+      "100 PC em bloqueado.",
+      "Devolução 122 dos 100 PC ao fornecedor.",
+      "Pedido reabre 100 PC; fornecedor reenvia."
+    ]
+  },
+  "armadilhas": [
+    "Usar 201 para ordem de produção: o custo não vai para a ordem (o correto é 261).",
+    "Transferir entre centros com 301 quando existe NF e transporte: perde-se controle fiscal; usar STO."
+  ],
+  "fixacao": {
+    "pergunta": "Por que um 311 não gera documento contábil e um 301 pode gerar?",
+    "resposta": "A avaliação de estoque é por centro. Entre depósitos do mesmo centro o valor não muda; entre centros, o preço pode ser diferente e há mudança de área de avaliação."
+  },
+  "links": [
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "A entrada é o movimento mais comum."
+    },
+    {
+      "id": "proc-mm-11-inventario",
+      "motivo": "Ajustes de inventário também são movimentos."
+    },
+    {
+      "id": "proc-mm-16-transferencia",
+      "motivo": "Transferência com pedido entre centros."
+    },
+    {
+      "id": "proc-mm-15-consignacao",
+      "motivo": "Movimento 411 K de consignação."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Goods Movement Type",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/ee6ff9b281d8448f96b4fe6c89f2bdc8/8b7b5fe73ef54063a2bfcfbe83cebd38.html"
+    },
+    {
+      "titulo": "How to post a stock transfer for Consignment Material (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/erpscm/3362168070.html"
+    }
+  ]
+}

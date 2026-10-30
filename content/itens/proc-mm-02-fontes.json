@@ -1,0 +1,265 @@
+{
+  "id": "proc-mm-02-fontes",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 2,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Fontes de suprimento",
+  "nivel": "intermediário",
+  "titulo": "Determinação de fontes: registro info, lista de fontes e cotas",
+  "resumo": "Antes de comprar, o sistema precisa saber de quem e a que preço. Os dados mestres de compras (registro info, lista de fontes, contrato e repartição de cotas) permitem que a requisição e o MRP proponham o fornecedor certo sem o comprador procurar manualmente.",
+  "quando": [
+    "Materiais comprados com frequência de fornecedores conhecidos.",
+    "Empresa quer obrigar o uso de fornecedores homologados (lista de fontes obrigatória).",
+    "Demanda dividida entre fornecedores por percentual (cotas)."
+  ],
+  "prerequisitos": [
+    "Business Partner com papel de fornecedor ampliado para a organização de compras.",
+    "Material com visão de compras.",
+    "Registro info criado: sem ele não há lista de fontes nem cota."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar o registro info",
+      "papel": "Comprador",
+      "transacao": "ME11 · Fiori: Manage Purchasing Info Records",
+      "descricao": "O registro info liga fornecedor e material (ou grupo de mercadorias) e guarda condições de compra: preço, prazo de entrega, tolerâncias, número do material no fornecedor.",
+      "detalhes": [
+        "Nível geral: dados válidos para todas as organizações de compras.",
+        "Nível organização de compras/centro: preço (condição PB00 no ECC, PPR0 em compras no S/4HANA), prazo, quantidade mínima.",
+        "Tipos: padrão, subcontratação, consignação, pipeline.",
+        "Atualizado automaticamente a partir de cotações e pedidos (indicador 'Registro info atualiz.')."
+      ],
+      "resultado": "Fornecedor e material ligados com preço e prazo.",
+      "exemplo": "Fornecedor 300100 · material 100-200 · 31,50 BRL/PC · 5 dias."
+    },
+    {
+      "titulo": "Manter a lista de fontes",
+      "papel": "Comprador",
+      "transacao": "ME01 · Fiori: Manage Source Lists",
+      "descricao": "A lista de fontes define quais fornecedores (ou contratos) podem fornecer um material num centro e em que período.",
+      "detalhes": [
+        "Fonte fixa: proposta mesmo quando há outras fontes.",
+        "Fonte bloqueada: impede compra daquele fornecedor no período.",
+        "Indicador MRP: 1 = gerar requisição com fonte; 2 = gerar remessa de programa direto.",
+        "Pode ser obrigatória por centro (controle de compras)."
+      ],
+      "resultado": "Fornecedores autorizados por período e centro.",
+      "exemplo": "Centro 1000: 300100 fixo de 01/01 a 31/12; 300200 alternativo."
+    },
+    {
+      "titulo": "Definir repartição de cotas (opcional)",
+      "papel": "Comprador",
+      "transacao": "MEQ1 · Fiori: Manage Quota Arrangements",
+      "descricao": "Quando a demanda é dividida, a cota define o percentual de cada fonte. O sistema calcula o número de cota (quantidade atribuída + base ÷ cota) e escolhe a fonte com menor número.",
+      "detalhes": [
+        "Cada requisição vai inteira para uma única fonte; a divisão acontece ao longo do tempo.",
+        "O uso da cota no material (visão de compras) diz em quais documentos ela vale.",
+        "Simulação disponível pelo menu Extras no monitoramento de cotas."
+      ],
+      "resultado": "Regra de divisão da demanda entre fornecedores.",
+      "exemplo": "300100: 70% · 300200: 30%."
+    },
+    {
+      "titulo": "Gerar a necessidade",
+      "papel": "Sistema (MRP)",
+      "transacao": "MD01N / ME51N",
+      "descricao": "Uma requisição manual ou do MRP chega sem fornecedor definido.",
+      "detalhes": [
+        "No MRP, registros info marcados como 'relevante para fonte automática' são considerados.",
+        "A data de remessa da requisição define qual cota e lista de fontes estão válidas."
+      ],
+      "resultado": "Necessidade pronta para determinação de fonte."
+    },
+    {
+      "titulo": "Determinar a fonte",
+      "papel": "Sistema",
+      "transacao": "ME51N · ME57 (Atribuir fonte)",
+      "descricao": "O sistema procura na ordem: repartição de cotas válida na data, lista de fontes, depois contratos e registros info.",
+      "detalhes": [
+        "Se houver cota: escolhe pela cota.",
+        "Senão, lista de fontes: a fonte fixa vence.",
+        "Sem lista: propõe contratos e registros info existentes para escolha.",
+        "No MRP, com várias fontes válidas: programa de remessa > contrato > registro info; fonte específica do centro vence a sem centro."
+      ],
+      "resultado": "Fonte proposta ou atribuída automaticamente.",
+      "exemplo": "Cota aponta 300200 porque o número de cota dele está menor nesta semana."
+    },
+    {
+      "titulo": "Usar a fonte no pedido",
+      "papel": "Comprador",
+      "transacao": "ME21N / ME59N",
+      "descricao": "O pedido criado a partir da requisição herda fornecedor, preço do registro info e prazo de entrega.",
+      "detalhes": [
+        "Condições do registro info são copiadas para o pedido (podem ser alteradas se permitido).",
+        "O último preço pode ser usado como proposta se configurado."
+      ],
+      "resultado": "Pedido coerente com o acordo vigente."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Registro info",
+      "tabelas": "EINA · EINE · KONP",
+      "descricao": "EINA: dados gerais; EINE: por organização de compras/centro; condições em A0xx/KONP.",
+      "exemplo": "5300001234"
+    },
+    {
+      "nome": "Lista de fontes",
+      "tabelas": "EORD",
+      "descricao": "Uma linha por fornecedor/período/centro."
+    },
+    {
+      "nome": "Repartição de cotas",
+      "tabelas": "EQUK · EQUP",
+      "descricao": "Cabeçalho por material/centro/validade e itens por fonte."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Registro info de compras",
+      "explicacao": "Relação fornecedor × material com preço, prazo e condições; base para propostas no pedido."
+    },
+    {
+      "termo": "Lista de fontes",
+      "explicacao": "Fornecedores permitidos ou bloqueados por material, centro e período."
+    },
+    {
+      "termo": "Fonte fixa",
+      "explicacao": "Fornecedor preferido proposto mesmo havendo outras fontes válidas."
+    },
+    {
+      "termo": "Repartição de cotas",
+      "explicacao": "Divisão percentual da necessidade entre fontes ao longo do tempo."
+    },
+    {
+      "termo": "Fonte automática (MRP)",
+      "explicacao": "Fontes que o MRP pode atribuir sozinho, conforme indicadores no registro info e na lista de fontes."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME11 / ME12 / ME13",
+      "descricao": "Criar, modificar, exibir registro info"
+    },
+    {
+      "codigo": "ME1M",
+      "descricao": "Registros info por material"
+    },
+    {
+      "codigo": "ME01 / ME03",
+      "descricao": "Manter / exibir lista de fontes"
+    },
+    {
+      "codigo": "ME05",
+      "descricao": "Gerar lista de fontes"
+    },
+    {
+      "codigo": "MEQ1 / MEQ3",
+      "descricao": "Manter / exibir cotas"
+    },
+    {
+      "codigo": "MEQM",
+      "descricao": "Monitorar cotas"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Lista de fontes obrigatória",
+      "onde": "SPRO › MM › Compras › Lista de fontes › Definir obrigatoriedade por centro",
+      "explicacao": "Obriga compra apenas de fornecedores na lista."
+    },
+    {
+      "item": "Regras de cota",
+      "onde": "SPRO › MM › Compras › Repartição de cotas › Definir regras de repartição",
+      "explicacao": "Como o número de cota é calculado e arredondado."
+    },
+    {
+      "item": "Uso da cota",
+      "onde": "Mestre de material, visão de compras (campo uso da repartição de cotas)",
+      "explicacao": "Em quais documentos (pedido, requisição, MRP, programa) a cota vale."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "PP (MRP)",
+      "explicacao": "O MRP usa lista de fontes e cotas para gerar requisições já com fornecedor."
+    },
+    {
+      "com": "SD",
+      "explicacao": "Não há impacto direto, mas o prazo de entrega do registro info afeta a ATP de vendas em compras sob encomenda."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Contrato como fonte",
+      "explicacao": "A lista de fontes pode apontar um contrato; o pedido vira pedido de liberação do contrato."
+    },
+    {
+      "nome": "Programa de remessa como fonte",
+      "explicacao": "Com indicador MRP 2, o MRP gera linhas de remessa diretamente no programa."
+    }
+  ],
+  "caso": {
+    "titulo": "Dupla fonte de resina para reduzir risco",
+    "contexto": "A empresa compra resina de dois fornecedores para não depender de um só e quer 70/30.",
+    "passos": [
+      "Registros info para os dois fornecedores.",
+      "Lista de fontes com os dois, sem fonte fixa.",
+      "Cota 70/30 válida no ano.",
+      "MRP gera requisições; cada uma vai inteira para o fornecedor de menor número de cota.",
+      "MEQM mostra a distribuição real ao longo dos meses."
+    ]
+  },
+  "armadilhas": [
+    "Criar cota sem registro info: o sistema não aceita o fornecedor como fonte.",
+    "Duas cotas com a mesma validade para o mesmo material e centro: não permitido.",
+    "Lista de fontes vencida: a requisição fica sem fonte e o ME59N não converte."
+  ],
+  "fixacao": {
+    "pergunta": "Em que ordem o sistema procura uma fonte para a requisição manual?",
+    "resposta": "Primeiro a repartição de cotas válida na data de remessa; depois a lista de fontes (a fonte fixa vence); por fim contratos e registros info existentes, que são propostos para escolha."
+  },
+  "links": [
+    {
+      "id": "proc-mm-01-requisicao",
+      "motivo": "A requisição é quem recebe a fonte."
+    },
+    {
+      "id": "proc-mm-07-contrato",
+      "motivo": "Contratos também são fontes."
+    },
+    {
+      "id": "proc-mm-08-programa-remessa",
+      "motivo": "Programa de remessa como fonte do MRP."
+    },
+    {
+      "id": "base-dados",
+      "motivo": "Dados mestres que sustentam a determinação."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Source Determination",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/9c7fb65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Quota Arrangement",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/8a7fb65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Determining Source of Supply for External Procurement",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/21aead0c98bd4755abdacd91c99e3393/79bbb853dcfcb44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Maintain Source List (MM-PUR)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/9207b753128eb44ce10000000a174cb4.html"
+    }
+  ]
+}

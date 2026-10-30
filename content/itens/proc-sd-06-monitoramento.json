@@ -1,0 +1,225 @@
+{
+  "id": "proc-sd-06-monitoramento",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 6,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Monitoramento de ordens",
+  "nivel": "intermediário",
+  "titulo": "Monitoramento de ordens de venda: carteira, bloqueios e fluxo",
+  "resumo": "Acompanhar ordens é garantir que cada uma chegue à fatura: identificar incompletas, bloqueadas (crédito, remessa, faturamento), atrasadas e com problemas de disponibilidade, e usar o fluxo de documentos para saber em que etapa está.",
+  "quando": [
+    "Rotina diária de vendas e expedição.",
+    "Fechamento do mês (carteira não faturada).",
+    "Atendimento a reclamações de clientes."
+  ],
+  "prerequisitos": [
+    "Ordens com status atualizados.",
+    "Variantes de lista por área de vendas."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Listar a carteira",
+      "papel": "Vendedor",
+      "transacao": "VA05 · Manage Sales Orders",
+      "descricao": "Ordens por cliente, material, período ou pedido do cliente.",
+      "detalhes": [
+        "Filtros por status global e de remessa.",
+        "Exportação para análise."
+      ],
+      "resultado": "Carteira visível."
+    },
+    {
+      "titulo": "Tratar incompletas",
+      "papel": "Vendedor",
+      "transacao": "V.02 · Sales Order Fulfillment",
+      "descricao": "Ordens com campos obrigatórios em falta.",
+      "detalhes": [
+        "Completar pelo log de incompletude.",
+        "App mostra problemas por ordem e item."
+      ],
+      "resultado": "Ordens completas."
+    },
+    {
+      "titulo": "Tratar bloqueios",
+      "papel": "Vendedor",
+      "transacao": "VA14L / VKM1 / VA02",
+      "descricao": "Ordens com bloqueio de remessa (ex.: aguardando pagamento antecipado), de faturamento ou de crédito.",
+      "detalhes": [
+        "VA14L lista ordens com bloqueio de remessa.",
+        "Bloqueio de crédito vai para o analista de crédito."
+      ],
+      "resultado": "Bloqueios resolvidos."
+    },
+    {
+      "titulo": "Verificar atrasos de remessa",
+      "papel": "Expedição",
+      "transacao": "VL10A / V_UC",
+      "descricao": "Ordens cuja data de seleção passou sem remessa.",
+      "detalhes": [
+        "V_UC lista documentos incompletos para remessa.",
+        "Causas comuns: falta de estoque, bloqueio, incompletude."
+      ],
+      "resultado": "Pendências de expedição."
+    },
+    {
+      "titulo": "Consultar o fluxo de documentos",
+      "papel": "Vendedor",
+      "transacao": "VA03 (Fluxo de documentos)",
+      "descricao": "Mostra a cadeia: cotação → ordem → remessa → saída → fatura → documento contábil → NF.",
+      "detalhes": [
+        "Status de cada documento (aberto, concluído).",
+        "Atalho para responder ao cliente com precisão."
+      ],
+      "resultado": "Etapa da ordem conhecida."
+    },
+    {
+      "titulo": "Encerrar itens que não serão atendidos",
+      "papel": "Vendedor",
+      "transacao": "VA02 (Motivo de recusa)",
+      "descricao": "Itens cancelados recebem motivo de recusa para sair da carteira.",
+      "detalhes": [
+        "Libera a necessidade no MRP.",
+        "Permite análise de perdas."
+      ],
+      "resultado": "Carteira limpa."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Ordem",
+      "tabelas": "VBAK · VBAP",
+      "descricao": "Status no próprio documento (S/4HANA)."
+    },
+    {
+      "nome": "Fluxo de documentos",
+      "tabelas": "VBFA",
+      "descricao": "Ligações entre documentos."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Status global",
+      "explicacao": "Situação geral (aberto, em processamento, concluído)."
+    },
+    {
+      "termo": "Bloqueio de remessa",
+      "explicacao": "Impede criar a remessa (cabeçalho ou divisão)."
+    },
+    {
+      "termo": "Bloqueio de faturamento",
+      "explicacao": "Impede faturar até a liberação."
+    },
+    {
+      "termo": "Lista de entregas devidas",
+      "explicacao": "Ordens prontas para remessa (VL10)."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA05",
+      "descricao": "Lista de ordens"
+    },
+    {
+      "codigo": "V.02",
+      "descricao": "Ordens incompletas"
+    },
+    {
+      "codigo": "VA14L",
+      "descricao": "Ordens com bloqueio de remessa"
+    },
+    {
+      "codigo": "V.23",
+      "descricao": "Ordens com bloqueio de faturamento"
+    },
+    {
+      "codigo": "VA03",
+      "descricao": "Fluxo de documentos"
+    },
+    {
+      "codigo": "Sales Order Fulfillment / Track Sales Orders",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Bloqueios",
+      "onde": "OVLS / OVV3",
+      "explicacao": "Motivos de bloqueio de remessa e faturamento."
+    },
+    {
+      "item": "Motivos de recusa",
+      "onde": "OVAG",
+      "explicacao": "Razões de cancelamento."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI",
+      "explicacao": "Crédito e títulos abertos."
+    },
+    {
+      "com": "LE",
+      "explicacao": "Remessas e transporte."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Monitor Fiori",
+      "explicacao": "Sales Order Fulfillment – analisar e resolver problemas."
+    }
+  ],
+  "caso": {
+    "titulo": "Fechamento do mês",
+    "contexto": "Diretoria quer faturar toda a carteira possível.",
+    "passos": [
+      "VA05 da carteira do mês.",
+      "V.02 completa ordens.",
+      "VKM1 trata crédito.",
+      "VL10A cria remessas pendentes.",
+      "VF04 fatura o que saiu."
+    ]
+  },
+  "armadilhas": [
+    "Deixar itens cancelados sem motivo de recusa: aparecem como carteira.",
+    "Olhar só a ordem: o problema pode estar na remessa."
+  ],
+  "fixacao": {
+    "pergunta": "Como descobrir rapidamente em que etapa está uma ordem?",
+    "resposta": "Pelo fluxo de documentos (VA03), que mostra cada documento subsequente e seu status."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "O documento monitorado."
+    },
+    {
+      "id": "proc-sd-05-credito",
+      "motivo": "Bloqueios de crédito."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Pendências de expedição."
+    },
+    {
+      "id": "proc-sd-11-faturamento",
+      "motivo": "Pendências de faturamento."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Sales Order Fulfillment - Analyze and Resolve Issues",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/036d7e70b0814326b582d50f8f256799.html"
+    },
+    {
+      "titulo": "Prerequisites for Processing Deliveries in Sales Orders",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c7894a248ca14f74aca67f97528e5ad7/571bbf53d25ab64ce10000000a174cb4.html"
+    }
+  ]
+}

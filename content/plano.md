@@ -27,3 +27,13 @@ temas novos quando o mercado trouxer algo relevante.
 - [ ] ABAP Unit com test doubles (CDS e SQL test environment)
 - [ ] abapGit, gCTS e CI/CD para ABAP
 - [ ] SAP Build Code e CAP: quando sair do ABAP
+
+## Processos por módulo
+Publicados em 2026-10-30: MM (16) e SD (15). Próximos candidatos:
+- [ ] MM: compra de serviços com folha de registro de serviço (lean services)
+- [ ] MM: avaliação de material, reavaliação de preço e Material Ledger
+- [ ] MM: cockpit de compras centralizadas (Central Procurement)
+- [ ] SD: determinação de mensagens (Output Management com BRF+)
+- [ ] SD: faturamento intercompany
+- [ ] SD: acordos de bônus com contratos de condição (Settlement Management)
+- [ ] FI e CO: mesmos moldes, quando os de MM e SD estiverem revisados

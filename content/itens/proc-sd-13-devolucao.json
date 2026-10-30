@@ -1,0 +1,236 @@
+{
+  "id": "proc-sd-13-devolucao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 13,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Devoluções e créditos",
+  "nivel": "intermediário",
+  "titulo": "Devoluções, notas de crédito e de débito",
+  "resumo": "Quando o cliente devolve mercadoria ou há ajuste de valor, o SAP usa documentos específicos: ordem de devolução (RE) com entrada de devolução e nota de crédito; solicitação de nota de crédito (G2) ou débito (L2) para ajustes só de valor.",
+  "quando": [
+    "Mercadoria com defeito ou enviada errada.",
+    "Desconto concedido depois da fatura.",
+    "Cobrança adicional (frete, diferença de preço)."
+  ],
+  "prerequisitos": [
+    "Fatura original (referência recomendada).",
+    "Motivos de ordem configurados."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar a ordem de devolução",
+      "papel": "Vendedor",
+      "transacao": "VA01 (RE, ref. fatura)",
+      "descricao": "Cria a devolução com referência à fatura, com motivo e bloqueio de faturamento.",
+      "detalhes": [
+        "Categoria de item REN.",
+        "Bloqueio de faturamento até a inspeção."
+      ],
+      "resultado": "Devolução registrada.",
+      "exemplo": "RE 60000012, 20 cx, motivo 'avaria'."
+    },
+    {
+      "titulo": "Receber a mercadoria",
+      "papel": "Expedição",
+      "transacao": "VL01N (LR) · saída 651",
+      "descricao": "Remessa de devolução e entrada (651) em estoque bloqueado de devoluções.",
+      "detalhes": [
+        "No Brasil, NF de devolução emitida pelo cliente ou NF de entrada própria.",
+        "Estoque bloqueado de devolução não é avaliado até decisão."
+      ],
+      "resultado": "Mercadoria recebida."
+    },
+    {
+      "titulo": "Inspecionar e decidir",
+      "papel": "Qualidade",
+      "transacao": "MIGO 453 / QM",
+      "descricao": "Liberar para estoque (453), sucatear ou devolver ao fornecedor.",
+      "detalhes": [
+        "Gestão avançada de devoluções (ARM) automatiza decisões e documentos.",
+        "Decisão define crédito ou substituição."
+      ],
+      "resultado": "Destino definido."
+    },
+    {
+      "titulo": "Liberar o crédito",
+      "papel": "Vendedor",
+      "transacao": "VA02 (tirar bloqueio)",
+      "descricao": "Remove o bloqueio de faturamento da devolução.",
+      "detalhes": [
+        "Ou cria entrega gratuita de reposição.",
+        "Aprovação conforme política."
+      ],
+      "resultado": "Pronto para crédito."
+    },
+    {
+      "titulo": "Emitir nota de crédito",
+      "papel": "Faturamento",
+      "transacao": "VF01 (RE)",
+      "descricao": "Fatura de devolução estorna receita e reduz o título do cliente.",
+      "detalhes": [
+        "D Receita/devoluções × C Cliente.",
+        "No Brasil, NF de entrada de devolução."
+      ],
+      "resultado": "Cliente creditado."
+    },
+    {
+      "titulo": "Ajustes só de valor",
+      "papel": "Vendedor",
+      "transacao": "VA01 (G2 / L2) → VF01",
+      "descricao": "Solicitação de crédito ou débito com referência à fatura, aprovada e faturada.",
+      "detalhes": [
+        "G2 crédito, L2 débito.",
+        "Bloqueio de faturamento para aprovação."
+      ],
+      "resultado": "Valor ajustado."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Ordem de devolução",
+      "tabelas": "VBAK (RE)",
+      "descricao": "Origem do processo."
+    },
+    {
+      "nome": "Remessa de devolução",
+      "tabelas": "LIKP (LR)",
+      "descricao": "Entrada física."
+    },
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC (651/453)",
+      "descricao": "Entrada e liberação."
+    },
+    {
+      "nome": "Nota de crédito",
+      "tabelas": "VBRK (RE/G2)",
+      "descricao": "Crédito ao cliente."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "RE",
+      "explicacao": "Ordem de devolução."
+    },
+    {
+      "termo": "651",
+      "explicacao": "Entrada de devolução em estoque bloqueado."
+    },
+    {
+      "termo": "G2 / L2",
+      "explicacao": "Solicitação de crédito / débito."
+    },
+    {
+      "termo": "ARM",
+      "explicacao": "Advanced Returns Management."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA01 (RE / G2 / L2)",
+      "descricao": "Documentos"
+    },
+    {
+      "codigo": "VL01N",
+      "descricao": "Remessa de devolução"
+    },
+    {
+      "codigo": "MIGO",
+      "descricao": "Liberar estoque (453)"
+    },
+    {
+      "codigo": "VF01",
+      "descricao": "Nota de crédito/débito"
+    },
+    {
+      "codigo": "Manage Customer Returns",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos RE, G2, L2",
+      "onde": "VOV8",
+      "explicacao": "Bloqueios e referência obrigatória."
+    },
+    {
+      "item": "Motivos de ordem",
+      "onde": "OVAU",
+      "explicacao": "Razões de devolução."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM-IM",
+      "explicacao": "Estoque de devoluções."
+    },
+    {
+      "com": "FI-AR",
+      "explicacao": "Crédito ao cliente."
+    },
+    {
+      "com": "QM",
+      "explicacao": "Inspeção."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Devolução com troca",
+      "explicacao": "Entrega gratuita de reposição."
+    },
+    {
+      "nome": "ARM",
+      "explicacao": "Devolução ao fornecedor automatizada."
+    }
+  ],
+  "caso": {
+    "titulo": "Caixas avariadas",
+    "contexto": "Cliente devolve 20 cx avariadas.",
+    "passos": [
+      "VA01 RE ref. fatura.",
+      "Entrada 651.",
+      "Qualidade decide sucata.",
+      "Bloqueio retirado.",
+      "VF01 RE credita 931,20."
+    ]
+  },
+  "armadilhas": [
+    "Criar devolução sem referência: preço e impostos errados.",
+    "Esquecer a NF de devolução."
+  ],
+  "fixacao": {
+    "pergunta": "Por que a ordem de devolução nasce com bloqueio de faturamento?",
+    "resposta": "Para que o crédito só seja emitido depois de receber e inspecionar a mercadoria."
+  },
+  "links": [
+    {
+      "id": "proc-sd-11-faturamento",
+      "motivo": "Fatura de referência."
+    },
+    {
+      "id": "proc-sd-12-nf-saida",
+      "motivo": "NF de devolução."
+    },
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Estoque bloqueado de devolução."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Sales Returns Processing",
+      "url": "https://help.sap.com/docs/SAP_ERP/78e0627c34ef43879d72718e21ea517b/9976b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Advanced Returns Management for Customer Returns",
+      "url": "https://help.sap.com/docs/SAP_ERP/78e0627c34ef43879d72718e21ea517b/ef17554b70b946e588cf4fb378fa4622.html"
+    }
+  ]
+}

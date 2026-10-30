@@ -1,0 +1,235 @@
+{
+  "id": "proc-sd-12-nf-saida",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 12,
+  "publicado": "2026-10-30",
+  "area": "Localização Brasil",
+  "curto": "Nota fiscal de saída (NF-e)",
+  "nivel": "avançado",
+  "titulo": "NF-e de saída: autorização na SEFAZ, DANFE e cancelamento",
+  "resumo": "No Brasil, a fatura de venda gera a nota fiscal no SAP, que é transmitida como NF-e à SEFAZ pela solução de NF-e. Só com a autorização a mercadoria pode circular. O monitor J1BNFE acompanha status, permite reenviar, cancelar e emitir carta de correção.",
+  "quando": [
+    "Toda venda, devolução, remessa e transferência com circulação de mercadoria."
+  ],
+  "prerequisitos": [
+    "Configuração de localização Brasil e tipos de NF eletrônica.",
+    "Solução de NF-e (SAP Electronic Invoicing for Brazil / Document Compliance) conectada à SEFAZ.",
+    "Certificado digital válido."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Gerar a nota fiscal",
+      "papel": "Sistema",
+      "transacao": "VF01",
+      "descricao": "Ao gravar a fatura, a nota fiscal é criada com CFOP, impostos e dados do cliente.",
+      "detalhes": [
+        "Tipo de NF vem da categoria de faturamento/item.",
+        "Numeração NF-e própria por série."
+      ],
+      "resultado": "Nota fiscal no SAP.",
+      "exemplo": "NF 000045678 série 1."
+    },
+    {
+      "titulo": "Transmitir à SEFAZ",
+      "papel": "Sistema",
+      "transacao": "NF-e (GRC/DRC)",
+      "descricao": "O XML é assinado e enviado; a SEFAZ valida e responde.",
+      "detalhes": [
+        "Envio síncrono ou em lote.",
+        "Monitor de status do serviço mostra disponibilidade da SEFAZ (107 = disponível)."
+      ],
+      "resultado": "XML transmitido."
+    },
+    {
+      "titulo": "Receber autorização",
+      "papel": "Sistema",
+      "transacao": "J1BNFE",
+      "descricao": "Com autorização (código 100), a NF-e recebe protocolo e a fatura pode ser impressa.",
+      "detalhes": [
+        "Rejeição: corrigir dados e reenviar.",
+        "Monitor é o ponto único de status e download do XML."
+      ],
+      "resultado": "NF-e autorizada."
+    },
+    {
+      "titulo": "Imprimir DANFE e liberar carga",
+      "papel": "Expedição",
+      "transacao": "Output / J1BNFE",
+      "descricao": "O DANFE acompanha a mercadoria.",
+      "detalhes": [
+        "Sem autorização, a carga não deve sair.",
+        "XML enviado ao cliente."
+      ],
+      "resultado": "Mercadoria em circulação."
+    },
+    {
+      "titulo": "Corrigir ou cancelar",
+      "papel": "Fiscal",
+      "transacao": "J1BNFE (CC-e / Cancelar)",
+      "descricao": "Carta de correção para erros permitidos; cancelamento por evento dentro do prazo legal.",
+      "detalhes": [
+        "Cancelamento antes da autorização: J1BNFE › Documento fiscal › Cancelar › Cancelar antes da autorização.",
+        "Cancelar a fatura (VF11) junto com a NF-e."
+      ],
+      "resultado": "Situação regularizada."
+    },
+    {
+      "titulo": "Contingência",
+      "papel": "Fiscal",
+      "transacao": "J1BNFE (contingência)",
+      "descricao": "Com a SEFAZ indisponível, emite-se em contingência (SVC, EPEC) e regulariza-se depois.",
+      "detalhes": [
+        "Monitor de lote permite encerrar processos travados.",
+        "Status 99 = processo concluído."
+      ],
+      "resultado": "Operação mantida."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Fatura",
+      "tabelas": "VBRK · VBRP",
+      "descricao": "Origem."
+    },
+    {
+      "nome": "Nota fiscal",
+      "tabelas": "J_1BNFDOC · J_1BNFLIN · J_1BNFE_ACTIVE",
+      "descricao": "J_1BNFE_ACTIVE guarda o status eletrônico."
+    },
+    {
+      "nome": "XML e protocolo",
+      "tabelas": "Solução NF-e",
+      "descricao": "Documentos legais a guardar."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Autorização (100)",
+      "explicacao": "NF-e válida para circular."
+    },
+    {
+      "termo": "CC-e",
+      "explicacao": "Carta de correção eletrônica."
+    },
+    {
+      "termo": "Cancelamento",
+      "explicacao": "Evento enviado à SEFAZ no prazo legal."
+    },
+    {
+      "termo": "Contingência",
+      "explicacao": "Emissão quando a SEFAZ está indisponível."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "J1BNFE",
+      "descricao": "Monitor de NF-e"
+    },
+    {
+      "codigo": "J1B3N",
+      "descricao": "Exibir nota fiscal"
+    },
+    {
+      "codigo": "VF01 / VF11",
+      "descricao": "Fatura e cancelamento"
+    },
+    {
+      "codigo": "Monitores de NF-e (outbound/batch)",
+      "descricao": "SAP Electronic Invoicing for Brazil"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de NF eletrônica",
+      "onde": "SPRO › Brasil › Nota fiscal › Tipos de NF",
+      "explicacao": "Série, numeração, eletrônica."
+    },
+    {
+      "item": "Conexão SEFAZ",
+      "onde": "Solução NF-e",
+      "explicacao": "Certificados e serviços."
+    },
+    {
+      "item": "CFOP e impostos",
+      "onde": "SPRO › Brasil",
+      "explicacao": "Saída por região e operação."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "SD-BIL",
+      "explicacao": "Fatura cria a NF."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Impostos a recolher."
+    },
+    {
+      "com": "SPED",
+      "explicacao": "Escrituração das saídas."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "NFS-e",
+      "explicacao": "Nota de serviço municipal."
+    },
+    {
+      "nome": "CT-e",
+      "explicacao": "Conhecimento de transporte."
+    }
+  ],
+  "caso": {
+    "titulo": "Rejeição por CFOP",
+    "contexto": "SEFAZ rejeitou NF-e de venda interestadual.",
+    "passos": [
+      "J1BNFE mostra rejeição.",
+      "Fiscal corrige determinação de CFOP.",
+      "Fatura cancelada e refeita.",
+      "Nova NF-e autorizada.",
+      "DANFE liberado."
+    ]
+  },
+  "armadilhas": [
+    "Deixar NF-e rejeitada sem tratamento: mercadoria parada.",
+    "Cancelar fatura e esquecer a NF-e."
+  ],
+  "fixacao": {
+    "pergunta": "Onde se acompanha o status das NF-e de saída no SAP?",
+    "resposta": "No monitor J1BNFE, ponto único de status, reenvio, cancelamento, CC-e e download do XML."
+  },
+  "links": [
+    {
+      "id": "proc-sd-11-faturamento",
+      "motivo": "A fatura que gera a NF."
+    },
+    {
+      "id": "proc-mm-13-nf-entrada",
+      "motivo": "O lado da entrada."
+    },
+    {
+      "id": "proc-sd-13-devolucao",
+      "motivo": "NF de devolução."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "NF-e Monitor (Outbound)",
+      "url": "https://help.sap.com/docs/r/e04cbb64541548f1bee0e4cb30fada56/10.0.30/en-US/cfdc8a52e33cac44e10000000a44176d.html"
+    },
+    {
+      "titulo": "Cancellation Prior to Authorization",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c5e66d2df826499d9b8c76b8355601c3/92e0cf8bb66d4cecbe751376a797a0e1.html"
+    },
+    {
+      "titulo": "NF-e Service Status Monitor (Outbound)",
+      "url": "https://help.sap.com/docs/r/e04cbb64541548f1bee0e4cb30fada56/10.0.31/en-US/2c928b52138c6f54e10000000a44176d.html"
+    }
+  ]
+}

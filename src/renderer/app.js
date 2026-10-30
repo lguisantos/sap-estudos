@@ -4,7 +4,7 @@ const $ = id => document.getElementById(id);
 
 const st = {
   itens: [], porId: {}, naoVistos: new Set(), notas: {}, config: {}, chat: [],
-  atual: null, view: "estudo", trilha: "todas", busca: "", respondendo: false,
+  atual: null, view: "estudo", trilha: "todas", busca: "", respondendo: false, fechados: new Set(),
 };
 
 /* ---------- utilidades ---------- */
@@ -27,25 +27,35 @@ const wikiLink = nome => { const id = resolver(nome); return id ? `<button class
 /* ---------- lista lateral ---------- */
 function filtrados() {
   const q = st.busca.toLowerCase();
-  return st.itens.filter(it => (st.trilha === "todas" || it.trilha === st.trilha) && (!q || JSON.stringify(it).toLowerCase().includes(q)));
+  const passa = it => st.trilha === "todas" || it.trilha === st.trilha || it.modulo === st.trilha;
+  return st.itens.filter(it => passa(it) && (!q || JSON.stringify(it).toLowerCase().includes(q)));
 }
 function linha(it) {
   const novo = st.naoVistos.has(it.id);
   const cls = ["it", estudado(it.id) ? "done" : "", novo ? "novo" : ""].join(" ");
-  const sub = it.tipo === "semanal" ? `${dataBR(it.publicado)}` : `fundamento ${it.ordem}`;
+  const sub = it.tipo === "semanal" ? `${dataBR(it.publicado)}` : it.tipo === "processo" ? `${esc(it.area)}` : `fundamento ${it.ordem}`;
   return `<button class="${cls}" data-abrir="${it.id}" aria-current="${it.id === st.atual}">
     <span class="dot" aria-hidden="true"></span>
     <span><span class="t">${esc(it.curto)}${novo ? '<span class="pill novo">novo</span>' : ""}</span>
-    <span class="d">${sub}<span class="pill ${it.trilha}">${rotulo(it.trilha)}</span></span></span></button>`;
+    <span class="d">${sub}${it.tipo === "processo" ? "" : `<span class="pill ${it.trilha}">${rotulo(it.trilha)}</span>`}</span></span></button>`;
 }
 function renderLista() {
   const its = filtrados();
-  const sem = its.filter(i => i.tipo === "semanal");
-  const fun = its.filter(i => i.tipo !== "semanal");
-  let html = "";
-  if (sem.length) html += `<p class="grp">Edições semanais</p>` + sem.map(linha).join("");
-  if (fun.length) html += `<p class="grp">Fundamentos</p>` + fun.map(linha).join("");
+  const grupos = [
+    ["proc-MM", "Processos MM · Materiais", its.filter(i => i.tipo === "processo" && i.modulo === "MM")],
+    ["proc-SD", "Processos SD · Vendas", its.filter(i => i.tipo === "processo" && i.modulo === "SD")],
+    ["semanal", "Edições semanais", its.filter(i => i.tipo === "semanal")],
+    ["fund", "Fundamentos", its.filter(i => i.tipo === "fundamentos")],
+  ];
+  // Grupos recolhíveis; a busca abre todos para mostrar os resultados.
+  const html = grupos.filter(g => g[2].length).map(([k, nome, lista]) => {
+    const aberto = st.busca || !st.fechados.has(k) || lista.some(i => i.id === st.atual);
+    return `<details class="grupo" data-grupo="${k}"${aberto ? " open" : ""}><summary class="grp">${nome} <span class="cnt">${lista.length}</span></summary>${lista.map(linha).join("")}</details>`;
+  }).join("");
   $("lista").innerHTML = html || `<p class="empty">Nada encontrado.</p>`;
+  $("lista").querySelectorAll("details.grupo").forEach(d => d.addEventListener("toggle", () => {
+    if (d.open) st.fechados.delete(d.dataset.grupo); else st.fechados.add(d.dataset.grupo);
+  }));
 }
 
 /* ---------- novidades ---------- */
@@ -55,7 +65,7 @@ function renderSino() {
   $("bell-count").textContent = n > 9 ? "9+" : n;
   const lista = st.itens.filter(i => st.naoVistos.has(i.id));
   $("pop-lista").innerHTML = lista.length
-    ? lista.map(i => `<button class="pop-item" data-abrir="${i.id}"><b>${esc(i.titulo)}</b><small>${rotulo(i.trilha)} · ${dataBR(i.publicado)} · ${esc(i.area)}</small></button>`).join("")
+    ? lista.map(i => `<button class="pop-item" data-abrir="${i.id}"><b>${esc(i.titulo)}</b><small>${i.tipo === "processo" ? "Processo " + esc(i.modulo) : rotulo(i.trilha)} · ${dataBR(i.publicado)} · ${esc(i.area)}</small></button>`).join("")
     : `<p class="empty pad">Você está em dia. A próxima edição chega na sexta às 9h.</p>`;
   desenharSelo(n);
 }
@@ -76,15 +86,20 @@ function renderItem() {
   if (!it) { $("reader").innerHTML = `<p class="empty">Selecione um tema na lista.</p>`; return; }
   const bl = backlinks(it.id);
   const sec = (titulo, corpo) => `<section class="blk"><h3>${titulo}</h3>${corpo}</section>`;
-  let h = `<div class="meta"><span class="area">${esc(it.area)}</span><span>${rotulo(it.trilha)} · ${esc(it.nivel)}</span>
-    <span>${it.tipo === "semanal" ? "Edição de " + dataBR(it.publicado) : "Fundamento " + it.ordem + " de 12"}</span></div>
+  const onde = it.tipo === "semanal" ? "Edição de " + dataBR(it.publicado)
+    : it.tipo === "processo" ? `Processo ${esc(it.modulo)} · ${esc(it.area)}` : "Fundamento " + it.ordem + " de 12";
+  let h = `<div class="meta"><span class="area">${esc(it.tipo === "processo" ? it.modulo : it.area)}</span><span>${rotulo(it.trilha)} · ${esc(it.nivel)}</span>
+    <span>${onde}</span></div>
     <h2>${esc(it.titulo)}</h2><p class="lede">${esc(it.resumo)}</p>`;
   if (it.novidades && it.novidades.length) h += sec("O que há de novo no mercado", `<div class="news">${it.novidades.map(n => `<div class="news-i"><b>${esc(n.titulo)}</b><p>${esc(n.resumo)}</p><button class="ext" data-url="${esc(n.url)}">${esc(n.fonte || "Fonte")}</button></div>`).join("")}</div>`);
+  if (it.tipo === "processo") h += window.renderProcesso(it, sec);
+  else {
   h += sec("Conceitos-chave", `<dl class="terms">${it.conceitos.map(c => `<dt>${esc(c.termo)}</dt><dd>${esc(c.explicacao)}</dd>`).join("")}</dl>`);
   h += sec("Transações e apps para praticar", `<div class="tcodes">${it.transacoes.map(t => `<div class="tc"><code>${esc(t.codigo)}</code><span>${esc(t.descricao)}</span></div>`).join("")}</div>`);
   if (it.codigo) h += sec("Código comentado", `<p class="codetitle">${esc(it.codigo.titulo || "")}</p><pre class="code"><code>${esc(it.codigo.conteudo)}</code></pre><p class="codeexp">${esc(it.codigo.explicacao || "")}</p>`);
   h += sec("No mundo real", `<div class="case"><p class="who">${esc(it.caso.titulo)}</p><p>${esc(it.caso.contexto)}</p><ol>${it.caso.passos.map(p => `<li>${esc(p)}</li>`).join("")}</ol></div>`);
   h += sec("Armadilhas comuns", `<ul class="plain">${it.armadilhas.map(a => `<li>${esc(a)}</li>`).join("")}</ul>`);
+  }
   h += sec("Pergunta de fixação", `<p class="quiz">${esc(it.fixacao.pergunta)}</p><details class="ans"><summary>Ver resposta comentada</summary><p>${esc(it.fixacao.resposta)}</p></details>
     <p class="quiz-cta"><button class="link" id="btn-quiz">Discutir minha resposta com o Claude →</button></p>`);
   const links = (it.links || []).filter(l => st.porId[l.id]);
@@ -197,15 +212,17 @@ $("btn-nova").onclick = async () => { await window.sap.novaConversa(); st.chat =
 /* ---------- mapa ---------- */
 function renderMapa() {
   const svg = $("mapsvg"), cx = 500, cy = 380;
-  const fund = st.itens.filter(i => i.tipo !== "semanal").sort((a, b) => a.ordem - b.ordem);
+  const fund = st.itens.filter(i => i.tipo === "fundamentos").sort((a, b) => a.ordem - b.ordem);
   const sem = st.itens.filter(i => i.tipo === "semanal").sort((a, b) => a.publicado.localeCompare(b.publicado));
+  const proc = st.itens.filter(i => i.tipo === "processo");
   const pos = {};
   const anel = (lista, r, giro) => lista.forEach((it, k) => {
     const a = -Math.PI / 2 + giro + k * 2 * Math.PI / Math.max(lista.length, 1);
-    pos[it.id] = [cx + r * Math.cos(a), cy + r * Math.sin(a), Math.cos(a)];
+    pos[it.id] = [cx + r * Math.cos(a), cy + r * Math.sin(a), Math.cos(a), a];
   });
   anel(fund, 175, 0);
-  anel(sem, 320, Math.PI / Math.max(sem.length, 1));
+  anel(sem, 300, Math.PI / Math.max(sem.length, 1));
+  anel(proc, 470, 0);
   const vistos = new Set(); let arestas = "";
   for (const it of st.itens) for (const l of it.links || []) {
     if (!pos[l.id]) continue;
@@ -214,7 +231,13 @@ function renderMapa() {
     arestas += `<line class="edge" data-a="${it.id}" data-b="${l.id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
   }
   const nos = st.itens.map(it => {
-    const [x, y, c] = pos[it.id];
+    const [x, y, c, ang] = pos[it.id];
+    if (it.tipo === "processo") {
+      // Rótulo radial, apontando para fora, sempre legível (vira no lado esquerdo).
+      const graus = ang * 180 / Math.PI, esq = Math.cos(ang) < 0;
+      const cls = ["node", "processo", it.modulo, estudado(it.id) ? "done" : "", st.naoVistos.has(it.id) ? "novo" : ""].join(" ");
+      return `<g class="${cls}" data-abrir="${it.id}" tabindex="0" role="link" aria-label="${esc(it.curto)}"><circle cx="${x}" cy="${y}" r="7"/><text transform="translate(${x},${y}) rotate(${esq ? graus + 180 : graus})" x="${esq ? -12 : 12}" y="4" text-anchor="${esq ? "end" : "start"}">${esc(it.modulo)} · ${esc(it.curto)}</text></g>`;
+    }
     const lado = c > 0.25 ? "start" : c < -0.25 ? "end" : "middle";
     const dx = lado === "start" ? 14 : lado === "end" ? -14 : 0, dy = lado === "middle" ? (y < cy ? -16 : 24) : 4;
     const cls = ["node", it.tipo, estudado(it.id) ? "done" : "", st.naoVistos.has(it.id) ? "novo" : ""].join(" ");
@@ -223,7 +246,8 @@ function renderMapa() {
   svg.innerHTML = arestas + nos;
   // Enquadra o desenho no conteúdo real (rótulos incluídos) para não sobrar espaço vazio.
   const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
-  const x0 = Math.min(...xs) - 200, y0 = Math.min(...ys) - 40, x1 = Math.max(...xs) + 200, y1 = Math.max(...ys) + 50;
+  const m = proc.length ? 230 : 0;
+  const x0 = Math.min(...xs) - 200 - m / 2, y0 = Math.min(...ys) - 40 - m, x1 = Math.max(...xs) + 200 + m / 2, y1 = Math.max(...ys) + 50 + m;
   svg.setAttribute("viewBox", `${x0} ${y0} ${x1 - x0} ${y1 - y0}`);
   svg.querySelectorAll(".node").forEach(g => {
     const id = g.dataset.abrir;

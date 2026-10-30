@@ -45,6 +45,8 @@
       <button data-trilha="todas" aria-pressed="true">Todas</button>
       <button data-trilha="funcional" aria-pressed="false">Funcional</button>
       <button data-trilha="tecnico" aria-pressed="false">Técnico</button>
+      <button data-trilha="MM" aria-pressed="false">MM</button>
+      <button data-trilha="SD" aria-pressed="false">SD</button>
     </div>
     <input type="search" id="busca" placeholder="Buscar tema, transação, conceito…">
     <div id="lista"></div>
@@ -84,7 +86,7 @@
 
 <section class="full" id="v-mapa" hidden>
   <h2>Mapa de conexões</h2>
-  <p class="sub">Fundamentos no anel interno, edições semanais no externo. Passe o mouse para ver as ligações; clique para abrir. Verde = estudado.</p>
+  <p class="sub">Fundamentos no centro, edições semanais no anel do meio e processos de MM e SD no anel externo. Passe o mouse para ver as ligações; clique para abrir. Verde = estudado.</p>
   <div class="mapbox"><svg id="mapsvg" viewBox="0 0 1000 760" role="img" aria-label="Grafo de conexões entre os temas"></svg></div>
 </section>
 
@@ -125,6 +127,7 @@
 </section>
 
 <script src="markdown.js"></script>
+<script src="processo.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

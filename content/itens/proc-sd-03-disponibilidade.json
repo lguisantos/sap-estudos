@@ -1,0 +1,243 @@
+{
+  "id": "proc-sd-03-disponibilidade",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 3,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Verificação de disponibilidade",
+  "nivel": "intermediário",
+  "titulo": "Verificação de disponibilidade (ATP) e transferência de necessidades",
+  "resumo": "Ao incluir um item na ordem, o SAP verifica se o material estará disponível na data necessária (Available-to-Promise). Considera estoque, entradas e saídas planejadas e o tempo de reposição. O resultado é a data e a quantidade confirmadas, e a necessidade é passada ao MRP.",
+  "quando": [
+    "Toda ordem com item relevante para disponibilidade.",
+    "Reagendamento quando o estoque muda (backorder).",
+    "Alocação de produtos escassos entre clientes."
+  ],
+  "prerequisitos": [
+    "Grupo de verificação no material (visão MRP/vendas).",
+    "Regra de verificação no tipo de transação.",
+    "Agendamento de expedição configurado (tempos de picking, carga, transporte)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Agendamento de expedição",
+      "papel": "Sistema",
+      "transacao": "VA01 (agendamento)",
+      "descricao": "A partir da data desejada, calcula para trás: data de seleção de material, carga e saída de mercadoria.",
+      "detalhes": [
+        "Tempos vêm do ponto de expedição e do itinerário (trânsito).",
+        "Se a data de seleção já passou, recalcula para frente."
+      ],
+      "resultado": "Data de disponibilidade necessária.",
+      "exemplo": "Entrega 25/11 → saída 23/11 → seleção 22/11."
+    },
+    {
+      "titulo": "Verificar ATP",
+      "papel": "Sistema",
+      "transacao": "VA01 / CO09",
+      "descricao": "Compara a quantidade necessária com estoque e elementos do MRP dentro do escopo de verificação.",
+      "detalhes": [
+        "Escopo definido por grupo de verificação + regra (A para estoque).",
+        "Inclui ou exclui: estoque em controle de qualidade, pedidos de compra, ordens de produção, reservas.",
+        "Tempo de reposição: se considerado, após ele tudo é confirmado."
+      ],
+      "resultado": "Quantidade disponível por data."
+    },
+    {
+      "titulo": "Propor confirmação",
+      "papel": "Sistema",
+      "transacao": "Tela de disponibilidade",
+      "descricao": "Opções: entrega completa em data posterior, entrega parcial agora e resto depois, ou entrega no prazo da quantidade disponível.",
+      "detalhes": [
+        "Acordo de entrega parcial/completa do cliente influencia.",
+        "Divisões de remessa refletem a confirmação."
+      ],
+      "resultado": "Proposta ao vendedor.",
+      "exemplo": "120 cx em 22/11, 80 cx em 29/11."
+    },
+    {
+      "titulo": "Escolher e confirmar",
+      "papel": "Vendedor",
+      "transacao": "VA01",
+      "descricao": "O vendedor aceita uma proposta; as divisões confirmadas são gravadas.",
+      "detalhes": [
+        "Quantidade confirmada é reservada logicamente para a ordem.",
+        "Prazo comunicado ao cliente."
+      ],
+      "resultado": "Divisões confirmadas."
+    },
+    {
+      "titulo": "Transferir necessidades",
+      "papel": "Sistema",
+      "transacao": "VBBE / MD04",
+      "descricao": "A necessidade vai ao MRP (individual ou somada por dia, conforme grupo de verificação).",
+      "detalhes": [
+        "Grupo 01: necessidades diárias; 02: individuais.",
+        "MRP planeja reposição para o restante."
+      ],
+      "resultado": "Planejamento atualizado."
+    },
+    {
+      "titulo": "Reprogramar (backorder)",
+      "papel": "Planejador",
+      "transacao": "V_V2 / aATP: Backorder Processing",
+      "descricao": "Quando chega estoque ou muda a prioridade, as confirmações são redistribuídas.",
+      "detalhes": [
+        "No aATP, o BOP reprocessa confirmações por regras e prioridade (ganha, perde, preenche).",
+        "Release for Delivery permite decisão manual antes da remessa."
+      ],
+      "resultado": "Confirmações coerentes com a realidade."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Divisões de remessa",
+      "tabelas": "VBEP",
+      "descricao": "Datas e quantidades confirmadas."
+    },
+    {
+      "nome": "Necessidades de vendas",
+      "tabelas": "VBBE",
+      "descricao": "Necessidades passadas ao MRP."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "ATP",
+      "explicacao": "Quantidade disponível para prometer = estoque + entradas − saídas planejadas."
+    },
+    {
+      "termo": "Grupo de verificação",
+      "explicacao": "No material: forma de transferir necessidades e tipo de verificação."
+    },
+    {
+      "termo": "Regra de verificação",
+      "explicacao": "Por transação: o que entra no escopo."
+    },
+    {
+      "termo": "Tempo de reposição",
+      "explicacao": "Prazo após o qual a quantidade é confirmada sem verificar."
+    },
+    {
+      "termo": "aATP",
+      "explicacao": "Advanced ATP do S/4HANA: BOP, alocação de produtos, Release for Delivery."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "CO09",
+      "descricao": "Visão de disponibilidade"
+    },
+    {
+      "codigo": "MD04",
+      "descricao": "Lista de necessidades/estoque"
+    },
+    {
+      "codigo": "V_V2",
+      "descricao": "Reprogramação clássica"
+    },
+    {
+      "codigo": "Configure BOP Segment / Schedule BOP Run",
+      "descricao": "aATP"
+    },
+    {
+      "codigo": "Release for Delivery",
+      "descricao": "App aATP"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Grupos de verificação",
+      "onde": "OVZ2",
+      "explicacao": "Necessidades individuais/somadas."
+    },
+    {
+      "item": "Escopo da verificação",
+      "onde": "OVZ9",
+      "explicacao": "Elementos considerados."
+    },
+    {
+      "item": "Agendamento de expedição",
+      "onde": "SPRO › LE › Expedição › Agendamento",
+      "explicacao": "Tempos por ponto de expedição e itinerário."
+    },
+    {
+      "item": "aATP",
+      "onde": "SPRO › Cross-Application › aATP",
+      "explicacao": "BOP, alocação de produtos."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "PP / MM",
+      "explicacao": "MRP repõe o que falta."
+    },
+    {
+      "com": "LE",
+      "explicacao": "Datas de expedição e trânsito."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Alocação de produtos",
+      "explicacao": "Limita quanto cada cliente/região pode receber em escassez."
+    },
+    {
+      "nome": "PAC com criação de suprimento",
+      "explicacao": "PP/DS cria suprimento temporário ao confirmar."
+    }
+  ],
+  "caso": {
+    "titulo": "Estoque curto antes do Natal",
+    "contexto": "Demanda maior que o estoque de um item.",
+    "passos": [
+      "ATP confirma parcialmente as ordens.",
+      "Alocação por cliente-chave.",
+      "Chega produção extra.",
+      "BOP redistribui priorizando clientes A.",
+      "Release for Delivery libera as remessas."
+    ]
+  },
+  "armadilhas": [
+    "Escopo incluindo pedidos de compra não confirmados: promete o que não chegará.",
+    "Tempo de reposição curto demais: confirma sem estoque real."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre o grupo de verificação 01 e 02?",
+    "resposta": "O 01 transfere necessidades somadas por dia ao MRP; o 02 transfere necessidades individuais por ordem."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "ATP ocorre na ordem."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Remessa considera a confirmação."
+    },
+    {
+      "id": "base-pp",
+      "motivo": "MRP repõe as necessidades."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Availability Check",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/eedc1019283a438a8b73fdde490abc4f/2c24bf53d25ab64ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Advanced Available-to-Promise Processing",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/4c6c3c99e6e94a92a626f424add61cba/c8ad1dcae1cb49f2a61935d666c97ace.html"
+    },
+    {
+      "titulo": "Backorder Processing (BOP)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/32da8359c8ee4e8b8e8c5e15cacba5aa/2a7db74efff042beae7185a6ddf8f9d7.html"
+    }
+  ]
+}

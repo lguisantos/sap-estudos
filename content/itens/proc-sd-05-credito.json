@@ -1,0 +1,232 @@
+{
+  "id": "proc-sd-05-credito",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 5,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD) + FIN-FSCM-CR",
+  "curto": "Gestão de crédito",
+  "nivel": "avançado",
+  "titulo": "Gestão de crédito: verificação na ordem e liberação de bloqueios",
+  "resumo": "No S/4HANA, a verificação de crédito usa o SAP Credit Management (FIN-FSCM-CR). Cada cliente tem um segmento de crédito com limite e exposição; ao gravar a ordem ou a remessa, o sistema verifica e, se o limite for excedido, bloqueia o documento até a análise do crédito.",
+  "quando": [
+    "Vendas a prazo para clientes com risco.",
+    "Grupos com política de crédito centralizada.",
+    "Bloqueio automático de ordens acima do limite."
+  ],
+  "prerequisitos": [
+    "BP com papel de crédito (UKM000), segmento e limite.",
+    "Controle de crédito ativo no tipo de documento e área de controle de crédito.",
+    "Regra de verificação definida."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Definir limite de crédito",
+      "papel": "Analista de crédito",
+      "transacao": "UKM_BP (BP, papel UKM000)",
+      "descricao": "Cadastrar classe de risco, regra de verificação, score e limite por segmento.",
+      "detalhes": [
+        "Limite pode ser calculado por fórmula ou digitado.",
+        "Segmentos permitem limites por área de negócio."
+      ],
+      "resultado": "Cliente com limite.",
+      "exemplo": "Limite 100.000 BRL, classe de risco B."
+    },
+    {
+      "titulo": "Criar a ordem",
+      "papel": "Vendedor",
+      "transacao": "VA01",
+      "descricao": "Ao gravar, o SD envia a ordem ao Credit Management para verificação.",
+      "detalhes": [
+        "Valor considerado: ordens abertas, remessas e faturas não pagas (exposição).",
+        "Verificação pode ocorrer também na remessa e na saída."
+      ],
+      "resultado": "Ordem enviada à verificação.",
+      "exemplo": "Exposição 92.000 + ordem 15.000 = 107.000."
+    },
+    {
+      "titulo": "Verificar crédito",
+      "papel": "Sistema",
+      "transacao": "Credit Management",
+      "descricao": "Compara exposição com o limite e aplica a regra (limite, atraso, idade de títulos).",
+      "detalhes": [
+        "Resultado positivo: ordem segue.",
+        "Negativo: bloqueio de crédito no documento."
+      ],
+      "resultado": "Ordem bloqueada para crédito.",
+      "exemplo": "107.000 > 100.000: bloqueio."
+    },
+    {
+      "titulo": "Analisar o bloqueio",
+      "papel": "Analista de crédito",
+      "transacao": "UKM_MY_DCDS · UKM_CASE",
+      "descricao": "A decisão de crédito documentada (DCD) registra os dados da verificação negativa para análise.",
+      "detalhes": [
+        "VKM1/VKM4 seguem disponíveis como alternativa no S/4HANA.",
+        "Pode reencaminhar ou pedir garantias."
+      ],
+      "resultado": "Decisão tomada."
+    },
+    {
+      "titulo": "Liberar ou rejeitar",
+      "papel": "Analista de crédito",
+      "transacao": "DCD / VKM1",
+      "descricao": "Liberar remove o bloqueio; rejeitar recusa a ordem.",
+      "detalhes": [
+        "Liberação exige ação do usuário (não automática no padrão).",
+        "Reverificação pode aprovar se a situação mudou; RVKRED06/08/09 fazem em lote."
+      ],
+      "resultado": "Ordem liberada.",
+      "exemplo": "Pagamento de 20.000 entra; recheck aprova."
+    },
+    {
+      "titulo": "Seguir o fluxo",
+      "papel": "Sistema",
+      "transacao": "VL10A",
+      "descricao": "Ordem liberada aparece para remessa.",
+      "detalhes": [
+        "Remessa também pode ser verificada se configurado.",
+        "Exposição atualizada a cada fatura e pagamento."
+      ],
+      "resultado": "Processo continua."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Ordem com status de crédito",
+      "tabelas": "VBAK-CMGST",
+      "descricao": "Status da verificação."
+    },
+    {
+      "nome": "Segmento de crédito",
+      "tabelas": "UKMBP_CMS_SGM",
+      "descricao": "Limite e dados por segmento."
+    },
+    {
+      "nome": "Decisão documentada",
+      "tabelas": "DCD (UKM_CASE)",
+      "descricao": "Caso de crédito."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Exposição de crédito",
+      "explicacao": "Ordens abertas + remessas + faturas abertas."
+    },
+    {
+      "termo": "Segmento de crédito",
+      "explicacao": "Unidade de controle de limites."
+    },
+    {
+      "termo": "Regra de verificação",
+      "explicacao": "Quais testes aplicar."
+    },
+    {
+      "termo": "Documented Credit Decision",
+      "explicacao": "Registro auditável da decisão de crédito."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "UKM_BP",
+      "descricao": "Dados de crédito do BP"
+    },
+    {
+      "codigo": "UKM_MY_DCDS / UKM_CASE",
+      "descricao": "Decisões documentadas"
+    },
+    {
+      "codigo": "VKM1 / VKM4",
+      "descricao": "Documentos bloqueados (alternativa)"
+    },
+    {
+      "codigo": "Manage Credit Accounts / Manage Documented Credit Decisions",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Credit Management",
+      "onde": "SPRO › Financial Supply Chain Mgmt › Credit Management",
+      "explicacao": "Segmentos, regras, score."
+    },
+    {
+      "item": "Integração SD",
+      "onde": "OVA8 / SPRO › SD › Funções básicas › Gestão de crédito",
+      "explicacao": "Onde verificar (ordem, remessa)."
+    },
+    {
+      "item": "DCD",
+      "onde": "SPRO › Credit Management › Monitoring › Documented Credit Decision",
+      "explicacao": "BC Set UKM_DCD_CUST."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI-AR",
+      "explicacao": "Faturas e pagamentos atualizam exposição."
+    },
+    {
+      "com": "SD",
+      "explicacao": "Bloqueio em ordens e remessas."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Crédito na remessa",
+      "explicacao": "Verificação no momento da expedição."
+    }
+  ],
+  "caso": {
+    "titulo": "Cliente acima do limite",
+    "contexto": "Ordem de 15.000 com exposição de 92.000 e limite 100.000.",
+    "passos": [
+      "Ordem bloqueada.",
+      "Analista abre DCD.",
+      "Cliente paga 20.000.",
+      "Recheck libera.",
+      "Remessa criada."
+    ]
+  },
+  "armadilhas": [
+    "Usar FD32: não existe no S/4HANA.",
+    "Esquecer de ativar a verificação no tipo de documento."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a recomendação SAP para tratar ordens bloqueadas por crédito no S/4HANA?",
+    "resposta": "Usar as decisões de crédito documentadas (DCD) do SAP Credit Management; VKM1/VKM4 ficam como alternativa."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "Verificação na ordem."
+    },
+    {
+      "id": "proc-sd-06-monitoramento",
+      "motivo": "Ordens bloqueadas no monitoramento."
+    },
+    {
+      "id": "base-fi",
+      "motivo": "Contas a receber."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Credit Block Release and Recheck",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/ab7f7d00ce2f4d0ea8838e11a1ee6388.html"
+    },
+    {
+      "titulo": "Work Lists for Credit Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/d9afc6535e601e4be10000000a174cb4.html"
+    },
+    {
+      "titulo": "Check Credit Blocked Sales Document",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/19d48293097f4a2589433856b034dfa5/7c1e60c14e54423a9b375c75a84ac685.html"
+    }
+  ]
+}

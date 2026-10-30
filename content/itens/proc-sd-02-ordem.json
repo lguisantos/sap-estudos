@@ -1,0 +1,292 @@
+{
+  "id": "proc-sd-02-ordem",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 2,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Ordem de venda",
+  "nivel": "básico",
+  "titulo": "Criação da ordem de venda",
+  "resumo": "A ordem de venda é o compromisso com o cliente: o que, quanto, a que preço e quando entregar. Ao criá-la, o SAP determina parceiros, preço, disponibilidade, crédito, dados de expedição e impostos. Ela é a base da remessa e do faturamento.",
+  "quando": [
+    "Pedido firme do cliente.",
+    "Conversão de cotação.",
+    "Pedido recebido por EDI, e-commerce ou API."
+  ],
+  "prerequisitos": [
+    "Cliente com dados de vendas, expedição e faturamento na área de vendas.",
+    "Material com visão de vendas e de expedição no centro.",
+    "Condições de preço e impostos configurados."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Informar tipo e área de vendas",
+      "papel": "Vendedor",
+      "transacao": "VA01 · Create Sales Orders",
+      "descricao": "Escolher tipo de ordem (OR padrão) e área de vendas (organização, canal, setor).",
+      "detalhes": [
+        "Tipo de documento controla numeração, bloqueios, tipo de remessa e faturamento.",
+        "Área de vendas define dados do cliente usados."
+      ],
+      "resultado": "Cabeçalho iniciado.",
+      "exemplo": "OR · 1000/10/00."
+    },
+    {
+      "titulo": "Informar cliente e pedido do cliente",
+      "papel": "Vendedor",
+      "transacao": "VA01 (cabeçalho)",
+      "descricao": "Emissor da ordem (AG), número e data do pedido do cliente.",
+      "detalhes": [
+        "Parceiros determinados: recebedor (WE), recebedor da fatura (RE), pagador (RG).",
+        "Dados de condição de pagamento, Incoterms e grupo de clientes vêm do cliente."
+      ],
+      "resultado": "Parceiros e condições comerciais definidos.",
+      "exemplo": "Cliente 1000123, pedido PO-7788."
+    },
+    {
+      "titulo": "Informar itens",
+      "papel": "Vendedor",
+      "transacao": "VA01 (itens)",
+      "descricao": "Material, quantidade e data desejada; o sistema determina categoria de item e categoria de divisão.",
+      "detalhes": [
+        "Categoria de item = tipo de documento + grupo de categoria do material (ex.: OR + NORM = TAN).",
+        "Categoria de divisão (ex.: CP) controla MRP e movimento 601.",
+        "Centro fornecedor determinado pelo cliente/material."
+      ],
+      "resultado": "Itens com divisões de remessa.",
+      "exemplo": "Item 10: 200 cx do material FG-100."
+    },
+    {
+      "titulo": "Determinações automáticas",
+      "papel": "Sistema",
+      "transacao": "VA01",
+      "descricao": "Preço, disponibilidade (ATP), crédito, ponto de expedição, itinerário, impostos e mensagens de saída.",
+      "detalhes": [
+        "Cada determinação tem seu processo: ver Determinação de preço, Disponibilidade e Gestão de crédito.",
+        "Log de incompletude lista campos obrigatórios em falta."
+      ],
+      "resultado": "Ordem calculada.",
+      "exemplo": "Preço 48,00, ICMS 18%, data confirmada 22/11."
+    },
+    {
+      "titulo": "Tratar incompletude e bloqueios",
+      "papel": "Vendedor",
+      "transacao": "VA01 (Editar › Log de incompletude)",
+      "descricao": "Campos obrigatórios em falta impedem remessa ou faturamento; bloqueios de remessa/faturamento podem ser postos manualmente.",
+      "detalhes": [
+        "Esquema de incompletude por tipo de documento e categoria de item.",
+        "Bloqueio de crédito definido automaticamente quando a verificação falha."
+      ],
+      "resultado": "Ordem completa."
+    },
+    {
+      "titulo": "Gravar e confirmar ao cliente",
+      "papel": "Sistema",
+      "transacao": "VA01 (Gravar) · Output BA00",
+      "descricao": "A ordem é gravada; a confirmação de pedido é enviada ao cliente.",
+      "detalhes": [
+        "Necessidade transferida ao MRP (tabela VBBE).",
+        "Fluxo de documentos inicia."
+      ],
+      "resultado": "Ordem 30000123 gravada."
+    },
+    {
+      "titulo": "Seguir para expedição",
+      "papel": "Sistema",
+      "transacao": "VL10A (lista de entregas)",
+      "descricao": "No dia de seleção de material, a ordem aparece para criar a remessa.",
+      "detalhes": [
+        "Data de seleção de material é calculada pelo agendamento de expedição.",
+        "Ordens bloqueadas não aparecem."
+      ],
+      "resultado": "Pronta para remessa."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Ordem de venda",
+      "tabelas": "VBAK · VBAP · VBEP",
+      "descricao": "Cabeçalho, itens e divisões.",
+      "exemplo": "30000123"
+    },
+    {
+      "nome": "Parceiros",
+      "tabelas": "VBPA",
+      "descricao": "AG, WE, RE, RG."
+    },
+    {
+      "nome": "Condições",
+      "tabelas": "PRCD_ELEMENTS",
+      "descricao": "Preços e impostos."
+    },
+    {
+      "nome": "Status",
+      "tabelas": "VBAK/VBAP (S/4HANA)",
+      "descricao": "No S/4HANA os status ficam nos próprios documentos (VBUK/VBUP foram eliminadas)."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Tipo de documento de vendas",
+      "explicacao": "OR padrão, SO entrega imediata (rush), BV venda à vista, RE devolução."
+    },
+    {
+      "termo": "Categoria de item",
+      "explicacao": "TAN normal, TAS terceiros, TANN gratuito; define relevância para remessa e faturamento."
+    },
+    {
+      "termo": "Categoria de divisão de remessa",
+      "explicacao": "CP com MRP, CN sem; define movimento de saída."
+    },
+    {
+      "termo": "Funções de parceiro",
+      "explicacao": "Emissor, recebedor, recebedor da fatura, pagador."
+    },
+    {
+      "termo": "Log de incompletude",
+      "explicacao": "Lista de campos obrigatórios em falta."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA01 / VA02 / VA03",
+      "descricao": "Criar, modificar, exibir ordem"
+    },
+    {
+      "codigo": "VA05",
+      "descricao": "Lista de ordens"
+    },
+    {
+      "codigo": "V.02",
+      "descricao": "Ordens incompletas"
+    },
+    {
+      "codigo": "Create Sales Orders / Manage Sales Orders",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de documento",
+      "onde": "VOV8",
+      "explicacao": "Numeração, bloqueios, tipos de remessa e fatura."
+    },
+    {
+      "item": "Categorias de item e determinação",
+      "onde": "VOV7 / VOV4",
+      "explicacao": "Tipo de doc + grupo de categoria → categoria de item."
+    },
+    {
+      "item": "Categorias de divisão",
+      "onde": "VOV6 / VOV5",
+      "explicacao": "Movimento e MRP."
+    },
+    {
+      "item": "Incompletude",
+      "onde": "OVA2",
+      "explicacao": "Esquemas e atribuição."
+    },
+    {
+      "item": "Determinação de parceiros",
+      "onde": "VOPAN",
+      "explicacao": "Funções obrigatórias."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM / PP",
+      "explicacao": "Necessidade para o MRP; ATP."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Crédito e condições de pagamento."
+    },
+    {
+      "com": "LE",
+      "explicacao": "Remessa e transporte."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Ordem de entrega imediata (SO)",
+      "explicacao": "Remessa criada automaticamente ao gravar."
+    },
+    {
+      "nome": "Venda à vista (BV)",
+      "explicacao": "Remessa e fatura imediatas, pagamento no ato."
+    },
+    {
+      "nome": "Ordem gratuita (FD)",
+      "explicacao": "Sem faturamento."
+    }
+  ],
+  "caso": {
+    "titulo": "Pedido por EDI",
+    "contexto": "Cliente grande envia pedidos por EDI.",
+    "passos": [
+      "IDoc ORDERS cria a ordem OR.",
+      "Preço confere com o acordado; diferença bloqueia.",
+      "ATP confirma a data.",
+      "Confirmação ORDRSP retorna ao cliente.",
+      "Ordem segue para VL10A."
+    ]
+  },
+  "armadilhas": [
+    "Ignorar o log de incompletude: remessa ou fatura não sai.",
+    "Alterar preço manualmente sem motivo: perda de rastreabilidade."
+  ],
+  "fixacao": {
+    "pergunta": "Como o sistema determina a categoria de item TAN?",
+    "resposta": "Pela combinação do tipo de documento (OR) com o grupo de categoria de item do material (NORM), mais o uso e a categoria do item superior, na configuração de determinação de categoria de item."
+  },
+  "links": [
+    {
+      "id": "proc-sd-03-disponibilidade",
+      "motivo": "ATP executado na ordem."
+    },
+    {
+      "id": "proc-sd-04-preco",
+      "motivo": "Determinação de preço."
+    },
+    {
+      "id": "proc-sd-05-credito",
+      "motivo": "Verificação de crédito."
+    },
+    {
+      "id": "proc-sd-06-monitoramento",
+      "motivo": "Acompanhamento das ordens."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Próximo passo: remessa."
+    },
+    {
+      "id": "base-sd",
+      "motivo": "Visão do Order-to-Cash."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Sales Document Types",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/c564b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Item Categories",
+      "url": "https://help.sap.com/docs/SAP_ERP/78e0627c34ef43879d72718e21ea517b/c864b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Incompletion Log",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9905622a5c1f49ba84e9076fc83a9c2c/5deea852c8296028e10000000a441470.html"
+    },
+    {
+      "titulo": "Process Flow for Sales Orders",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/2d95c3180a974e0aad07556ee4d28e94/1a61b6531de6b64ce10000000a174cb4.html"
+    }
+  ]
+}

@@ -1,0 +1,289 @@
+{
+  "id": "proc-mm-12-fatura",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 12,
+  "publicado": "2026-10-30",
+  "area": "Verificação de faturas (MM-IV)",
+  "curto": "Verificação de faturas",
+  "nivel": "intermediário",
+  "titulo": "Verificação de faturas: three-way match, bloqueios e liberação",
+  "resumo": "A verificação de faturas (Logistics Invoice Verification) confere a fatura do fornecedor contra o pedido e a entrada. Se preço, quantidade ou data passam das tolerâncias, a fatura é lançada bloqueada para pagamento. A fatura compensa a GR/IR e cria a obrigação com o fornecedor.",
+  "quando": [
+    "Recebimento de toda fatura de compra com pedido.",
+    "Notas de débito e crédito posteriores.",
+    "Autofaturamento (ERS)."
+  ],
+  "prerequisitos": [
+    "Pedido e, para GR-based IV, entrada lançada.",
+    "Tolerâncias por empresa configuradas.",
+    "Códigos de imposto válidos."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Receber a fatura",
+      "papel": "Contas a pagar",
+      "transacao": "Documento do fornecedor / NF-e / OCR",
+      "descricao": "A fatura chega em papel, PDF, EDI ou NF-e e é atribuída ao pedido.",
+      "detalhes": [
+        "Captura por OCR ou portal reduz digitação.",
+        "No Brasil, a NF-e é a própria fatura."
+      ],
+      "resultado": "Fatura disponível para lançamento."
+    },
+    {
+      "titulo": "Registrar a fatura",
+      "papel": "Contas a pagar",
+      "transacao": "MIRO · Create Supplier Invoice",
+      "descricao": "Informa data, referência, valor bruto, imposto e o pedido; o sistema propõe itens a faturar.",
+      "detalhes": [
+        "Proposta pela quantidade recebida e não faturada (ou pedida, sem GR-based IV).",
+        "Transação: fatura, nota de crédito, débito posterior, crédito posterior."
+      ],
+      "resultado": "Itens propostos.",
+      "exemplo": "Fatura 1.000 PC × 31,50 = 31.500 BRL; entrada só de 980 PC."
+    },
+    {
+      "titulo": "Conferir o saldo",
+      "papel": "Contas a pagar",
+      "transacao": "MIRO (semáforo de saldo)",
+      "descricao": "O saldo deve ser zero: valor do cabeçalho = soma dos itens + impostos.",
+      "detalhes": [
+        "Diferenças pequenas podem ser lançadas em conta de diferença se dentro da tolerância de pequenas diferenças.",
+        "Simular mostra o documento contábil antes de lançar."
+      ],
+      "resultado": "Fatura equilibrada."
+    },
+    {
+      "titulo": "Verificação de tolerâncias",
+      "papel": "Sistema",
+      "transacao": "MIRO (lançar)",
+      "descricao": "Cada item é comparado com pedido e entrada nas chaves de tolerância: PP (preço), DQ (quantidade), DW (sem entrada), PS (preço estimado), ST (data), entre outras.",
+      "detalhes": [
+        "Se o limite superior é ultrapassado, a fatura é lançada com bloqueio de pagamento.",
+        "Sem a chave DW, fatura sem entrada é bloqueada.",
+        "O bloqueio é por item e marca o cabeçalho com status de bloqueio."
+      ],
+      "resultado": "Fatura lançada livre ou bloqueada.",
+      "exemplo": "Quantidade faturada 1.000 > recebida 980: bloqueio Q."
+    },
+    {
+      "titulo": "Lançamento contábil",
+      "papel": "Sistema",
+      "transacao": "MIRO",
+      "descricao": "D GR/IR (WRX) × C Fornecedor; diferenças de preço vão a estoque ou à conta de diferença conforme preço e estoque.",
+      "detalhes": [
+        "Impostos lançados em contas próprias.",
+        "Com preço médio móvel e estoque suficiente, diferença ajusta o estoque."
+      ],
+      "resultado": "Obrigação criada e GR/IR compensada."
+    },
+    {
+      "titulo": "Resolver e liberar o bloqueio",
+      "papel": "Comprador",
+      "transacao": "MRBR · Manage Supplier Invoices",
+      "descricao": "Após resolver (nova entrada, nota de crédito, correção do pedido), a fatura é liberada.",
+      "detalhes": [
+        "MRBR pode liberar automaticamente faturas cujo motivo deixou de existir.",
+        "Itens bloqueados por preço (PP) podem ser reverificados automaticamente.",
+        "Não usar FBL1N para tirar o bloqueio de MM: remove o indicador no FI sem tratar o registro de MM."
+      ],
+      "resultado": "Fatura liberada para pagamento.",
+      "exemplo": "Chegam os 20 PC; MRBR libera."
+    },
+    {
+      "titulo": "Pagar",
+      "papel": "Contas a pagar",
+      "transacao": "F110",
+      "descricao": "O programa de pagamento seleciona faturas vencidas e não bloqueadas.",
+      "detalhes": [
+        "Condição de pagamento define vencimento e desconto.",
+        "Arquivo bancário enviado ao banco."
+      ],
+      "resultado": "Fornecedor pago."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Documento de fatura",
+      "tabelas": "RBKP · RSEG",
+      "descricao": "Cabeçalho e itens da fatura de logística.",
+      "exemplo": "5105600010"
+    },
+    {
+      "nome": "Documento contábil",
+      "tabelas": "BKPF · ACDOCA",
+      "descricao": "Fornecedor × GR/IR."
+    },
+    {
+      "nome": "Histórico do pedido",
+      "tabelas": "EKBE (VGABE = 2)",
+      "descricao": "Fatura registrada no item."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Three-way match",
+      "explicacao": "Pedido × entrada × fatura."
+    },
+    {
+      "termo": "Chave de tolerância",
+      "explicacao": "Tipo de variação verificada (PP, DQ, DW, ST, BD...)."
+    },
+    {
+      "termo": "Bloqueio automático",
+      "explicacao": "Status de pagamento R quando a tolerância é excedida."
+    },
+    {
+      "termo": "Bloqueio manual",
+      "explicacao": "Indicador colocado pelo usuário no item ou cabeçalho."
+    },
+    {
+      "termo": "ERS",
+      "explicacao": "Evaluated Receipt Settlement: fatura gerada pela entrada (MRRL)."
+    },
+    {
+      "termo": "GR/IR clearing",
+      "explicacao": "Compensação da conta GR/IR (MR11 para ajustes de saldo)."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "MIRO",
+      "descricao": "Registrar fatura"
+    },
+    {
+      "codigo": "MIR4 / MIR7",
+      "descricao": "Exibir / pré-editar fatura"
+    },
+    {
+      "codigo": "MRBR",
+      "descricao": "Liberar faturas bloqueadas"
+    },
+    {
+      "codigo": "MRRL",
+      "descricao": "Autofaturamento ERS"
+    },
+    {
+      "codigo": "MR11",
+      "descricao": "Manutenção da conta GR/IR"
+    },
+    {
+      "codigo": "MR8M",
+      "descricao": "Estornar fatura"
+    },
+    {
+      "codigo": "Manage Supplier Invoices",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tolerâncias",
+      "onde": "SPRO › MM › Verificação de faturas logística › Bloqueio de faturas › Definir tolerâncias",
+      "explicacao": "Por empresa e chave."
+    },
+    {
+      "item": "Pequenas diferenças",
+      "onde": "SPRO › MM › Verificação de faturas logística › Tolerâncias de pequenas diferenças",
+      "explicacao": "Aceitar centavos sem bloqueio."
+    },
+    {
+      "item": "Bloqueio aleatório e por valor de item",
+      "onde": "SPRO › MM › Verificação de faturas logística › Bloqueio de faturas",
+      "explicacao": "Bloqueio por amostragem/valor."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI-AP",
+      "explicacao": "Partida em aberto do fornecedor e pagamento."
+    },
+    {
+      "com": "MM-IM",
+      "explicacao": "Entradas determinam o que pode ser faturado."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "NF-e e impostos (ICMS, IPI, PIS, COFINS) no lançamento."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Débito/crédito posterior",
+      "explicacao": "Ajuste só de valor sem quantidade."
+    },
+    {
+      "nome": "Fatura sem pedido",
+      "explicacao": "FB60, fora do MM-IV."
+    },
+    {
+      "nome": "ERS",
+      "explicacao": "Sem fatura do fornecedor."
+    }
+  ],
+  "caso": {
+    "titulo": "Fatura cobrando mais do que chegou",
+    "contexto": "Pedido 1.000, entrada 980, fatura 1.000.",
+    "passos": [
+      "MIRO propõe 980; analista digita 1.000 conforme a fatura.",
+      "Tolerância DQ excedida: bloqueio por quantidade.",
+      "Comprador cobra 20 PC do fornecedor.",
+      "Entrada dos 20 PC.",
+      "MRBR libera automaticamente porque o motivo deixou de existir."
+    ]
+  },
+  "armadilhas": [
+    "Liberar bloqueio pelo FBL1N.",
+    "Lançar fatura com imposto errado e estornar várias vezes: usar MIR7 (pré-edição) para revisar."
+  ],
+  "fixacao": {
+    "pergunta": "O que acontece com uma fatura lançada acima da tolerância de preço?",
+    "resposta": "Ela é lançada, mas com bloqueio de pagamento no item (motivo de preço). A obrigação existe no FI, mas o F110 não paga até a liberação (MRBR)."
+  },
+  "links": [
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "A entrada cria a GR/IR que a fatura compensa."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "Preço e condições de referência."
+    },
+    {
+      "id": "proc-mm-13-nf-entrada",
+      "motivo": "Particularidades da NF no Brasil."
+    },
+    {
+      "id": "base-fi",
+      "motivo": "Contas a pagar e pagamento."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Chave WRX e diferenças de preço."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Tolerance Limits for Invoice Postings",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/b7eb2f9e70ab4c88abbff8b34a409b26/ec236b54f94c8f4ce10000000a4450e5.html"
+    },
+    {
+      "titulo": "Blocking Invoices",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/ed84b70c199d4470ae2e5ccb93b2e45b/7870b6531de6b64ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Validity of a Block",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/8a70b6531de6b64ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Invoice Release (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/spmm/3362167830.html"
+    }
+  ]
+}

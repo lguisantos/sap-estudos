@@ -1,0 +1,255 @@
+{
+  "id": "proc-sd-11-faturamento",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 11,
+  "publicado": "2026-10-30",
+  "area": "Faturamento (SD-BIL)",
+  "curto": "Faturamento",
+  "nivel": "intermediário",
+  "titulo": "Faturamento: da lista de faturas devidas ao lançamento contábil",
+  "resumo": "O faturamento cria o documento de faturamento (fatura, nota de crédito ou débito) a partir de remessas ou ordens, copia os preços, determina contas de receita e transfere o lançamento para a contabilidade. É o fim do Order-to-Cash do lado de vendas e o início do contas a receber.",
+  "quando": [
+    "Após a saída de mercadoria (faturamento por remessa).",
+    "Serviços e ordens sem remessa (faturamento por ordem).",
+    "Créditos, débitos e cancelamentos."
+  ],
+  "prerequisitos": [
+    "Documento relevante para faturamento sem bloqueio.",
+    "Determinação de contas de receita (VKOA).",
+    "Período contábil aberto."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Selecionar documentos devidos",
+      "papel": "Faturamento",
+      "transacao": "VF04 · Create Billing Documents",
+      "descricao": "A lista de faturamento devido traz ordens, remessas e solicitações prontas para faturar.",
+      "detalhes": [
+        "No app, até 1.000 itens por vez.",
+        "Processamento em lote por job."
+      ],
+      "resultado": "Documentos selecionados."
+    },
+    {
+      "titulo": "Criar o documento",
+      "papel": "Faturamento",
+      "transacao": "VF01 / VF04",
+      "descricao": "Tipo F2 (fatura), G2 (crédito), L2 (débito), RE (devolução), F8 (pró-forma).",
+      "detalhes": [
+        "Dados copiados conforme controle de cópia.",
+        "Preços copiados ou redeterminados (tipo de determinação)."
+      ],
+      "resultado": "Fatura criada.",
+      "exemplo": "Fatura 90000456."
+    },
+    {
+      "titulo": "Agrupar ou dividir",
+      "papel": "Sistema",
+      "transacao": "VF01",
+      "descricao": "Documentos com os mesmos dados de cabeçalho são agrupados; campos diferentes geram divisão (split).",
+      "detalhes": [
+        "Análise de split no app mostra o motivo.",
+        "Critérios de split adicionais por rotina."
+      ],
+      "resultado": "Faturas finais."
+    },
+    {
+      "titulo": "Determinar contas",
+      "papel": "Sistema",
+      "transacao": "VKOA",
+      "descricao": "Contas de receita, desconto e frete por grupo de clientes, de material e chave de conta.",
+      "detalhes": [
+        "Chave ERL receita, ERS desconto.",
+        "Erro de determinação mantém a fatura 'a contabilizar'."
+      ],
+      "resultado": "Contas definidas."
+    },
+    {
+      "titulo": "Transferir para a contabilidade",
+      "papel": "Sistema",
+      "transacao": "VF01 / VFX3",
+      "descricao": "Lançamento: D Cliente × C Receita (+ impostos).",
+      "detalhes": [
+        "Falha (interface, conta, preço) deixa status 'a contabilizar'; VFX3 lista e reprocessa.",
+        "Documento também alimenta CO-PA."
+      ],
+      "resultado": "Título em aberto no cliente.",
+      "exemplo": "D Cliente 9.312,00 × C Receita."
+    },
+    {
+      "titulo": "Emitir e cancelar se preciso",
+      "papel": "Faturamento",
+      "transacao": "Output / VF11",
+      "descricao": "Fatura impressa/enviada; cancelamento gera documento S1 que estorna a contabilidade.",
+      "detalhes": [
+        "Se a original nunca foi lançada, ambas ficam com status E e não há lançamento.",
+        "No Brasil, cancelar exige também cancelar a NF-e."
+      ],
+      "resultado": "Faturamento concluído."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Documento de faturamento",
+      "tabelas": "VBRK · VBRP",
+      "descricao": "Cabeçalho e itens.",
+      "exemplo": "90000456"
+    },
+    {
+      "nome": "Documento contábil",
+      "tabelas": "BKPF · ACDOCA",
+      "descricao": "Cliente × receita."
+    },
+    {
+      "nome": "Nota fiscal (Brasil)",
+      "tabelas": "J_1BNFDOC",
+      "descricao": "Criada a partir da fatura."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Lista de faturas devidas",
+      "explicacao": "Índice de documentos prontos para faturar."
+    },
+    {
+      "termo": "Split de fatura",
+      "explicacao": "Divisão por campos diferentes no cabeçalho."
+    },
+    {
+      "termo": "Tipos de faturamento",
+      "explicacao": "F2, G2, L2, RE, S1, F8."
+    },
+    {
+      "termo": "VKOA",
+      "explicacao": "Determinação de contas de receita."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VF01 / VF02 / VF03",
+      "descricao": "Fatura"
+    },
+    {
+      "codigo": "VF04",
+      "descricao": "Lista de faturas devidas"
+    },
+    {
+      "codigo": "VF11",
+      "descricao": "Cancelar fatura"
+    },
+    {
+      "codigo": "VFX3",
+      "descricao": "Faturas bloqueadas para contabilidade"
+    },
+    {
+      "codigo": "Create Billing Documents / Manage Billing Documents",
+      "descricao": "Apps Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de faturamento",
+      "onde": "VOFA",
+      "explicacao": "Numeração, cancelamento, contabilidade."
+    },
+    {
+      "item": "Controle de cópia",
+      "onde": "VTFL / VTFA",
+      "explicacao": "Remessa → fatura e ordem → fatura."
+    },
+    {
+      "item": "Determinação de contas",
+      "onde": "VKOA",
+      "explicacao": "Receita por chave de conta."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI-AR",
+      "explicacao": "Título do cliente."
+    },
+    {
+      "com": "CO-PA",
+      "explicacao": "Receita e margem."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "NF-e de saída."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Faturamento por ordem",
+      "explicacao": "Serviços sem remessa."
+    },
+    {
+      "nome": "Lista de faturas (invoice list)",
+      "explicacao": "Agrupamento periódico para o pagador."
+    }
+  ],
+  "caso": {
+    "titulo": "Faturamento diário",
+    "contexto": "200 remessas por dia.",
+    "passos": [
+      "Job VF04 às 18h.",
+      "Faturas agrupadas por pagador.",
+      "VFX3 mostra 2 com erro de conta.",
+      "VKOA corrigida, reprocessamento.",
+      "NF-e autorizadas."
+    ]
+  },
+  "armadilhas": [
+    "Ignorar VFX3: receita não lançada.",
+    "Cancelar fatura sem cancelar a NF-e."
+  ],
+  "fixacao": {
+    "pergunta": "O que acontece se a fatura falhar na transferência para a contabilidade?",
+    "resposta": "Ela fica com status 'a contabilizar' (bloqueada para contabilidade); após corrigir a causa, é reprocessada em VFX3."
+  },
+  "links": [
+    {
+      "id": "proc-sd-10-saida",
+      "motivo": "Saída que libera o faturamento."
+    },
+    {
+      "id": "proc-sd-12-nf-saida",
+      "motivo": "NF-e gerada pela fatura."
+    },
+    {
+      "id": "proc-sd-04-preco",
+      "motivo": "Preço copiado ou redeterminado."
+    },
+    {
+      "id": "proc-sd-13-devolucao",
+      "motivo": "Créditos e devoluções."
+    },
+    {
+      "id": "base-fi",
+      "motivo": "Contas a receber."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Billing Processing",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/946fb6535fe6b74ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Billing Document Type",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/d96fb6535fe6b74ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Manage Billing Documents",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/d2185b549a8c8e4ce10000000a4450e5.html"
+    },
+    {
+      "titulo": "Create Billing Documents",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/7dc3125477a98c24e10000000a4450e5.html"
+    }
+  ]
+}

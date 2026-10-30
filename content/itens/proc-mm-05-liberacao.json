@@ -1,0 +1,252 @@
+{
+  "id": "proc-mm-05-liberacao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 5,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Liberação (aprovação)",
+  "nivel": "intermediário",
+  "titulo": "Liberação de requisições e pedidos: estratégia e workflow flexível",
+  "resumo": "A liberação é a aprovação formal de documentos de compras antes que produzam efeito. No S/4HANA on-premise existem dois caminhos: a estratégia de liberação com classificação (clássica) e o workflow flexível. Ambos decidem quem aprova, em que ordem e a partir de que condições.",
+  "quando": [
+    "Documentos acima de um valor exigem aprovação.",
+    "Certos grupos de mercadorias, centros ou classificações contábeis precisam de aprovador específico.",
+    "Auditoria exige trilha de aprovação."
+  ],
+  "prerequisitos": [
+    "Configuração do procedimento (classificação ou workflow flexível) para o tipo de documento.",
+    "Aprovadores com autorização para seus códigos de liberação (objeto M_EINK_FRG)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Gravar o documento",
+      "papel": "Comprador",
+      "transacao": "ME21N / ME51N",
+      "descricao": "Ao gravar, o sistema lê as características do documento (valor, centro, grupo de mercadorias, grupo de compradores).",
+      "detalhes": [
+        "Características vêm da estrutura CEKKO (pedido) ou CEBAN (requisição).",
+        "Os campos usados como característica precisam estar preenchidos no momento da gravação; campo vazio não casa com nenhuma estratégia.",
+        "A mesma lógica vale para requisição, RFQ, contrato, programa de remessa e folha de serviço."
+      ],
+      "resultado": "Características avaliadas."
+    },
+    {
+      "titulo": "Determinar a estratégia",
+      "papel": "Sistema",
+      "transacao": "Classificação (CL20N)",
+      "descricao": "As características são comparadas com os valores atribuídos a cada estratégia na classe de liberação; a estratégia que bate é atribuída.",
+      "detalhes": [
+        "Estratégia define até oito códigos de liberação e a sequência (pré-requisitos).",
+        "Indicador de liberação muda de 'bloqueado' para 'liberado' conforme os códigos aplicados.",
+        "Requisições podem ser liberadas por item; pedidos, RFQs e contratos só como um todo."
+      ],
+      "resultado": "Documento bloqueado aguardando aprovação.",
+      "exemplo": "Pedido 18.000 BRL → estratégia P2: códigos C1 (coordenador) e D1 (diretor)."
+    },
+    {
+      "titulo": "Notificar o aprovador",
+      "papel": "Sistema",
+      "transacao": "Workflow / My Inbox",
+      "descricao": "Com workflow ativo, o item de trabalho chega ao aprovador; sem workflow, ele consulta a lista em ME28/ME55.",
+      "detalhes": [
+        "App My Inbox (F0862) concentra aprovações.",
+        "Sem workflow, o aprovador seleciona pelo seu código de liberação em ME28 (pedidos) ou ME55 (requisições).",
+        "No workflow flexível, os agentes são determinados por regras (ex.: gestor do centro de custo)."
+      ],
+      "resultado": "Aprovador ciente."
+    },
+    {
+      "titulo": "Aprovar ou recusar",
+      "papel": "Aprovador",
+      "transacao": "ME29N / ME28 / ME54N / ME55",
+      "descricao": "O aprovador revisa o documento e aplica seu código de liberação ou recusa.",
+      "detalhes": [
+        "Recusa: o comprador anula a recusa em ME22N (aba Estratégia de liberação) depois de ajustar.",
+        "Liberação pode ser revertida enquanto não houver documento subsequente, conforme configuração."
+      ],
+      "resultado": "Código aplicado; próximo nível notificado.",
+      "exemplo": "C1 libera; D1 recebe em seguida."
+    },
+    {
+      "titulo": "Documento liberado",
+      "papel": "Sistema",
+      "transacao": "—",
+      "descricao": "Após o último código, o indicador de liberação permite os passos seguintes.",
+      "detalhes": [
+        "Pedido: mensagem de saída é enviada e a entrada fica permitida.",
+        "Requisição: pode ser convertida em pedido."
+      ],
+      "resultado": "Documento efetivo."
+    },
+    {
+      "titulo": "Alteração após liberação",
+      "papel": "Comprador",
+      "transacao": "ME22N",
+      "descricao": "Se um campo relevante mudar (ex.: valor acima da tolerância de alteração), a estratégia é redeterminada e o documento volta a bloquear.",
+      "detalhes": [
+        "Tolerância de valor para alterações é definida no indicador de liberação.",
+        "Campos relevantes para liberação são os mesmos usados como características (valor, centro, grupo de mercadorias).",
+        "Mudanças em texto ou data normalmente não reiniciam a estratégia."
+      ],
+      "resultado": "Nova aprovação quando necessário."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Status de liberação",
+      "tabelas": "EKKO-FRGKE · FRGZU · FRGGR · FRGSX",
+      "descricao": "Grupo, estratégia, status acumulado e indicador."
+    },
+    {
+      "nome": "Classificação",
+      "tabelas": "AUSP",
+      "descricao": "Valores das características atribuídas às estratégias."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Grupo de liberação",
+      "explicacao": "Agrupa estratégias de uma mesma classe (ex.: pedidos)."
+    },
+    {
+      "termo": "Código de liberação",
+      "explicacao": "Identifica o aprovador ou nível; até oito por estratégia."
+    },
+    {
+      "termo": "Indicador de liberação",
+      "explicacao": "Status do documento: bloqueado, liberado para envio, etc."
+    },
+    {
+      "termo": "Workflow flexível",
+      "explicacao": "Aprovação por condições configuradas em apps (Manage Workflows for Purchase Orders), com etapas e agentes; recomendado no S/4HANA."
+    },
+    {
+      "termo": "Liberação automática",
+      "explicacao": "No workflow flexível, se nenhuma condição se aplica, o documento é liberado automaticamente."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME28",
+      "descricao": "Liberação coletiva de pedidos"
+    },
+    {
+      "codigo": "ME29N",
+      "descricao": "Liberar pedido individual"
+    },
+    {
+      "codigo": "ME54N / ME55",
+      "descricao": "Liberar requisições"
+    },
+    {
+      "codigo": "CL20N / CL24N",
+      "descricao": "Atribuir classificação"
+    },
+    {
+      "codigo": "My Inbox (F0862)",
+      "descricao": "Aprovação no Fiori"
+    },
+    {
+      "codigo": "Manage Workflows for Purchase Orders",
+      "descricao": "Configurar workflow flexível"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Características e classe",
+      "onde": "CT04 / CL02 (classe tipo 032)",
+      "explicacao": "Características baseadas em CEKKO/CEBAN (ex.: GNETW valor)."
+    },
+    {
+      "item": "Estratégias",
+      "onde": "SPRO › MM › Compras › Pedido › Procedimento de liberação › Definir procedimento",
+      "explicacao": "Grupos, códigos, indicadores, estratégias e pré-requisitos."
+    },
+    {
+      "item": "Workflow flexível",
+      "onde": "SPRO › MM › Compras › Pedido › Workflow flexível + app Manage Workflows",
+      "explicacao": "Condições de início (valor, grupo de compradores) e etapas."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "Fiori / Workflow",
+      "explicacao": "Aprovação mobile via My Inbox."
+    },
+    {
+      "com": "CO",
+      "explicacao": "Requisições aprovadas viram compromisso definitivo no orçamento."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Classificação clássica",
+      "explicacao": "Robusta e conhecida; exige manutenção de classes e valores."
+    },
+    {
+      "nome": "Workflow flexível",
+      "explicacao": "Configuração em apps, várias etapas, agentes por regra; padrão no S/4HANA Cloud."
+    }
+  ],
+  "caso": {
+    "titulo": "Alçada por valor",
+    "contexto": "Até 5.000 BRL o coordenador aprova; acima, coordenador e diretor.",
+    "passos": [
+      "Característica de valor (GNETW) com faixas ≤ 5.000 e > 5.000.",
+      "Estratégia P1 (C1) e P2 (C1 → D1).",
+      "Pedido de 18.000 cai em P2.",
+      "C1 aprova em My Inbox; D1 aprova em seguida.",
+      "Pedido enviado automaticamente."
+    ]
+  },
+  "armadilhas": [
+    "Esquecer de atualizar os valores das características ao mudar alçadas: documentos passam sem aprovação.",
+    "Valores em moeda diferente da característica geram estratégia errada."
+  ],
+  "fixacao": {
+    "pergunta": "Um pedido recusado na liberação: quem anula a recusa e onde?",
+    "resposta": "O comprador, em ME22N, na aba Estratégia de liberação, depois de ajustar o pedido; então o documento volta para aprovação."
+  },
+  "links": [
+    {
+      "id": "proc-mm-01-requisicao",
+      "motivo": "Requisições também passam por liberação."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "Pedido aprovado por esta estratégia."
+    },
+    {
+      "id": "proc-mm-07-contrato",
+      "motivo": "Contratos também podem exigir liberação."
+    },
+    {
+      "id": "base-fiori",
+      "motivo": "My Inbox e apps de aprovação."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Release Procedure with Classification",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/4d7df1d4b5940f8be10000000a42189b.html"
+    },
+    {
+      "titulo": "Release Strategy",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/3b80b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Release Purchase Order – ME29N",
+      "url": "https://help.sap.com/docs/SAP_ERP/967e1c2a6a8c4183b7e07d28e7574445/ef7db65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Manage Workflows for Purchase Orders",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/46c9e5b6ba7a4feeb920ca1cbad68c73.html"
+    }
+  ]
+}

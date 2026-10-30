@@ -1,0 +1,246 @@
+{
+  "id": "proc-mm-03-cotacao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 3,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Cotação (RFQ)",
+  "nivel": "básico",
+  "titulo": "Solicitação de cotação e comparação de propostas",
+  "resumo": "Quando não há preço acordado, o comprador envia uma solicitação de cotação (RFQ) a vários fornecedores, registra as propostas recebidas, compara e escolhe a melhor. As propostas perdedoras são recusadas e a vencedora vira pedido, além de poder atualizar o registro info.",
+  "quando": [
+    "Primeira compra de um item ou item sem fornecedor homologado.",
+    "Compras acima de um valor que exigem concorrência.",
+    "Renegociação periódica de preços."
+  ],
+  "prerequisitos": [
+    "Fornecedores cadastrados para a organização de compras.",
+    "Requisição liberada (opcional, mas recomendada para rastreio)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar a RFQ",
+      "papel": "Comprador",
+      "transacao": "ME41 · Fiori: Manage RFQs",
+      "descricao": "O comprador cria a RFQ (categoria de documento A, tipo AN) com prazo de resposta, itens e quantidades, normalmente com referência à requisição.",
+      "detalhes": [
+        "Uma RFQ pode reunir itens de várias requisições se forem da mesma organização de compras, centro e moeda.",
+        "Número de coleta agrupa RFQs do mesmo processo de concorrência.",
+        "Prazo de cotação define até quando as propostas são aceitas."
+      ],
+      "resultado": "RFQ criada para o primeiro fornecedor.",
+      "exemplo": "RFQ 6000000101, número de coleta RESINA-2026."
+    },
+    {
+      "titulo": "Copiar para outros fornecedores",
+      "papel": "Comprador",
+      "transacao": "ME41 (Fornecedor adicional)",
+      "descricao": "A mesma RFQ é replicada para cada fornecedor convidado; cada um recebe seu número.",
+      "detalhes": [
+        "Mensagens de saída (impressão, e-mail) enviam a RFQ.",
+        "No S/4HANA, Manage RFQs permite vários fornecedores no mesmo documento."
+      ],
+      "resultado": "RFQ enviada a três fornecedores."
+    },
+    {
+      "titulo": "Fornecedor responde",
+      "papel": "Fornecedor",
+      "transacao": "e-mail / portal / Ariba",
+      "descricao": "Cada fornecedor devolve preço, prazo e condições dentro do prazo.",
+      "detalhes": [
+        "Respostas fora do prazo podem ser desconsideradas por política interna.",
+        "Com SAP Ariba, a resposta chega integrada."
+      ],
+      "resultado": "Propostas em mãos."
+    },
+    {
+      "titulo": "Registrar as cotações",
+      "papel": "Comprador",
+      "transacao": "ME47 · Fiori: Manage Supplier Quotations",
+      "descricao": "O comprador digita na RFQ de cada fornecedor o preço e as condições oferecidas, transformando-a em cotação.",
+      "detalhes": [
+        "Condições: preço bruto, descontos, frete.",
+        "Prazo de entrega prometido.",
+        "Itens não cotados ficam em branco."
+      ],
+      "resultado": "Cotações registradas para comparação.",
+      "exemplo": "300100: 31,50 · 300200: 29,90 · 300300: 33,00 BRL/PC."
+    },
+    {
+      "titulo": "Comparar preços",
+      "papel": "Comprador",
+      "transacao": "ME49 · Fiori: Compare Supplier Quotations",
+      "descricao": "O comparativo ordena as cotações por item, do menor para o maior preço, podendo considerar desconto, frete e preço efetivo.",
+      "detalhes": [
+        "Seleção por número de coleta, faixa de cotações, fornecedor ou material.",
+        "Percentuais contra o maior, menor ou preço médio.",
+        "No app Fiori: até três cotações lado a lado e marcação de melhor preço (só preço; avaliação do fornecedor não entra)."
+      ],
+      "resultado": "Vencedor identificado.",
+      "exemplo": "300200 vence com 29,90 BRL."
+    },
+    {
+      "titulo": "Recusar as perdedoras",
+      "papel": "Comprador",
+      "transacao": "ME47 (indicador de recusa)",
+      "descricao": "As cotações não escolhidas recebem indicador de recusa; o sistema pode emitir carta de recusa.",
+      "detalhes": [
+        "Mantém o histórico da concorrência para auditoria.",
+        "A carta de recusa é uma mensagem de saída da cotação, enviada automaticamente se configurada."
+      ],
+      "resultado": "Concorrência encerrada."
+    },
+    {
+      "titulo": "Gerar pedido e registro info",
+      "papel": "Comprador",
+      "transacao": "ME21N (ref. cotação)",
+      "descricao": "O pedido é criado com referência à cotação vencedora; com o indicador de atualização, o registro info passa a ter o preço negociado.",
+      "detalhes": [
+        "O preço e prazo vêm da cotação.",
+        "O registro info facilita as próximas compras sem nova RFQ."
+      ],
+      "resultado": "Pedido emitido ao vencedor.",
+      "exemplo": "Pedido 4500012390 para 300200."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "RFQ / cotação",
+      "tabelas": "EKKO (BSTYP = A) · EKPO",
+      "descricao": "Mesma estrutura do pedido, categoria de documento A.",
+      "exemplo": "6000000101"
+    },
+    {
+      "nome": "Registro info",
+      "tabelas": "EINA · EINE",
+      "descricao": "Atualizado com o preço vencedor."
+    },
+    {
+      "nome": "Pedido de compra",
+      "tabelas": "EKKO · EKPO",
+      "descricao": "Referência à cotação.",
+      "exemplo": "4500012390"
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "RFQ",
+      "explicacao": "Solicitação de cotação enviada a fornecedores; categoria de documento A."
+    },
+    {
+      "termo": "Cotação",
+      "explicacao": "A mesma RFQ com os preços do fornecedor registrados."
+    },
+    {
+      "termo": "Número de coleta",
+      "explicacao": "Agrupa RFQs de uma mesma concorrência para comparação."
+    },
+    {
+      "termo": "Preço efetivo",
+      "explicacao": "Preço considerando descontos, frete e custos de entrega."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME41 / ME42 / ME43",
+      "descricao": "Criar, modificar, exibir RFQ"
+    },
+    {
+      "codigo": "ME47",
+      "descricao": "Registrar cotação"
+    },
+    {
+      "codigo": "ME49",
+      "descricao": "Comparativo de preços"
+    },
+    {
+      "codigo": "ME4L / ME4M",
+      "descricao": "Listas de RFQ por fornecedor/material"
+    },
+    {
+      "codigo": "Manage RFQs / Manage Supplier Quotations / Compare Supplier Quotations",
+      "descricao": "Apps Fiori equivalentes"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de RFQ",
+      "onde": "SPRO › MM › Compras › RFQ/Cotação › Definir tipos de documento",
+      "explicacao": "Tipo AN e numeração."
+    },
+    {
+      "item": "Mensagens de saída",
+      "onde": "SPRO › MM › Compras › Mensagens › Determinação de mensagens para RFQ",
+      "explicacao": "Impressão/e-mail da RFQ e carta de recusa."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "SAP Ariba / Sourcing",
+      "explicacao": "Concorrências maiores costumam ocorrer no Ariba, integrando RFQ e resposta."
+    },
+    {
+      "com": "Registro info",
+      "explicacao": "Cotação vencedora pode atualizar o registro info automaticamente."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Concorrência no app Fiori",
+      "explicacao": "Manage RFQs permite publicar a RFQ, receber cotações e premiar (inclusive dividir o prêmio entre fornecedores)."
+    }
+  ],
+  "caso": {
+    "titulo": "Concorrência para nova embalagem",
+    "contexto": "Nova caixa de papelão sem fornecedor homologado.",
+    "passos": [
+      "RFQ para três fornecedores com número de coleta CAIXA-26.",
+      "Cotações registradas em ME47.",
+      "ME49 mostra 300200 como menor preço efetivo com frete.",
+      "Cotações de 300100 e 300300 recusadas.",
+      "Pedido para 300200 com atualização do registro info."
+    ]
+  },
+  "armadilhas": [
+    "Comparar só preço bruto e esquecer frete e prazo.",
+    "Não recusar cotações perdedoras: elas aparecem como abertas e confundem as listas."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre RFQ e cotação no SAP?",
+    "resposta": "É o mesmo documento (categoria A). Ele nasce como RFQ enviada ao fornecedor e vira cotação quando o comprador registra os preços oferecidos."
+  },
+  "links": [
+    {
+      "id": "proc-mm-01-requisicao",
+      "motivo": "A RFQ normalmente nasce da requisição."
+    },
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "O pedido é criado a partir da cotação vencedora."
+    },
+    {
+      "id": "proc-mm-02-fontes",
+      "motivo": "O registro info gerado vira fonte para próximas compras."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Compare Supplier Quotations",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/14cf681cd716412baaf04199e3c96782.html"
+    },
+    {
+      "titulo": "Manage RFQs",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/144e987fe3a74a79a4c764a2aabc3a80.html"
+    },
+    {
+      "titulo": "Comparing Quotations (SAP ERP)",
+      "url": "https://help.sap.com/docs/SAP_ERP/967e1c2a6a8c4183b7e07d28e7574445/917eb65334e6b54ce10000000a174cb4.html"
+    }
+  ]
+}

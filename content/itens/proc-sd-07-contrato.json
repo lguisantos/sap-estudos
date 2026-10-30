@@ -1,0 +1,206 @@
+{
+  "id": "proc-sd-07-contrato",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 7,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Contrato de venda",
+  "nivel": "intermediário",
+  "titulo": "Contratos de venda: quantidade, valor e ordens de liberação",
+  "resumo": "O contrato de venda é um acordo de longo prazo com o cliente: quantidade (KM) ou valor (WK1/WK2) por um período, com preço acordado, sem datas de entrega. O cliente compra por ordens de liberação, que consomem o contrato.",
+  "quando": [
+    "Acordos anuais com clientes.",
+    "Garantir preço e volume.",
+    "Controlar consumo de um teto de valor."
+  ],
+  "prerequisitos": [
+    "Tipos de contrato configurados.",
+    "Preços de contrato (condições no contrato ou registros)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar o contrato",
+      "papel": "Vendedor",
+      "transacao": "VA41 · Manage Sales Contracts",
+      "descricao": "Tipo KM (quantidade) ou WK1/WK2 (valor); validade, cliente, itens e meta.",
+      "detalhes": [
+        "Itens de quantidade e de valor não podem estar no mesmo contrato.",
+        "Dados de contrato: início, fim, regras de cancelamento."
+      ],
+      "resultado": "Contrato criado.",
+      "exemplo": "KM 40000010: 12.000 cx em 2027 a 46,00."
+    },
+    {
+      "titulo": "Definir preço",
+      "papel": "Vendedor",
+      "transacao": "VA41 (Condições)",
+      "descricao": "Preço do contrato vale para as liberações.",
+      "detalhes": [
+        "Condições específicas por contrato.",
+        "Reajustes com validade."
+      ],
+      "resultado": "Preço acordado."
+    },
+    {
+      "titulo": "Criar ordem de liberação",
+      "papel": "Vendedor",
+      "transacao": "VA01 (ref. contrato)",
+      "descricao": "Ordem com referência ao contrato; o sistema atualiza a quantidade/valor liberado.",
+      "detalhes": [
+        "Ordem processada como uma ordem normal.",
+        "Erro ou aviso se ultrapassar o saldo, conforme configuração."
+      ],
+      "resultado": "Saldo consumido.",
+      "exemplo": "Ordem de 1.000 cx consome o contrato."
+    },
+    {
+      "titulo": "Remessa e faturamento",
+      "papel": "Expedição",
+      "transacao": "VL01N / VF01",
+      "descricao": "Liberações seguem o fluxo normal.",
+      "detalhes": [
+        "Faturamento por ordem ou remessa conforme categoria.",
+        "Contratos de valor podem faturar por plano de faturamento."
+      ],
+      "resultado": "Receita reconhecida."
+    },
+    {
+      "titulo": "Acompanhar e encerrar",
+      "papel": "Vendedor",
+      "transacao": "VA43 / VA45",
+      "descricao": "Ver liberações e saldo; encerrar com motivo de recusa no fim.",
+      "detalhes": [
+        "Contrato de valor é concluído com motivo de recusa.",
+        "VA45 lista contratos."
+      ],
+      "resultado": "Contrato encerrado."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Contrato",
+      "tabelas": "VBAK (VBTYP = G) · VEDA",
+      "descricao": "VEDA guarda dados de contrato.",
+      "exemplo": "40000010"
+    },
+    {
+      "nome": "Ordem de liberação",
+      "tabelas": "VBAK · VBFA",
+      "descricao": "Ligada ao contrato no fluxo."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Contrato de quantidade (KM)",
+      "explicacao": "Meta de quantidade sem datas."
+    },
+    {
+      "termo": "Contrato de valor (WK1/WK2)",
+      "explicacao": "Meta de valor; WK2 restrito a materiais."
+    },
+    {
+      "termo": "Ordem de liberação",
+      "explicacao": "Ordem com referência ao contrato."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA41 / VA42 / VA43",
+      "descricao": "Contrato"
+    },
+    {
+      "codigo": "VA45",
+      "descricao": "Lista de contratos"
+    },
+    {
+      "codigo": "Manage Sales Contracts",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de contrato",
+      "onde": "VOV8",
+      "explicacao": "KM, WK1, WK2."
+    },
+    {
+      "item": "Controle de cópia",
+      "onde": "VTAA",
+      "explicacao": "Contrato → ordem."
+    },
+    {
+      "item": "Dados de contrato",
+      "onde": "SPRO › SD › Vendas › Contratos",
+      "explicacao": "Perfis de dados de contrato e cancelamento."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM",
+      "explicacao": "Do lado do cliente, é um contrato de compra."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Faturamento normal."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Contrato de serviço",
+      "explicacao": "Com plano de faturamento periódico."
+    }
+  ],
+  "caso": {
+    "titulo": "Contrato anual com rede varejista",
+    "contexto": "12.000 cx a preço fixo.",
+    "passos": [
+      "VA41 KM.",
+      "Liberações mensais por VA01.",
+      "VA43 mostra consumo.",
+      "Renegociação no fim do ano.",
+      "Contrato encerrado."
+    ]
+  },
+  "armadilhas": [
+    "Ordem sem referência: o contrato não baixa.",
+    "Misturar itens de valor e quantidade."
+  ],
+  "fixacao": {
+    "pergunta": "Por que o contrato de venda não gera necessidade no MRP?",
+    "resposta": "Porque não tem datas de entrega; a necessidade surge nas ordens de liberação."
+  },
+  "links": [
+    {
+      "id": "proc-mm-07-contrato",
+      "motivo": "Contrato do lado de compras."
+    },
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "Ordens de liberação."
+    },
+    {
+      "id": "proc-sd-08-programa-remessa",
+      "motivo": "Acordo com datas de entrega."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Quantity Contract: Definition",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/4a65b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Release Orders",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/5c65b65334e6b54ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Value Contracts",
+      "url": "https://help.sap.com/docs/SAP_ERP/78e0627c34ef43879d72718e21ea517b/5065b65334e6b54ce10000000a174cb4.html"
+    }
+  ]
+}

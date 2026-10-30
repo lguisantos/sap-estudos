@@ -1,0 +1,191 @@
+{
+  "id": "proc-mm-15-consignacao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 15,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Consignação de fornecedor",
+  "nivel": "avançado",
+  "titulo": "Consignação de fornecedor: estoque no seu armazém, pago só quando usado",
+  "resumo": "Na consignação, o fornecedor deixa material no armazém da empresa, mas a propriedade continua dele. A empresa só deve quando retira o material para uso (ou transfere para estoque próprio). A liquidação é periódica (MRKO).",
+  "quando": [
+    "Itens de alto giro onde o fornecedor quer garantir exclusividade.",
+    "Reduzir capital imobilizado em estoque."
+  ],
+  "prerequisitos": [
+    "Registro info de consignação com preço.",
+    "Pedido com categoria K (ou entrada sem pedido, conforme processo)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Pedido de consignação",
+      "papel": "Comprador",
+      "transacao": "ME21N (categoria K)",
+      "descricao": "Pedido sem preço no item; o preço vem do registro info de consignação no momento da retirada.",
+      "detalhes": [
+        "O pedido controla a reposição do fornecedor.",
+        "Não gera compromisso de valor."
+      ],
+      "resultado": "Reposição solicitada."
+    },
+    {
+      "titulo": "Entrada em estoque consignado",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO 101 K",
+      "descricao": "Entra em estoque especial K, sem valor e sem lançamento contábil.",
+      "detalhes": [
+        "Visível em MMBE separado do estoque próprio.",
+        "No Brasil, a NF-e de remessa em consignação é tratada na entrada."
+      ],
+      "resultado": "Estoque do fornecedor no armazém."
+    },
+    {
+      "titulo": "Retirar para uso",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO 201 K / 261 K / 411 K",
+      "descricao": "O consumo do estoque consignado gera a obrigação: D Consumo × C Passivo de consignação.",
+      "detalhes": [
+        "411 K transfere para estoque próprio (avaliado).",
+        "Do estoque bloqueado, primeiro 343 K para livre."
+      ],
+      "resultado": "Dívida com o fornecedor criada."
+    },
+    {
+      "titulo": "Liquidar a consignação",
+      "papel": "Contas a pagar",
+      "transacao": "MRKO",
+      "descricao": "Lista os consumos e gera a liquidação (fatura) para o fornecedor.",
+      "detalhes": [
+        "Pode enviar mensagem de liquidação ao fornecedor.",
+        "Periodicidade combinada (semanal, mensal)."
+      ],
+      "resultado": "Fornecedor pago pelo usado."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Pedido K",
+      "tabelas": "EKPO",
+      "descricao": "Reposição."
+    },
+    {
+      "nome": "Documentos de material",
+      "tabelas": "MATDOC (101 K, 201 K, 411 K)",
+      "descricao": "Movimentos do estoque consignado."
+    },
+    {
+      "nome": "Liquidação",
+      "tabelas": "RBKP (MRKO)",
+      "descricao": "Fatura gerada pela liquidação."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Estoque especial K",
+      "explicacao": "Estoque do fornecedor em poder da empresa."
+    },
+    {
+      "termo": "Passivo de consignação",
+      "explicacao": "Conta onde nasce a obrigação na retirada (chave KON)."
+    },
+    {
+      "termo": "MRKO",
+      "explicacao": "Liquidação de consignação e pipeline."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME21N (K)",
+      "descricao": "Pedido de consignação"
+    },
+    {
+      "codigo": "MIGO",
+      "descricao": "101 K / 201 K / 411 K"
+    },
+    {
+      "codigo": "MRKO",
+      "descricao": "Liquidação"
+    },
+    {
+      "codigo": "MB54",
+      "descricao": "Estoque consignado"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Registro info de consignação",
+      "onde": "ME11 (tipo consignação)",
+      "explicacao": "Preço de retirada."
+    },
+    {
+      "item": "Conta KON",
+      "onde": "OBYC",
+      "explicacao": "Passivo de consignação."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI",
+      "explicacao": "Obrigação nasce na retirada."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "NFs de remessa, retorno simbólico e venda em consignação."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Pipeline",
+      "explicacao": "Materiais como água e energia, pagos pelo consumo (estoque P)."
+    }
+  ],
+  "caso": {
+    "titulo": "Parafusos em consignação",
+    "contexto": "Fornecedor mantém estoque de parafusos na fábrica.",
+    "passos": [
+      "Pedido K de reposição.",
+      "101 K entra sem valor.",
+      "Produção retira com 261 K.",
+      "MRKO semanal gera a liquidação.",
+      "Fornecedor recebe pelo consumido."
+    ]
+  },
+  "armadilhas": [
+    "Esquecer o registro info de consignação: retirada falha por falta de preço.",
+    "Tratar consignação como estoque próprio no inventário."
+  ],
+  "fixacao": {
+    "pergunta": "Quando nasce a dívida com o fornecedor na consignação?",
+    "resposta": "Na retirada do estoque consignado (consumo ou transferência para estoque próprio), não na entrada."
+  },
+  "links": [
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Movimentos com estoque especial."
+    },
+    {
+      "id": "proc-mm-12-fatura",
+      "motivo": "Liquidação como alternativa à MIRO."
+    },
+    {
+      "id": "proc-sd-15-consignacao",
+      "motivo": "Consignação do lado de vendas."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "How to post a stock transfer for Consignment Material (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/erpscm/3362168070.html"
+    },
+    {
+      "titulo": "Feature Comparison for Goods Movement",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/91b21005dded4984bcccf4a69ae1300c/de29287f0c0840caacbbc6f79c8d6242.html"
+    }
+  ]
+}

@@ -19,7 +19,7 @@ for (const f of files) {
   if (it.id !== f.replace(/\.json$/, "")) err(`id "${it.id}" deve ser igual ao nome do arquivo`);
   if (items.has(it.id)) err("id duplicado");
   items.set(it.id, it);
-  if (!["fundamentos", "semanal"].includes(it.tipo)) err("tipo deve ser fundamentos ou semanal");
+  if (!["fundamentos", "semanal", "processo"].includes(it.tipo)) err("tipo deve ser fundamentos, semanal ou processo");
   if (!["funcional", "tecnico"].includes(it.trilha)) err("trilha deve ser funcional ou tecnico");
   for (const k of ["area", "titulo", "curto", "nivel", "resumo"]) if (!str(it[k])) err(`${k} obrigatório`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(it.publicado || "")) err("publicado deve ser AAAA-MM-DD");
@@ -33,6 +33,22 @@ for (const f of files) {
   if (it.tipo === "semanal") {
     if (!arr(it.fontes)) err("item semanal precisa de fontes");
     if (it.trilha === "tecnico" && (!it.codigo || !str(it.codigo.conteudo) || !str(it.codigo.explicacao))) err("item técnico semanal precisa de codigo com conteudo e explicacao");
+  }
+  if (it.tipo === "processo") {
+    if (!["MM", "SD", "FI", "CO", "PP", "QM", "PM", "WM", "EWM"].includes(it.modulo)) err("processo: modulo inválido");
+    if (!Number.isInteger(it.ordem)) err("processo: ordem (inteiro) obrigatória");
+    if (!arr(it.quando) || !it.quando.every(str)) err("processo: quando (lista) obrigatório");
+    if (!arr(it.prerequisitos) || !it.prerequisitos.every(str)) err("processo: prerequisitos (lista) obrigatório");
+    if (!arr(it.fluxo, 4)) err("processo: fluxo com pelo menos 4 passos");
+    (it.fluxo || []).forEach((p, i) => {
+      for (const k of ["titulo", "papel", "transacao", "descricao", "resultado"]) if (!str(p[k])) err(`fluxo[${i}].${k} obrigatório`);
+      if (!arr(p.detalhes, 2) || !p.detalhes.every(str)) err(`fluxo[${i}].detalhes: pelo menos 2`);
+      if (p.titulo && p.titulo.length > 48) err(`fluxo[${i}].titulo longo demais para a ilustração (máx. 48)`);
+    });
+    if (!arr(it.documentos, 1) || !it.documentos.every(d => str(d.nome) && str(d.descricao))) err("processo: documentos com nome e descricao");
+    if (!arr(it.configuracao, 1) || !it.configuracao.every(c => str(c.item) && str(c.onde) && str(c.explicacao))) err("processo: configuracao com item, onde e explicacao");
+    if (!Array.isArray(it.integracao) || !it.integracao.every(c => str(c.com) && str(c.explicacao))) err("processo: integracao com 'com' e explicacao");
+    if (!arr(it.fontes)) err("processo precisa de fontes");
   }
   for (const n of it.novidades || []) if (!str(n.titulo) || !str(n.resumo) || !/^https?:\/\//.test(n.url || "")) err("novidades: titulo, resumo e url http(s)");
   for (const s of it.fontes || []) if (!/^https?:\/\//.test(s.url || "")) err(`fonte sem url válida: ${s.titulo}`);

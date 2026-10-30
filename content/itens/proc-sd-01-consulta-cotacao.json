@@ -1,0 +1,232 @@
+{
+  "id": "proc-sd-01-consulta-cotacao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 1,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Consulta e cotação",
+  "nivel": "básico",
+  "titulo": "Consulta e cotação de venda: da pergunta do cliente à proposta",
+  "resumo": "Antes do pedido, o cliente pergunta (consulta) e a empresa responde com uma proposta formal (cotação). Os dois são documentos de pré-venda: não geram necessidade firme nem estoque, mas guardam preços e prazos e podem ser copiados para a ordem de venda, medindo a taxa de conversão.",
+  "quando": [
+    "Cliente pede preço e prazo antes de comprar.",
+    "Vendas B2B com proposta formal e validade.",
+    "Acompanhar funil de vendas e taxa de conversão."
+  ],
+  "prerequisitos": [
+    "Cliente (BP) com dados de vendas na área de vendas.",
+    "Material com visão de vendas.",
+    "Condições de preço cadastradas."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Registrar a consulta",
+      "papel": "Vendedor",
+      "transacao": "VA11 (tipo IN)",
+      "descricao": "Registra o interesse do cliente: materiais, quantidades e data desejada.",
+      "detalhes": [
+        "Item com categoria AFN (consulta), sem divisão de remessa firme.",
+        "Validade da consulta define até quando é considerada."
+      ],
+      "resultado": "Consulta registrada.",
+      "exemplo": "Consulta 10000050: cliente 1000123, 200 caixas."
+    },
+    {
+      "titulo": "Criar a cotação",
+      "papel": "Vendedor",
+      "transacao": "VA21 (tipo QT) · Manage Sales Quotations",
+      "descricao": "Cria a proposta com referência à consulta, com preço, prazo e validade.",
+      "detalhes": [
+        "Categoria de item AGN.",
+        "Preço determinado pela técnica de condições, igual à ordem.",
+        "Validade de/até obrigatória na cotação."
+      ],
+      "resultado": "Cotação com valor.",
+      "exemplo": "Cotação 20000080: 200 cx × 48,00 BRL, válida até 30/11."
+    },
+    {
+      "titulo": "Verificar disponibilidade (opcional)",
+      "papel": "Sistema",
+      "transacao": "VA21 (ATP)",
+      "descricao": "Pode verificar disponibilidade para informar prazo realista, sem reservar estoque.",
+      "detalhes": [
+        "A cotação não gera necessidade firme para o MRP (depende da categoria de divisão).",
+        "Prazo informado vira referência na negociação."
+      ],
+      "resultado": "Prazo informado ao cliente."
+    },
+    {
+      "titulo": "Enviar ao cliente",
+      "papel": "Sistema",
+      "transacao": "Output (AN00 / BRF+)",
+      "descricao": "A cotação é impressa ou enviada por e-mail.",
+      "detalhes": [
+        "Mensagem de saída determinada pelo tipo de documento.",
+        "Pode ser reenviada após alterações."
+      ],
+      "resultado": "Cliente recebe a proposta."
+    },
+    {
+      "titulo": "Acompanhar e negociar",
+      "papel": "Vendedor",
+      "transacao": "VA25 / VA05 · Manage Sales Quotations",
+      "descricao": "Listar cotações abertas, vencendo e com probabilidade alta.",
+      "detalhes": [
+        "Probabilidade de pedido por tipo de documento.",
+        "Alterações de preço registradas em versões ou mudanças."
+      ],
+      "resultado": "Funil acompanhado."
+    },
+    {
+      "titulo": "Converter ou recusar",
+      "papel": "Vendedor",
+      "transacao": "VA01 (ref. cotação) / motivo de recusa",
+      "descricao": "Se o cliente aceitar, cria-se a ordem com referência; se não, informa-se motivo de recusa.",
+      "detalhes": [
+        "Fluxo de documentos liga cotação e ordem.",
+        "Motivos de recusa permitem análise de perdas (preço, prazo, concorrência)."
+      ],
+      "resultado": "Ordem criada ou cotação encerrada.",
+      "exemplo": "Ordem 30000123 criada da cotação 20000080."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Consulta",
+      "tabelas": "VBAK (VBTYP = A) · VBAP",
+      "descricao": "Documento de pré-venda.",
+      "exemplo": "10000050"
+    },
+    {
+      "nome": "Cotação",
+      "tabelas": "VBAK (VBTYP = B) · VBAP",
+      "descricao": "Proposta com validade.",
+      "exemplo": "20000080"
+    },
+    {
+      "nome": "Ordem de venda",
+      "tabelas": "VBAK (VBTYP = C)",
+      "descricao": "Criada por cópia.",
+      "exemplo": "30000123"
+    },
+    {
+      "nome": "Fluxo de documentos",
+      "tabelas": "VBFA",
+      "descricao": "Ligação entre os documentos."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Documento de pré-venda",
+      "explicacao": "Consulta e cotação: não geram remessa nem faturamento."
+    },
+    {
+      "termo": "Controle de cópia",
+      "explicacao": "Regras de cópia de um tipo de documento para outro (VTAA)."
+    },
+    {
+      "termo": "Motivo de recusa",
+      "explicacao": "Fecha itens não convertidos com a razão."
+    },
+    {
+      "termo": "Taxa de conversão",
+      "explicacao": "Quanto das cotações viraram pedidos."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA11 / VA12 / VA13",
+      "descricao": "Consulta"
+    },
+    {
+      "codigo": "VA21 / VA22 / VA23",
+      "descricao": "Cotação"
+    },
+    {
+      "codigo": "VA15 / VA25",
+      "descricao": "Listas de consultas e cotações"
+    },
+    {
+      "codigo": "Manage Sales Quotations",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de documento",
+      "onde": "VOV8",
+      "explicacao": "IN, QT e campos de validade."
+    },
+    {
+      "item": "Controle de cópia",
+      "onde": "VTAA",
+      "explicacao": "Cotação → ordem."
+    },
+    {
+      "item": "Motivos de recusa",
+      "onde": "SPRO › SD › Vendas › Documentos de vendas › Definir motivos de recusa",
+      "explicacao": "Lista de razões de perda."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "CRM / Sales Cloud",
+      "explicacao": "Oportunidades podem gerar cotações."
+    },
+    {
+      "com": "CO-PA",
+      "explicacao": "Pré-venda não gera resultado, mas alimenta análise de funil."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Cotação com várias alternativas",
+      "explicacao": "Itens alternativos para o cliente escolher."
+    }
+  ],
+  "caso": {
+    "titulo": "Distribuidor B2B",
+    "contexto": "Clientes pedem cotação antes de cada compra grande.",
+    "passos": [
+      "VA21 com validade de 15 dias.",
+      "Envio por e-mail.",
+      "VA25 semanal das cotações vencendo.",
+      "Aceita: VA01 com referência.",
+      "Recusada: motivo 'preço' para análise."
+    ]
+  },
+  "armadilhas": [
+    "Criar ordem sem referência à cotação: perde-se a medição de conversão e o preço negociado.",
+    "Cotação sem validade: fica aberta indefinidamente."
+  ],
+  "fixacao": {
+    "pergunta": "A cotação gera necessidade para o MRP?",
+    "resposta": "Normalmente não: é documento de pré-venda. A necessidade firme nasce na ordem de venda."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "A ordem nasce da cotação."
+    },
+    {
+      "id": "proc-sd-04-preco",
+      "motivo": "O preço da cotação usa a mesma técnica de condições."
+    },
+    {
+      "id": "base-sd",
+      "motivo": "Visão geral do Order-to-Cash."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Sales Document Types",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/c564b65334e6b54ce10000000a174cb4.html"
+    }
+  ]
+}

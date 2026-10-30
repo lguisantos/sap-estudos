@@ -51,7 +51,7 @@ function carregar(pasta, origem) {
   const { itens, erros } = conteudo.carregarItens(pasta);
   if (!itens.length) return false;
   // Fundamentos não contam como novidade: marcados como vistos na primeira leitura.
-  for (const it of itens) if (it.tipo !== "semanal" && !estado.vistos[it.id]) estado.vistos[it.id] = it.versao;
+  for (const it of itens) if (it.tipo === "fundamentos" && !estado.vistos[it.id]) estado.vistos[it.id] = it.versao;
   biblioteca = { ...biblioteca, itens, origem, erro: erros.length ? `Itens ignorados: ${erros.join("; ")}` : "" };
   return true;
 }

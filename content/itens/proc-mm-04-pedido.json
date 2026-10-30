@@ -1,0 +1,286 @@
+{
+  "id": "proc-mm-04-pedido",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 4,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Pedido de compra",
+  "nivel": "básico",
+  "titulo": "Criação do pedido de compra",
+  "resumo": "O pedido de compra é o documento legal enviado ao fornecedor: o quê, quanto, a que preço, quando e onde entregar. É o centro do Procure-to-Pay: dele dependem a entrada de mercadorias, a verificação da fatura e o pagamento.",
+  "quando": [
+    "Compra com fornecedor e preço definidos.",
+    "Conversão de requisições liberadas.",
+    "Compra direta sem requisição, quando a política permite."
+  ],
+  "prerequisitos": [
+    "Fornecedor (BP) ampliado para a organização de compras.",
+    "Organização de compras atribuída ao centro.",
+    "Material com visão de compras ou item em texto + grupo de mercadorias.",
+    "Para itens de consumo: classificação contábil."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Iniciar o pedido",
+      "papel": "Comprador",
+      "transacao": "ME21N · Fiori: Manage Purchase Orders",
+      "descricao": "Escolher tipo de pedido (NB padrão, UB transferência, FO limite), fornecedor, organização e grupo de compras e empresa.",
+      "detalhes": [
+        "Dados de cabeçalho vêm do fornecedor: condição de pagamento, Incoterms, moeda.",
+        "Pode referenciar requisição, cotação ou contrato pelo 'Document overview'."
+      ],
+      "resultado": "Cabeçalho preenchido.",
+      "exemplo": "NB · fornecedor 300100 · org. compras 1000 · grupo 001 · empresa 1000."
+    },
+    {
+      "titulo": "Informar os itens",
+      "papel": "Comprador",
+      "transacao": "ME21N (itens)",
+      "descricao": "Para cada item: material, quantidade, unidade, data de remessa, centro, depósito, preço.",
+      "detalhes": [
+        "Categoria de item: padrão, K consignação, L subcontratação, D serviço, U transferência.",
+        "Classificação contábil para consumo (K, F, P, A).",
+        "Preço vem do registro info ou contrato (condição PPR0/PB00), pode ser alterado conforme configuração.",
+        "Aba Remessa: tolerâncias de sobre/sub-entrega, entrada de mercadoria obrigatória."
+      ],
+      "resultado": "Itens completos.",
+      "exemplo": "Item 10: 100-200, 1.000 PC, 31,50 BRL, entrega 20/11, centro 1000, depósito 0001."
+    },
+    {
+      "titulo": "Revisar condições e impostos",
+      "papel": "Comprador",
+      "transacao": "ME21N (Condições / Fatura)",
+      "descricao": "Conferir descontos, frete, código de imposto e, no Brasil, dados fiscais (CFOP proposto, utilização do material, origem).",
+      "detalhes": [
+        "Esquema de cálculo de compras define as condições aplicáveis.",
+        "Aba Fatura: código IVA, verificação de fatura baseada em entrada (GR-based IV).",
+        "Brasil: categoria de NF e utilização do material (consumo, industrialização, revenda) afetam impostos."
+      ],
+      "resultado": "Valor final do pedido conhecido."
+    },
+    {
+      "titulo": "Verificar e gravar",
+      "papel": "Sistema",
+      "transacao": "ME21N (Verificar)",
+      "descricao": "O sistema checa campos obrigatórios, orçamento, preço e determina liberação e mensagens de saída.",
+      "detalhes": [
+        "Se uma estratégia de liberação se aplicar, o pedido fica bloqueado até aprovação.",
+        "Compromissos (commitments) são criados em CO para itens de consumo."
+      ],
+      "resultado": "Pedido gravado com número.",
+      "exemplo": "4500012345."
+    },
+    {
+      "titulo": "Aprovar (se necessário)",
+      "papel": "Aprovador",
+      "transacao": "ME29N / ME28 · My Inbox",
+      "descricao": "Pedidos que caem em estratégia de liberação aguardam os códigos de liberação ou o workflow flexível.",
+      "detalhes": [
+        "Sem liberação não há envio ao fornecedor nem entrada de mercadorias.",
+        "Ver detalhes da estratégia e do workflow em Liberação (aprovação).",
+        "Alterar o pedido depois de liberado pode reiniciar a aprovação se o valor subir além da tolerância."
+      ],
+      "resultado": "Pedido liberado."
+    },
+    {
+      "titulo": "Enviar ao fornecedor",
+      "papel": "Sistema",
+      "transacao": "ME9F · Output (BRF+/NACE)",
+      "descricao": "A mensagem de saída (impressão, e-mail, EDI) é processada e o pedido chega ao fornecedor.",
+      "detalhes": [
+        "No S/4HANA, o gerenciamento de saída pode usar o Output Management baseado em BRF+.",
+        "ME9F reprocessa mensagens pendentes."
+      ],
+      "resultado": "Fornecedor recebe o pedido."
+    },
+    {
+      "titulo": "Receber confirmação",
+      "papel": "Fornecedor",
+      "transacao": "ME22N (Confirmações)",
+      "descricao": "O fornecedor confirma datas e quantidades (confirmação de pedido ou aviso de remessa), que ficam registradas no item.",
+      "detalhes": [
+        "Chave de controle de confirmação define se é obrigatória.",
+        "Confirmações entram no MRP como data real de chegada."
+      ],
+      "resultado": "Datas confiáveis para planejamento."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Pedido de compra",
+      "tabelas": "EKKO · EKPO · EKET · EKKN",
+      "descricao": "Cabeçalho, itens, divisões de remessa e classificação contábil.",
+      "exemplo": "4500012345"
+    },
+    {
+      "nome": "Condições",
+      "tabelas": "PRCD_ELEMENTS",
+      "descricao": "No S/4HANA, condições de documentos de compras e vendas ficam em PRCD_ELEMENTS (substitui KONV)."
+    },
+    {
+      "nome": "Histórico do pedido",
+      "tabelas": "EKBE",
+      "descricao": "Entradas e faturas registradas contra o pedido."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Tipo de pedido",
+      "explicacao": "NB padrão, UB pedido de transferência, FO pedido limite; controla numeração e categorias permitidas."
+    },
+    {
+      "termo": "Categoria de item",
+      "explicacao": "Define o processo: padrão, consignação (K), subcontratação (L), serviço (D), transferência (U)."
+    },
+    {
+      "termo": "Divisão de remessa",
+      "explicacao": "Quantidade e data de entrega; um item pode ter várias."
+    },
+    {
+      "termo": "Compromisso (commitment)",
+      "explicacao": "Valor comprometido no orçamento antes da fatura."
+    },
+    {
+      "termo": "GR-based IV",
+      "explicacao": "Fatura verificada por entrada: cada fatura se refere a uma entrada específica."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME21N / ME22N / ME23N",
+      "descricao": "Criar, modificar, exibir pedido"
+    },
+    {
+      "codigo": "ME2L / ME2M / ME2N",
+      "descricao": "Listas de pedidos"
+    },
+    {
+      "codigo": "ME9F",
+      "descricao": "Mensagens de pedido"
+    },
+    {
+      "codigo": "ME59N",
+      "descricao": "Pedido automático a partir de requisições"
+    },
+    {
+      "codigo": "Manage Purchase Orders",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de documento",
+      "onde": "SPRO › MM › Compras › Pedido › Definir tipos de documento",
+      "explicacao": "Numeração, categorias de item, ligação com requisição."
+    },
+    {
+      "item": "Esquema de cálculo",
+      "onde": "SPRO › MM › Compras › Condições › Definir determinação de preço",
+      "explicacao": "Condições e sequência do cálculo do preço do pedido."
+    },
+    {
+      "item": "Mensagens",
+      "onde": "SPRO › MM › Compras › Mensagens / Output Management",
+      "explicacao": "Forma de envio ao fornecedor."
+    },
+    {
+      "item": "Tolerâncias",
+      "onde": "Pedido (aba Remessa) e SPRO de MM-IM",
+      "explicacao": "Sobre e subentrega na entrada."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM-IM",
+      "explicacao": "A entrada de mercadorias referencia o pedido."
+    },
+    {
+      "com": "MM-IV / FI",
+      "explicacao": "A fatura é verificada contra pedido e entrada; o pagamento sai em FI."
+    },
+    {
+      "com": "CO",
+      "explicacao": "Compromissos para itens de consumo."
+    },
+    {
+      "com": "Brasil (fiscal)",
+      "explicacao": "Dados do pedido alimentam a NF de entrada e a determinação de impostos."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Pedido limite (FO)",
+      "explicacao": "Para serviços/consumo com valor máximo e sem quantidades exatas."
+    },
+    {
+      "nome": "Pedido de transferência (UB)",
+      "explicacao": "Entre centros, ver transferência entre centros."
+    },
+    {
+      "nome": "Pedido de subcontratação / consignação",
+      "explicacao": "Categorias L e K."
+    }
+  ],
+  "caso": {
+    "titulo": "Compra de 1.000 PC com entrega dividida",
+    "contexto": "Fornecedor só consegue entregar 600 em 20/11 e 400 em 27/11.",
+    "passos": [
+      "ME21N com item 10 de 1.000 PC.",
+      "Aba Divisões: 600 em 20/11 e 400 em 27/11.",
+      "Pedido liberado e enviado.",
+      "Fornecedor confirma as datas; o MRP passa a enxergar duas entradas.",
+      "Duas entradas em MIGO, cada uma baixando a sua divisão."
+    ]
+  },
+  "armadilhas": [
+    "Mudar preço no pedido sem atualizar o registro info: a próxima compra volta ao preço antigo.",
+    "Esquecer o indicador de GR-based IV quando a fatura vem por entrega: a conciliação na MIRO fica difícil.",
+    "Brasil: utilização do material errada gera CFOP e impostos errados na entrada."
+  ],
+  "fixacao": {
+    "pergunta": "Qual tabela guarda as condições de preço do pedido no S/4HANA?",
+    "resposta": "PRCD_ELEMENTS, que substituiu a KONV para documentos de compras e vendas."
+  },
+  "links": [
+    {
+      "id": "proc-mm-01-requisicao",
+      "motivo": "Origem mais comum do pedido."
+    },
+    {
+      "id": "proc-mm-05-liberacao",
+      "motivo": "Aprovação do pedido."
+    },
+    {
+      "id": "proc-mm-06-monitoramento",
+      "motivo": "Como acompanhar depois de enviado."
+    },
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "Próximo passo: receber a mercadoria."
+    },
+    {
+      "id": "proc-mm-12-fatura",
+      "motivo": "Verificação da fatura contra o pedido."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Lançamentos contábeis gerados ao longo do processo."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Process Purchase Requisition and Create Purchase Order (SAP Best Practices)",
+      "url": "https://help.sap.com/docs/s4hana-cloud-best-practices/purchase-contract-bmd-my/process-purchase-requisition-and-create-purchase-order"
+    },
+    {
+      "titulo": "Materials Management – Enhancements in Procurement",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/77c07c8d30664260a0b3ff864e6b5e78/20c48270010449eca1fcc1b3d5da3cd3.html"
+    }
+  ]
+}

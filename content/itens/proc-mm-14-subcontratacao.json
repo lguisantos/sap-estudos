@@ -1,0 +1,217 @@
+{
+  "id": "proc-mm-14-subcontratacao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 14,
+  "publicado": "2026-10-30",
+  "area": "Compras (MM-PUR)",
+  "curto": "Subcontratação",
+  "nivel": "avançado",
+  "titulo": "Subcontratação (industrialização por terceiros)",
+  "resumo": "Na subcontratação, a empresa envia componentes ao fornecedor, que os transforma e devolve o produto acabado. O pedido tem categoria L e lista os componentes; eles saem para o estoque no fornecedor (541) e são consumidos (543) na entrada do produto.",
+  "quando": [
+    "Parte do processo produtivo é terceirizada (pintura, usinagem, montagem).",
+    "No Brasil: remessa para industrialização."
+  ],
+  "prerequisitos": [
+    "Lista técnica do material acabado (ou componentes informados no pedido).",
+    "Registro info de subcontratação com o preço do serviço.",
+    "Configuração fiscal para remessa e retorno de industrialização."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar pedido de subcontratação",
+      "papel": "Comprador",
+      "transacao": "ME21N (categoria L)",
+      "descricao": "O item é o produto acabado; o preço é o do serviço. Os componentes são explodidos da BOM ou informados.",
+      "detalhes": [
+        "Componentes podem ser ajustados por item.",
+        "O MRP enxerga a necessidade dos componentes no fornecedor."
+      ],
+      "resultado": "Pedido com componentes.",
+      "exemplo": "Pedido L: 500 peças pintadas, componente 500 peças brutas."
+    },
+    {
+      "titulo": "Enviar componentes",
+      "papel": "Almoxarifado",
+      "transacao": "ME2O / MIGO 541",
+      "descricao": "Os componentes saem do estoque livre para o estoque especial no fornecedor (O).",
+      "detalhes": [
+        "ME2O mostra o que falta enviar por fornecedor.",
+        "Sem efeito contábil: o estoque continua da empresa."
+      ],
+      "resultado": "Componentes no fornecedor."
+    },
+    {
+      "titulo": "Emitir NF de remessa (Brasil)",
+      "papel": "Fiscal",
+      "transacao": "J1B1N / NF via remessa",
+      "descricao": "A saída exige NF de remessa para industrialização (CFOP 5.901/6.901).",
+      "detalhes": [
+        "Com entrega (pedido + remessa SD) a NF sai automaticamente.",
+        "Controle fiscal do saldo no terceiro."
+      ],
+      "resultado": "Remessa documentada."
+    },
+    {
+      "titulo": "Receber o produto acabado",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO 101 (com 543)",
+      "descricao": "A entrada do acabado (101) consome automaticamente os componentes do estoque no fornecedor (543).",
+      "detalhes": [
+        "Consumo pode ser ajustado se houve perda.",
+        "O custo do acabado = componentes + serviço."
+      ],
+      "resultado": "Acabado em estoque, componentes baixados."
+    },
+    {
+      "titulo": "Faturar o serviço",
+      "papel": "Contas a pagar",
+      "transacao": "MIRO",
+      "descricao": "A fatura cobra somente o serviço de industrialização.",
+      "detalhes": [
+        "No Brasil, a NF de retorno traz o retorno simbólico dos componentes e a cobrança do serviço.",
+        "Diferenças seguem as tolerâncias normais."
+      ],
+      "resultado": "Serviço pago."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Pedido (categoria L)",
+      "tabelas": "EKPO · RESB",
+      "descricao": "Componentes como reservas do pedido."
+    },
+    {
+      "nome": "Documentos de material",
+      "tabelas": "MATDOC (541/543/101)",
+      "descricao": "Remessa, consumo e entrada."
+    },
+    {
+      "nome": "Notas fiscais",
+      "tabelas": "J_1BNFDOC",
+      "descricao": "Remessa e retorno de industrialização."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Estoque especial O",
+      "explicacao": "Material da empresa em poder do fornecedor."
+    },
+    {
+      "termo": "541 / 543",
+      "explicacao": "Transferência para o fornecedor / consumo no fornecedor."
+    },
+    {
+      "termo": "ME2O",
+      "explicacao": "Monitor de estoques e envios de subcontratação."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "ME21N",
+      "descricao": "Pedido categoria L"
+    },
+    {
+      "codigo": "ME2O",
+      "descricao": "Monitor de subcontratação"
+    },
+    {
+      "codigo": "MIGO",
+      "descricao": "541 / 101 com 543"
+    },
+    {
+      "codigo": "MBLB",
+      "descricao": "Estoque no fornecedor"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Registro info de subcontratação",
+      "onde": "ME11 (tipo subcontratação)",
+      "explicacao": "Preço do serviço."
+    },
+    {
+      "item": "Movimentos 541/543",
+      "onde": "OMJJ",
+      "explicacao": "Normalmente padrão."
+    },
+    {
+      "item": "CFOPs de industrialização",
+      "onde": "SPRO Brasil",
+      "explicacao": "Remessa e retorno."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "PP",
+      "explicacao": "BOM e MRP de componentes."
+    },
+    {
+      "com": "CO",
+      "explicacao": "Custo do acabado inclui o serviço."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "Notas de remessa/retorno."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Subcontratação com remessa SD",
+      "explicacao": "Usa entrega de saída para documentar transporte e NF."
+    }
+  ],
+  "caso": {
+    "titulo": "Pintura terceirizada",
+    "contexto": "Peças brutas vão para pintura externa.",
+    "passos": [
+      "Pedido L com 500 peças.",
+      "541 envia 500 brutas.",
+      "NF de remessa 5.901.",
+      "Entrada 101 de 500 pintadas consome 500 brutas (543).",
+      "MIRO do serviço de pintura."
+    ]
+  },
+  "armadilhas": [
+    "Esquecer a remessa: entrada falha por falta de estoque no fornecedor.",
+    "BOM desatualizada consome componente errado."
+  ],
+  "fixacao": {
+    "pergunta": "Qual movimento consome os componentes na subcontratação e quando ocorre?",
+    "resposta": "O 543, gerado automaticamente junto com a entrada 101 do produto acabado."
+  },
+  "links": [
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "Pedido com categoria L."
+    },
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Estoques especiais."
+    },
+    {
+      "id": "proc-mm-13-nf-entrada",
+      "motivo": "Notas de industrialização."
+    },
+    {
+      "id": "base-pp",
+      "motivo": "BOM que define componentes."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Subcontracting (S/4HANA Cloud)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/857bfa75f4c3453bacf512c3f9a1a970.html"
+    },
+    {
+      "titulo": "Receipt of Repaired Parts from the Subcontractor",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/e72f747389b340229f7fa343975bfa57/5adbc353b677b44ce10000000a174cb4.html"
+    }
+  ]
+}

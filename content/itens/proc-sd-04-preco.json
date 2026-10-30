@@ -1,0 +1,241 @@
+{
+  "id": "proc-sd-04-preco",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 4,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Determinação de preço",
+  "nivel": "intermediário",
+  "titulo": "Determinação de preço: a técnica de condições",
+  "resumo": "O preço de venda no SAP é calculado pela técnica de condições: um esquema de cálculo lista as condições (preço, descontos, frete, impostos); cada condição tem uma sequência de acesso que procura registros de condição do mais específico ao mais geral.",
+  "quando": [
+    "Toda ordem, cotação, contrato e fatura.",
+    "Preços por cliente, grupo, região ou material.",
+    "Promoções com validade."
+  ],
+  "prerequisitos": [
+    "Esquema de cálculo determinado para área de vendas + esquema do documento + esquema do cliente.",
+    "Registros de condição (VK11) válidos na data de preço."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Determinar o esquema de cálculo",
+      "papel": "Sistema",
+      "transacao": "OVKK",
+      "descricao": "Área de vendas + esquema de documento (tipo de ordem) + esquema de cliente (mestre) definem o esquema.",
+      "detalhes": [
+        "Padrão clássico RVAA01; nas SAP Best Practices há esquemas próprios.",
+        "Esquemas diferentes para exportação, intercompany etc."
+      ],
+      "resultado": "Esquema escolhido."
+    },
+    {
+      "titulo": "Ler as condições do esquema",
+      "papel": "Sistema",
+      "transacao": "V/08",
+      "descricao": "O esquema lista as condições em ordem, com subtotais, requisitos e fórmulas.",
+      "detalhes": [
+        "Condição de preço base: PR00 (padrão clássico) ou PPR0 (S/4HANA Best Practices/Cloud).",
+        "Descontos (K004 material, K007 cliente), frete, impostos."
+      ],
+      "resultado": "Lista de condições a buscar."
+    },
+    {
+      "titulo": "Executar as sequências de acesso",
+      "papel": "Sistema",
+      "transacao": "V/07",
+      "descricao": "Para cada condição, a sequência de acesso testa tabelas na ordem até achar um registro válido.",
+      "detalhes": [
+        "Ex.: 1º cliente/material, 2º lista de preços/material, 3º material.",
+        "Registro exclusivo: para no primeiro encontrado."
+      ],
+      "resultado": "Registros encontrados.",
+      "exemplo": "Preço cliente/material 48,00 encontrado no 1º acesso."
+    },
+    {
+      "titulo": "Calcular o preço",
+      "papel": "Sistema",
+      "transacao": "VA01 (aba Condições)",
+      "descricao": "Aplica valores, escalas, percentuais e fórmulas; calcula subtotais e impostos.",
+      "detalhes": [
+        "Escalas por quantidade/valor.",
+        "Arredondamento e conversão de moeda."
+      ],
+      "resultado": "Valor líquido e impostos.",
+      "exemplo": "200 × 48,00 − 3% = 9.312,00 + ICMS."
+    },
+    {
+      "titulo": "Ajuste manual (se permitido)",
+      "papel": "Vendedor",
+      "transacao": "VA02 (Condições)",
+      "descricao": "Condições com alteração manual permitida podem ser ajustadas.",
+      "detalhes": [
+        "Permissão por tipo de condição.",
+        "Aprovação de preço pode ser exigida por workflow em alguns cenários."
+      ],
+      "resultado": "Preço final da ordem."
+    },
+    {
+      "titulo": "Repassar à fatura",
+      "papel": "Sistema",
+      "transacao": "VF01 (tipo de determinação de preço)",
+      "descricao": "Na fatura, o preço é copiado ou redeterminado conforme o controle de cópia.",
+      "detalhes": [
+        "Tipo C copia manuais e redetermina o resto; G redetermina impostos.",
+        "Contas de receita vêm da determinação de contas (VKOA)."
+      ],
+      "resultado": "Fatura com preço coerente."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Registros de condição",
+      "tabelas": "Tabelas A### · KONH · KONP",
+      "descricao": "Preços e descontos cadastrados."
+    },
+    {
+      "nome": "Condições no documento",
+      "tabelas": "PRCD_ELEMENTS",
+      "descricao": "Resultado do cálculo."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Tipo de condição",
+      "explicacao": "Preço, desconto, sobretaxa, imposto (PR00/PPR0, K004, K007, MWST)."
+    },
+    {
+      "termo": "Sequência de acesso",
+      "explicacao": "Ordem de busca dos registros."
+    },
+    {
+      "termo": "Tabela de condição",
+      "explicacao": "Combinação de campos-chave (ex.: org. vendas + cliente + material)."
+    },
+    {
+      "termo": "Esquema de cálculo",
+      "explicacao": "Lista ordenada de condições e subtotais."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VK11 / VK12 / VK13",
+      "descricao": "Registros de condição"
+    },
+    {
+      "codigo": "V/06",
+      "descricao": "Tipos de condição"
+    },
+    {
+      "codigo": "V/07",
+      "descricao": "Sequências de acesso"
+    },
+    {
+      "codigo": "V/08",
+      "descricao": "Esquemas de cálculo"
+    },
+    {
+      "codigo": "OVKK",
+      "descricao": "Determinação do esquema"
+    },
+    {
+      "codigo": "Manage Prices – Sales",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tabelas de condição",
+      "onde": "V/03",
+      "explicacao": "Campos-chave."
+    },
+    {
+      "item": "Sequências",
+      "onde": "V/07",
+      "explicacao": "Acessos."
+    },
+    {
+      "item": "Tipos de condição",
+      "onde": "V/06",
+      "explicacao": "Cálculo, escalas, manual."
+    },
+    {
+      "item": "Esquema",
+      "onde": "V/08 e OVKK",
+      "explicacao": "Montagem e determinação."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI",
+      "explicacao": "Contas de receita e desconto via VKOA."
+    },
+    {
+      "com": "CO-PA",
+      "explicacao": "Valores de condição alimentam a margem."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "Impostos por condições específicas (ICMS, IPI, PIS, COFINS)."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Acordos e bonificações",
+      "explicacao": "No S/4HANA, rebates de SD foram substituídos pelos contratos de condição (Settlement Management)."
+    }
+  ],
+  "caso": {
+    "titulo": "Preço especial para cliente-chave",
+    "contexto": "Cliente 1000123 negociou 48,00 e 3% de desconto em compras acima de 100 cx.",
+    "passos": [
+      "VK11 preço cliente/material 48,00.",
+      "VK11 K007 com escala: 3% a partir de 100.",
+      "VA01 encontra o preço no 1º acesso.",
+      "Escala aplica 3%.",
+      "Fatura copia as condições."
+    ]
+  },
+  "armadilhas": [
+    "Registro sem validade correta: preço antigo aparece.",
+    "Desconto em sequência errada no esquema: base de cálculo errada."
+  ],
+  "fixacao": {
+    "pergunta": "O que acontece se a sequência de acesso não encontra registro no primeiro acesso?",
+    "resposta": "Ela testa o próximo acesso (mais genérico) até achar um registro válido ou acabar a sequência, quando a condição fica sem valor."
+  },
+  "links": [
+    {
+      "id": "proc-sd-02-ordem",
+      "motivo": "Preço calculado na ordem."
+    },
+    {
+      "id": "proc-sd-11-faturamento",
+      "motivo": "Preço na fatura."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "VKOA e contas de receita."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Condition Type for Pricing in Sales",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/19d48293097f4a2589433856b034dfa5/fcc6f65362484413bfbb0f7cae3652d3.html"
+    },
+    {
+      "titulo": "Pricing and Conditions (SAP ERP)",
+      "url": "https://help.sap.com/docs/SAP_ERP/3d9b4e6529de433bac82328613bca800/5e49b753128eb44ce10000000a174cb4.html"
+    },
+    {
+      "titulo": "Access Sequence for Pricing in Sales",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/df34f53fa1bc4d0ca0bb7dd8b25c7aec.html"
+    }
+  ]
+}

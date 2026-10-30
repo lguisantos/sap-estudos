@@ -1,0 +1,197 @@
+{
+  "id": "proc-sd-15-consignacao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 15,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Consignação no cliente",
+  "nivel": "avançado",
+  "titulo": "Consignação no cliente: abastecer, faturar o consumo, retirar e devolver",
+  "resumo": "Na consignação de vendas, a empresa deixa mercadoria no cliente, mas continua dona. O cliente só é faturado quando usa ou vende. São quatro processos: abastecimento (KB), saída/consumo (KE), devolução (KR) e retirada (KA), com estoque especial W.",
+  "quando": [
+    "Clientes que não querem imobilizar estoque.",
+    "Produtos de alto giro em pontos de venda."
+  ],
+  "prerequisitos": [
+    "Tipos KB, KE, KR, KA configurados.",
+    "Cliente com estoque especial W controlado."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Abastecer o cliente (KB)",
+      "papel": "Vendedor",
+      "transacao": "VA01 (KB) → VL01N",
+      "descricao": "Remessa com movimento 631 transfere para o estoque W do cliente.",
+      "detalhes": [
+        "Sem faturamento: continua da empresa.",
+        "No Brasil, NF de remessa em consignação."
+      ],
+      "resultado": "Estoque no cliente."
+    },
+    {
+      "titulo": "Registrar consumo (KE)",
+      "papel": "Vendedor",
+      "transacao": "VA01 (KE) → VL01N → VF01",
+      "descricao": "Cliente informa o que usou; saída 633 baixa o estoque W e gera fatura.",
+      "detalhes": [
+        "Momento da transferência de propriedade.",
+        "Fatura normal ao cliente."
+      ],
+      "resultado": "Receita do consumo."
+    },
+    {
+      "titulo": "Devolução de consignação (KR)",
+      "papel": "Vendedor",
+      "transacao": "VA01 (KR)",
+      "descricao": "Mercadoria consumida devolvida volta ao estoque W (634) com crédito.",
+      "detalhes": [
+        "Bloqueio de faturamento padrão.",
+        "Crédito após liberar."
+      ],
+      "resultado": "Cliente creditado."
+    },
+    {
+      "titulo": "Retirada (KA)",
+      "papel": "Vendedor",
+      "transacao": "VA01 (KA)",
+      "descricao": "Mercadoria não usada volta para o estoque próprio (632).",
+      "detalhes": [
+        "Sem faturamento.",
+        "NF de retorno no Brasil."
+      ],
+      "resultado": "Estoque de volta."
+    },
+    {
+      "titulo": "Monitorar estoque no cliente",
+      "papel": "Vendedor",
+      "transacao": "MB58 / MMBE",
+      "descricao": "Saldo por cliente.",
+      "detalhes": [
+        "Inventário periódico no cliente.",
+        "Conciliação com relatórios do cliente."
+      ],
+      "resultado": "Controle do estoque externo."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Ordens KB/KE/KR/KA",
+      "tabelas": "VBAK",
+      "descricao": "Quatro processos."
+    },
+    {
+      "nome": "Documentos de material",
+      "tabelas": "MATDOC (631/632/633/634)",
+      "descricao": "Movimentos do estoque W."
+    },
+    {
+      "nome": "Fatura",
+      "tabelas": "VBRK",
+      "descricao": "Só no consumo (KE)."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Estoque especial W",
+      "explicacao": "Estoque da empresa no cliente."
+    },
+    {
+      "termo": "KB / KE / KR / KA",
+      "explicacao": "Abastecimento, consumo, devolução, retirada."
+    },
+    {
+      "termo": "Transferência de propriedade",
+      "explicacao": "Só acontece no consumo (KE); até lá o estoque continua avaliado na empresa."
+    },
+    {
+      "termo": "Movimentos 631–634",
+      "explicacao": "631 abastecimento, 632 retirada, 633 consumo, 634 devolução."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA01",
+      "descricao": "Ordens de consignação"
+    },
+    {
+      "codigo": "MB58",
+      "descricao": "Estoque em consignação no cliente"
+    },
+    {
+      "codigo": "VL01N / VF01",
+      "descricao": "Remessa e fatura"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de ordem",
+      "onde": "VOV8",
+      "explicacao": "KB, KE, KR, KA."
+    },
+    {
+      "item": "Categorias de item",
+      "onde": "VOV7",
+      "explicacao": "KBN, KEN, KRN, KAN."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM-IM",
+      "explicacao": "Estoque W."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "NFs de remessa, retorno e venda em consignação."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Agente externo",
+      "explicacao": "Consignação via operador logístico."
+    }
+  ],
+  "caso": {
+    "titulo": "Peças em oficinas",
+    "contexto": "Distribuidor deixa peças nas oficinas clientes.",
+    "passos": [
+      "KB abastece.",
+      "Mensalmente KE fatura o consumido.",
+      "KA retira peças paradas.",
+      "MB58 controla saldos.",
+      "Inventário semestral."
+    ]
+  },
+  "armadilhas": [
+    "Faturar no abastecimento: o KB não é venda."
+  ],
+  "fixacao": {
+    "pergunta": "Em qual dos quatro processos de consignação o cliente é faturado?",
+    "resposta": "No KE (saída de consignação), quando consome ou vende a mercadoria."
+  },
+  "links": [
+    {
+      "id": "proc-mm-15-consignacao",
+      "motivo": "Consignação do lado de compras."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Remessas do processo."
+    },
+    {
+      "id": "proc-sd-13-devolucao",
+      "motivo": "Devoluções."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Consignment Stock Processing",
+      "url": "https://help.sap.com/docs/SAP_ERP/78e0627c34ef43879d72718e21ea517b/da65b65334e6b54ce10000000a174cb4.html"
+    }
+  ]
+}

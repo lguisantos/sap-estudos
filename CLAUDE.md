@@ -11,7 +11,8 @@ Escreva sempre em português do Brasil, frases diretas, sem enrolação.
 
 ## Edição semanal: o que gerar
 
-Toda sexta, crie **dois itens novos** em `content/itens/`:
+Toda sexta, crie **dois itens novos** em `content/itens/` (tipo `semanal`); se o plano pedir,
+aprofunde também um processo existente ou crie um novo (tipo `processo`, ver abaixo):
 
 - um da trilha `funcional` (processos, módulos, configuração, mercado);
 - um da trilha `tecnico` (ABAP Cloud, RAP, CDS, BTP, integração, Fiori, performance).
@@ -60,6 +61,39 @@ Nome do arquivo e `id`: `AAAA-MM-DD-<trilha>-<slug>.json` (o `id` é o nome sem 
 ```
 
 `codigo` e `novidades` são opcionais; o resto é obrigatório.
+
+## Processos (tipo `processo`)
+
+Explicações completas de processos por módulo (hoje MM e SD), em `content/itens/proc-<mod>-<nn>-<slug>.json`.
+Cada processo traz o fluxo inteiro, passo a passo, e o app desenha a ilustração em raias a partir de `fluxo`.
+
+Campos além dos comuns (`conceitos`, `transacoes`, `caso` = exemplo completo, `armadilhas`, `fixacao`, `links`, `fontes`):
+
+```json
+{
+  "tipo": "processo", "modulo": "MM", "area": "Compras (MM-PUR)", "ordem": 4,
+  "quando": ["situações de uso"],
+  "prerequisitos": ["o que precisa existir antes"],
+  "fluxo": [{
+    "titulo": "Criar o pedido (até 48 caracteres)",
+    "papel": "Comprador",            // vira a coluna (raia) da ilustração; máx. 5 papéis por processo
+    "transacao": "ME21N · app Fiori",
+    "descricao": "o que acontece",
+    "detalhes": ["pelo menos 2 pontos"],
+    "resultado": "o que existe depois do passo",
+    "exemplo": "valores concretos (opcional)"
+  }],
+  "documentos": [{ "nome": "", "tabelas": "EKKO · EKPO", "descricao": "", "exemplo": "" }],
+  "configuracao": [{ "item": "", "onde": "SPRO › … ou transação", "explicacao": "" }],
+  "integracao": [{ "com": "FI", "explicacao": "" }],
+  "variantes": [{ "nome": "", "explicacao": "" }]
+}
+```
+
+Regras: base na documentação SAP Help (cite as subpáginas usadas em `fontes`), um papel por
+responsável real, `links` para os processos vizinhos (antes/depois no fluxo e o equivalente no
+outro módulo). Diferencie S/4HANA de ECC quando a transação ou tabela mudou (ex.: MATDOC, PRCD_ELEMENTS,
+Business Partner, Credit Management).
 
 ## Chat do app
 

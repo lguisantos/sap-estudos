@@ -1,0 +1,264 @@
+{
+  "id": "proc-mm-09-entrada",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "ordem": 9,
+  "publicado": "2026-10-30",
+  "area": "Gestão de estoque (MM-IM)",
+  "curto": "Entrada de mercadorias",
+  "nivel": "básico",
+  "titulo": "Entrada de mercadorias por pedido de compra",
+  "resumo": "A entrada de mercadorias (goods receipt) registra fisicamente e contabilmente o recebimento do que foi comprado. Com referência ao pedido, o sistema propõe material, quantidade e preço, aumenta o estoque, atualiza o histórico do pedido e lança estoque contra a conta GR/IR.",
+  "quando": [
+    "Chegada de material comprado no almoxarifado.",
+    "Recebimento de itens de consumo (entrada direta no centro de custo).",
+    "Recebimento com inspeção de qualidade antes de liberar o uso."
+  ],
+  "prerequisitos": [
+    "Pedido liberado com item aberto e indicador de entrada de mercadorias.",
+    "Material com visão de contabilidade (preço e classe de avaliação) se for estocável.",
+    "Período de estoque aberto (MMPV/MMRV)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Chegada física e conferência",
+      "papel": "Almoxarifado",
+      "transacao": "Portaria / nota fiscal",
+      "descricao": "O caminhão chega com a mercadoria e a nota fiscal; o recebedor confere quantidade e o pedido citado na nota.",
+      "detalhes": [
+        "No Brasil, a NF-e pode ser validada antes (portaria/gatekeeper do SAP Electronic Invoicing for Brazil).",
+        "Divergências grosseiras podem levar à recusa da carga."
+      ],
+      "resultado": "Mercadoria conferida.",
+      "exemplo": "NF 12345 cita o pedido 4500012345, 600 PC."
+    },
+    {
+      "titulo": "Lançar a entrada",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO (A01 Entrada · R01 Pedido)",
+      "descricao": "Na MIGO, escolher 'Entrada de mercadorias' com referência ao pedido; o sistema traz itens abertos.",
+      "detalhes": [
+        "Tipo de movimento 101 (entrada por pedido).",
+        "Informar quantidade recebida, depósito, lote (se houver) e marcar 'Item OK'.",
+        "Nota de remessa e conhecimento de frete no cabeçalho."
+      ],
+      "resultado": "Itens prontos para lançamento.",
+      "exemplo": "600 PC no depósito 0001."
+    },
+    {
+      "titulo": "Escolher o tipo de estoque",
+      "papel": "Almoxarifado",
+      "transacao": "MIGO (campo tipo de estoque)",
+      "descricao": "Define onde o material entra: livre utilização, controle de qualidade ou bloqueado.",
+      "detalhes": [
+        "Com QM ativo (tipo de inspeção 01), a entrada vai para controle de qualidade automaticamente.",
+        "Movimento 103 coloca em estoque bloqueado de entrada (não avaliado) e 105 libera para estoque.",
+        "Entrada direta de consumo (classificação K/F) não gera estoque: o custo vai ao objeto."
+      ],
+      "resultado": "Destino do material definido."
+    },
+    {
+      "titulo": "Verificar tolerâncias",
+      "papel": "Sistema",
+      "transacao": "MIGO (verificação)",
+      "descricao": "O sistema compara quantidade recebida com a pedida, considerando tolerâncias de sobre e subentrega do pedido.",
+      "detalhes": [
+        "Acima da tolerância de sobre-entrega: erro.",
+        "Abaixo: o item continua aberto, salvo se marcar remessa final."
+      ],
+      "resultado": "Entrada aceita ou bloqueada."
+    },
+    {
+      "titulo": "Gravar: documentos gerados",
+      "papel": "Sistema",
+      "transacao": "MIGO (Gravar)",
+      "descricao": "São criados o documento de material e, se avaliado, o documento contábil.",
+      "detalhes": [
+        "Lançamento típico: D Estoque (BSX) × C GR/IR (WRX).",
+        "Preço standard com diferença do pedido: diferença vai para PRD.",
+        "Histórico do pedido (EKBE) e estoque (MATDOC) atualizados."
+      ],
+      "resultado": "Estoque aumentado e contabilidade lançada.",
+      "exemplo": "Doc. material 5000000123 · doc. contábil 5000000045."
+    },
+    {
+      "titulo": "Atividades seguintes",
+      "papel": "Sistema",
+      "transacao": "QM / WM / Saídas",
+      "descricao": "Dependendo da configuração: lote de controle de QM, necessidade de transporte para WM/EWM, etiqueta e notificação ao solicitante.",
+      "detalhes": [
+        "Em EWM, a entrada pode partir de um aviso de recebimento (inbound delivery).",
+        "O MRP passa a enxergar o estoque novo."
+      ],
+      "resultado": "Material disponível para uso conforme o tipo de estoque."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC (S/4HANA)",
+      "descricao": "No S/4HANA, MATDOC substitui MKPF/MSEG e as tabelas de totais de estoque.",
+      "exemplo": "5000000123/2026"
+    },
+    {
+      "nome": "Documento contábil",
+      "tabelas": "ACDOCA · BKPF",
+      "descricao": "Estoque × GR/IR."
+    },
+    {
+      "nome": "Histórico do pedido",
+      "tabelas": "EKBE",
+      "descricao": "Linha de entrada (VGABE = 1)."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Tipo de movimento",
+      "explicacao": "Código de 3 dígitos que define o efeito do lançamento (101 entrada por pedido, 102 estorno)."
+    },
+    {
+      "termo": "Estoque de livre utilização",
+      "explicacao": "Disponível para consumo e vendas."
+    },
+    {
+      "termo": "Estoque em controle de qualidade",
+      "explicacao": "Avaliado, mas bloqueado para uso até a decisão de qualidade."
+    },
+    {
+      "termo": "Estoque bloqueado de entrada (103)",
+      "explicacao": "Não avaliado; mercadoria aceita com reservas, ainda sem lançamento de estoque."
+    },
+    {
+      "termo": "Conta GR/IR",
+      "explicacao": "Conta de compensação entre entrada e fatura."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "MIGO",
+      "descricao": "Movimentos de mercadoria (entrada, saída, transferência)"
+    },
+    {
+      "codigo": "MB51",
+      "descricao": "Lista de documentos de material"
+    },
+    {
+      "codigo": "MMBE",
+      "descricao": "Visão geral de estoque"
+    },
+    {
+      "codigo": "MB5S",
+      "descricao": "Saldos GR/IR por pedido"
+    },
+    {
+      "codigo": "Post Goods Receipt for Purchasing Document",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de movimento",
+      "onde": "OMJJ",
+      "explicacao": "Controle de campos, contas e regras de cada movimento."
+    },
+    {
+      "item": "Tolerâncias de entrada",
+      "onde": "SPRO › MM › Gestão de estoque › Entrada de mercadorias › Definir tolerâncias",
+      "explicacao": "B1/B2 para variação de preço na entrada."
+    },
+    {
+      "item": "Determinação de contas",
+      "onde": "OBYC (BSX, WRX, PRD)",
+      "explicacao": "Contas usadas no lançamento."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "FI",
+      "explicacao": "Lança estoque e GR/IR na ACDOCA."
+    },
+    {
+      "com": "QM",
+      "explicacao": "Cria lote de controle."
+    },
+    {
+      "com": "EWM/WM",
+      "explicacao": "Gera tarefa de armazenagem."
+    },
+    {
+      "com": "Brasil",
+      "explicacao": "Integração com a NF de entrada."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Entrada com aviso de recebimento",
+      "explicacao": "Inbound delivery antes da chegada, usada com EWM."
+    },
+    {
+      "nome": "Entrada em duas etapas",
+      "explicacao": "103 (bloqueado) e depois 105 (libera para estoque)."
+    }
+  ],
+  "caso": {
+    "titulo": "Recebimento com inspeção",
+    "contexto": "Resina exige análise antes do uso.",
+    "passos": [
+      "MIGO 101 com referência ao pedido.",
+      "Material com QM: entra em controle de qualidade.",
+      "Lote de controle criado e analisado.",
+      "Decisão de uso libera para livre utilização.",
+      "MRP enxerga o estoque disponível."
+    ]
+  },
+  "armadilhas": [
+    "Lançar entrada no centro errado: estoque e custo ficam no lugar errado e é preciso estornar (102).",
+    "Receber acima da tolerância por pressa: a fatura bloqueia por quantidade depois.",
+    "Esquecer a entrada e lançar a fatura: com GR-based IV ela não pode ser lançada."
+  ],
+  "fixacao": {
+    "pergunta": "Qual o lançamento contábil de uma entrada 101 de material com preço médio móvel?",
+    "resposta": "Débito na conta de estoque (BSX) e crédito na GR/IR (WRX) pelo valor do pedido; com preço médio móvel não há conta de diferença de preço, o preço médio é recalculado."
+  },
+  "links": [
+    {
+      "id": "proc-mm-04-pedido",
+      "motivo": "A entrada referencia o pedido."
+    },
+    {
+      "id": "proc-mm-12-fatura",
+      "motivo": "A fatura compensa a GR/IR criada aqui."
+    },
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Outros movimentos de estoque."
+    },
+    {
+      "id": "proc-mm-13-nf-entrada",
+      "motivo": "Nota fiscal de entrada no Brasil."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Determinação de contas BSX/WRX."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Help – SAP S/4HANA (on-premise): Materials Management, referência indicada",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/8a57feade137489098f59374c06f1e0e/1d07b753128eb44ce10000000a174cb4.html?locale=en-US"
+    },
+    {
+      "titulo": "Goods Movement Type",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/ee6ff9b281d8448f96b4fe6c89f2bdc8/8b7b5fe73ef54063a2bfcfbe83cebd38.html"
+    },
+    {
+      "titulo": "Feature Comparison for Goods Movement",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/91b21005dded4984bcccf4a69ae1300c/de29287f0c0840caacbbc6f79c8d6242.html"
+    },
+    {
+      "titulo": "Goods-Receipt-Based Invoice Verification",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/af9ef57f504840d2b81be8667206d485/a97eb65334e6b54ce10000000a174cb4.html"
+    }
+  ]
+}

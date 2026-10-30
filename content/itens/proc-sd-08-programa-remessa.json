@@ -1,0 +1,184 @@
+{
+  "id": "proc-sd-08-programa-remessa",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "ordem": 8,
+  "publicado": "2026-10-30",
+  "area": "Vendas (SD-SLS)",
+  "curto": "Programa de remessa (venda)",
+  "nivel": "avançado",
+  "titulo": "Programa de remessa de venda: entregas por cronograma do cliente",
+  "resumo": "No programa de remessa de vendas, o cliente envia programas (previsão e JIT) que substituem os anteriores em data e quantidade. As remessas são criadas a partir das linhas do programa, sem uma ordem por entrega. É o espelho do programa de remessa de compras do cliente.",
+  "quando": [
+    "Fornecimento a montadoras e indústrias com JIT.",
+    "Cliente envia programas por EDI (DELFOR/DELJIT)."
+  ],
+  "prerequisitos": [
+    "Tipo LP/LZ configurado.",
+    "Integração EDI com o cliente (opcional, comum)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar o programa",
+      "papel": "Vendedor",
+      "transacao": "VA31 (LP/LZ)",
+      "descricao": "Cliente, material, quantidade-alvo e validade.",
+      "detalhes": [
+        "LZ: com documentação de liberação (previsão e JIT).",
+        "Número do programa do cliente referenciado."
+      ],
+      "resultado": "Acordo criado."
+    },
+    {
+      "titulo": "Receber programa do cliente",
+      "papel": "Sistema",
+      "transacao": "EDI DELFOR / DELJIT · VA32",
+      "descricao": "Novas linhas substituem total ou parcialmente as anteriores.",
+      "detalhes": [
+        "Previsão (forecast) para planejamento.",
+        "JIT para chamadas de curto prazo."
+      ],
+      "resultado": "Linhas atualizadas."
+    },
+    {
+      "titulo": "Planejar",
+      "papel": "Sistema (MRP)",
+      "transacao": "MD04",
+      "descricao": "Linhas geram necessidades para produção.",
+      "detalhes": [
+        "Previsão pode ser tratada como necessidade independente.",
+        "JIT entra como necessidade firme."
+      ],
+      "resultado": "Produção planejada."
+    },
+    {
+      "titulo": "Criar remessas",
+      "papel": "Expedição",
+      "transacao": "VL10 / VL01N",
+      "descricao": "Remessas a partir das linhas vencidas.",
+      "detalhes": [
+        "Quantidade acumulada (cum) controla diferenças.",
+        "Tolerâncias de quantidade."
+      ],
+      "resultado": "Remessas criadas."
+    },
+    {
+      "titulo": "Saída e faturamento",
+      "papel": "Expedição",
+      "transacao": "VL02N / VF04",
+      "descricao": "Fluxo normal de saída e fatura.",
+      "detalhes": [
+        "Autofaturamento do cliente (self-billing) é comum.",
+        "Conciliação pela quantidade acumulada."
+      ],
+      "resultado": "Receita reconhecida."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Programa de remessa",
+      "tabelas": "VBAK (VBTYP = E) · VBEP",
+      "descricao": "Linhas de remessa."
+    },
+    {
+      "nome": "Liberações",
+      "tabelas": "VBLB",
+      "descricao": "Histórico dos programas recebidos."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Programa de previsão",
+      "explicacao": "Médio prazo, para planejamento."
+    },
+    {
+      "termo": "Programa JIT",
+      "explicacao": "Curto prazo, firme."
+    },
+    {
+      "termo": "Quantidade acumulada",
+      "explicacao": "Total entregue desde o início, usada na conciliação com o cliente."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "VA31 / VA32 / VA33",
+      "descricao": "Programa de remessa"
+    },
+    {
+      "codigo": "VL10",
+      "descricao": "Remessas devidas"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos LP/LZ",
+      "onde": "VOV8",
+      "explicacao": "Com/sem documentação de liberação."
+    },
+    {
+      "item": "EDI",
+      "onde": "WE20 / perfis de parceiro",
+      "explicacao": "Mensagens DELFOR/DELJIT."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM (do cliente)",
+      "explicacao": "Espelho do programa de remessa de compras."
+    },
+    {
+      "com": "PP",
+      "explicacao": "Necessidades a partir das linhas."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Com agente externo (LK)",
+      "explicacao": "Consignação no cliente via operador logístico."
+    }
+  ],
+  "caso": {
+    "titulo": "Fornecedor de autopeças",
+    "contexto": "Cliente envia JIT diário.",
+    "passos": [
+      "VA31 LZ.",
+      "EDI atualiza linhas.",
+      "MRP produz.",
+      "Remessas diárias.",
+      "Self-billing do cliente."
+    ]
+  },
+  "armadilhas": [
+    "Perder sincronia da quantidade acumulada com o cliente."
+  ],
+  "fixacao": {
+    "pergunta": "O que acontece com as linhas antigas quando chega um novo programa?",
+    "resposta": "O novo programa substitui, total ou parcialmente, as linhas anteriores em datas e quantidades."
+  },
+  "links": [
+    {
+      "id": "proc-mm-08-programa-remessa",
+      "motivo": "O lado do comprador."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "Remessas a partir das linhas."
+    },
+    {
+      "id": "proc-sd-07-contrato",
+      "motivo": "Acordo sem datas."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "SAP Support Content – Sales and Distribution (SD), referência indicada",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915062.html?locale=en-US"
+    },
+    {
+      "titulo": "Sales Scheduling Agreements",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/e092ba53422bb54ce10000000a174cb4.html"
+    }
+  ]
+}
