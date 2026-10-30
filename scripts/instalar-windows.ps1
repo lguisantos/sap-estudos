@@ -53,8 +53,24 @@ Push-Location $fonte
 $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
 npm ci --no-audit --no-fund
 if ($LASTEXITCODE -ne 0) { throw "npm ci falhou." }
+# O pacote winCodeSign do electron-builder traz links simbólicos de macOS que o Windows só cria
+# como administrador. Extraímos nós mesmos para o cache, ignorando esses dois arquivos (inúteis no Windows).
+$cache = Join-Path $env:LOCALAPPDATA "electron-builder\Cache\winCodeSign"
+$wcs = Join-Path $cache "winCodeSign-2.6.0"
+if (-not (Test-Path "$wcs\rcedit-x64.exe")) {
+  New-Item -ItemType Directory -Force $cache | Out-Null
+  $arq = Join-Path $cache "winCodeSign-2.6.0.7z"
+  Invoke-WebRequest "https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z" -OutFile $arq -UseBasicParsing
+  & "$fonte\node_modules\7zip-bin\win\x64\7za.exe" x -y -bd $arq "-o$wcs" | Out-Null
+  Remove-Item $arq -Force -ErrorAction SilentlyContinue
+  if (-not (Test-Path "$wcs\rcedit-x64.exe")) { Write-Warning "Não consegui preparar o winCodeSign; o instalador sairá sem o ícone personalizado no .exe." }
+}
 npm run dist
-if ($LASTEXITCODE -ne 0) { throw "A geração do instalador falhou." }
+if ($LASTEXITCODE -ne 0) {
+  Write-Warning "Nova tentativa sem editar o executável (o app funciona igual; só o ícone do .exe fica o padrão)."
+  npx electron-builder --win nsis "-c.win.signAndEditExecutable=false"
+  if ($LASTEXITCODE -ne 0) { throw "A geração do instalador falhou." }
+}
 $exe = Get-ChildItem "$fonte\dist\*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 Pop-Location
 if (-not $exe) { throw "Instalador não encontrado em dist\." }
