@@ -18,8 +18,10 @@ notificação do Windows e marca o que você ainda não viu.
   chega conteúdo novo ou quando um item é revisado. O app fica na bandeja e verifica a cada 30 min.
 - **Caderno**: anotação por tema, salva automaticamente. Escreva `[[MM — Compras]]` para criar
   link para outro tema. A aba *Anotações* junta tudo.
-- **Conexões**: cada tema lista temas relacionados (e quem o cita). O *Mapa de conexões* mostra
-  a trilha inteira como grafo.
+- **Conexões**: cada tema lista temas relacionados (e quem o cita). O *Mapa de conexões* é interativo:
+  arraste para mover, roda do mouse para zoom, arraste temas para reorganizar, clique para ver as
+  conexões com o motivo de cada uma, duplo clique para abrir; filtros por MM, SD, fundamentos e edições,
+  busca e a opção "Sequência da trilha", que desenha a ordem de estudo como setas numeradas.
 - **Perguntar ao Claude**: chat ligado ao **Claude Code instalado no seu computador**, com o seu
   login. Ele lê o conteúdo do app, pesquisa na web e mantém o histórico da conversa. Em
   *Configurações* você pode liberar que ele edite o conteúdo (criar/corrigir itens, commit e push).

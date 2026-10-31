@@ -320,50 +320,8 @@ $("btn-nova").onclick = async () => { await window.sap.novaConversa(); st.chat =
 
 /* ---------- mapa ---------- */
 function renderMapa() {
-  const svg = $("mapsvg"), cx = 500, cy = 380;
-  const fund = st.itens.filter(i => i.tipo === "fundamentos").sort((a, b) => a.ordem - b.ordem);
-  const sem = st.itens.filter(i => i.tipo === "semanal").sort((a, b) => a.publicado.localeCompare(b.publicado));
-  const proc = st.itens.filter(i => i.tipo === "processo" || i.tipo === "guia");
-  const pos = {};
-  const anel = (lista, r, giro) => lista.forEach((it, k) => {
-    const a = -Math.PI / 2 + giro + k * 2 * Math.PI / Math.max(lista.length, 1);
-    pos[it.id] = [cx + r * Math.cos(a), cy + r * Math.sin(a), Math.cos(a), a];
-  });
-  anel(fund, 175, 0);
-  anel(sem, 300, Math.PI / Math.max(sem.length, 1));
-  anel(proc, 470, 0);
-  const vistos = new Set(); let arestas = "";
-  for (const it of st.itens) for (const l of it.links || []) {
-    if (!pos[l.id]) continue;
-    const k = [it.id, l.id].sort().join("|"); if (vistos.has(k)) continue; vistos.add(k);
-    const [x1, y1] = pos[it.id], [x2, y2] = pos[l.id];
-    arestas += `<line class="edge" data-a="${it.id}" data-b="${l.id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
-  }
-  const nos = st.itens.map(it => {
-    const [x, y, c, ang] = pos[it.id];
-    if (it.tipo === "processo") {
-      // Rótulo radial, apontando para fora, sempre legível (vira no lado esquerdo).
-      const graus = ang * 180 / Math.PI, esq = Math.cos(ang) < 0;
-      const cls = ["node", "processo", it.modulo, estudado(it.id) ? "done" : "", st.naoVistos.has(it.id) ? "novo" : ""].join(" ");
-      return `<g class="${cls}" data-abrir="${it.id}" tabindex="0" role="link" aria-label="${esc(it.curto)}"><circle cx="${x}" cy="${y}" r="7"/><text transform="translate(${x},${y}) rotate(${esq ? graus + 180 : graus})" x="${esq ? -12 : 12}" y="4" text-anchor="${esq ? "end" : "start"}">${esc(it.modulo)} · ${esc(it.curto)}</text></g>`;
-    }
-    const lado = c > 0.25 ? "start" : c < -0.25 ? "end" : "middle";
-    const dx = lado === "start" ? 14 : lado === "end" ? -14 : 0, dy = lado === "middle" ? (y < cy ? -16 : 24) : 4;
-    const cls = ["node", it.tipo, estudado(it.id) ? "done" : "", st.naoVistos.has(it.id) ? "novo" : ""].join(" ");
-    return `<g class="${cls}" data-abrir="${it.id}" tabindex="0" role="link" aria-label="${esc(it.curto)}"><circle cx="${x}" cy="${y}" r="${it.tipo === "semanal" ? 9 : 11}"/><text x="${x + dx}" y="${y + dy}" text-anchor="${lado}">${esc(it.curto)}</text></g>`;
-  }).join("");
-  svg.innerHTML = arestas + nos;
-  // Enquadra o desenho no conteúdo real (rótulos incluídos) para não sobrar espaço vazio.
-  const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
-  const m = proc.length ? 230 : 0;
-  const x0 = Math.min(...xs) - 200 - m / 2, y0 = Math.min(...ys) - 40 - m, x1 = Math.max(...xs) + 200 + m / 2, y1 = Math.max(...ys) + 50 + m;
-  svg.setAttribute("viewBox", `${x0} ${y0} ${x1 - x0} ${y1 - y0}`);
-  svg.querySelectorAll(".node").forEach(g => {
-    const id = g.dataset.abrir;
-    const quente = on => svg.querySelectorAll(`.edge[data-a="${id}"],.edge[data-b="${id}"]`).forEach(e => e.classList.toggle("hot", on));
-    g.onmouseenter = () => quente(true); g.onmouseleave = () => quente(false);
-    g.onfocus = () => quente(true); g.onblur = () => quente(false);
-    g.onkeydown = e => { if (e.key === "Enter") abrir(id); };
+  window.Mapa.render({
+    itens: st.itens, naoVistos: st.naoVistos, estudado, abrir, posicao, rotuloTipo, trilhaAtiva,
   });
 }
 
