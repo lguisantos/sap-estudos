@@ -196,8 +196,11 @@ function renderItem() {
     <span>${onde}</span></div>
     <h2>${esc(it.titulo)}</h2><p class="lede">${esc(it.resumo)}</p>`;
   if (it.novidades && it.novidades.length) h += sec("O que há de novo no mercado", `<div class="news">${it.novidades.map(n => `<div class="news-i"><b>${esc(n.titulo)}</b><p>${esc(n.resumo)}</p><button class="ext" data-url="${esc(n.url)}">${esc(n.fonte || "Fonte")}</button></div>`).join("")}</div>`);
+  const ctxDiag = { posicao, etapasDa, porId: st.porId, itens: st.itens, estudado };
+  h += window.renderDependencias(it, sec, ctxDiag);
   if (it.tipo === "processo") h += window.renderProcesso(it, sec);
   else {
+  h += window.renderDiagramas(it, sec, ctxDiag);
   h += sec("Conceitos-chave", `<dl class="terms">${it.conceitos.map(c => `<dt>${esc(c.termo)}</dt><dd>${esc(c.explicacao)}</dd>`).join("")}</dl>`);
   h += sec("Transações e apps para praticar", `<div class="tcodes">${it.transacoes.map(t => `<div class="tc"><code>${esc(t.codigo)}</code><span>${esc(t.descricao)}</span></div>`).join("")}</div>`);
   if (it.codigo) h += sec("Código comentado", `<p class="codetitle">${esc(it.codigo.titulo || "")}</p><pre class="code"><code>${esc(it.codigo.conteudo)}</code></pre><p class="codeexp">${esc(it.codigo.explicacao || "")}</p>`);

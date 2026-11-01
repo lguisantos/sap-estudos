@@ -52,6 +52,26 @@ for (const f of files) {
     if (!Array.isArray(it.integracao) || !it.integracao.every(c => str(c.com) && str(c.explicacao))) err("processo: integracao com 'com' e explicacao");
     if (!arr(it.fontes)) err("processo precisa de fontes");
   }
+  // Ilustrações: processos usam o próprio fluxo; os demais temas precisam de pelo menos um diagrama.
+  if (it.tipo !== "processo" && !arr(it.diagramas)) err("diagramas: pelo menos uma ilustração (fluxo ou hierarquia)");
+  (it.diagramas || []).forEach((d, i) => {
+    const onde = `diagramas[${i}]`;
+    if (!str(d.titulo)) err(`${onde}.titulo obrigatório`);
+    if (d.tipo === "fluxo") {
+      if (!arr(d.passos, 3)) err(`${onde}: fluxo com pelo menos 3 passos`);
+      (d.passos || []).forEach((p, j) => {
+        for (const k of ["titulo", "papel", "transacao"]) if (!str(p[k])) err(`${onde}.passos[${j}].${k} obrigatório`);
+        if (p.titulo && p.titulo.length > 48) err(`${onde}.passos[${j}].titulo longo demais (máx. 48)`);
+      });
+      if (new Set((d.passos || []).map(p => p.papel)).size > 5) err(`${onde}: no máximo 5 papéis`);
+    } else if (d.tipo === "hierarquia") {
+      const nos = n => (str(n && n.nome) ? 1 : NaN) + (n && n.filhos ? n.filhos.reduce((t, f) => t + nos(f), 0) : 0);
+      const total = nos(d.raiz);
+      if (!(total >= 3)) err(`${onde}: hierarquia com raiz e pelo menos 3 nós com nome`);
+      const prof = (n, d = 1) => Math.max(d, ...((n && n.filhos) || []).map(f => prof(f, d + 1)));
+      if (prof(d.raiz) > 4) err(`${onde}: hierarquia com no máximo 4 níveis (para caber legível na tela)`);
+    } else err(`${onde}.tipo deve ser fluxo ou hierarquia`);
+  });
   for (const n of it.novidades || []) if (!str(n.titulo) || !str(n.resumo) || !/^https?:\/\//.test(n.url || "")) err("novidades: titulo, resumo e url http(s)");
   for (const s of it.fontes || []) if (!/^https?:\/\//.test(s.url || "")) err(`fonte sem url válida: ${s.titulo}`);
 }

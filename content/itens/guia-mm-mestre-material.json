@@ -134,5 +134,98 @@
       "titulo": "Control of Material Valuation (SAP Help)",
       "url": "https://help.sap.com/docs/PRODUCT_ID/af9ef57f504840d2b81be8667206d485/435eb6531de6b64ce10000000a174cb4.html"
     }
+  ],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Níveis do mestre de material",
+      "legenda": "Cada visão é mantida no nível em que faz sentido; a contabilidade liga o material à conta de estoque.",
+      "raiz": {
+        "nome": "Material",
+        "sub": "número e tipo de material",
+        "filhos": [
+          {
+            "nome": "Mandante",
+            "sub": "dados básicos",
+            "filhos": [
+              {
+                "nome": "Unidade básica",
+                "sub": "PC, KG…"
+              },
+              {
+                "nome": "Grupo de mercadorias",
+                "sub": "relatórios e compras"
+              }
+            ]
+          },
+          {
+            "nome": "Centro",
+            "sub": "compras · MRP · armazenagem",
+            "filhos": [
+              {
+                "nome": "Depósito",
+                "sub": "estoque por local"
+              }
+            ]
+          },
+          {
+            "nome": "Área de avaliação",
+            "sub": "contabilidade 1",
+            "filhos": [
+              {
+                "nome": "Classe de avaliação",
+                "sub": "ex.: 3000",
+                "filhos": [
+                  {
+                    "nome": "Conta de estoque",
+                    "sub": "via OBYC · BSX"
+                  }
+                ]
+              },
+              {
+                "nome": "Controle de preço",
+                "sub": "S ou V"
+              }
+            ]
+          },
+          {
+            "nome": "Org. de vendas + canal",
+            "sub": "visões de vendas"
+          }
+        ]
+      }
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "Do cadastro ao primeiro lançamento",
+      "legenda": "Por que a visão de contabilidade precisa existir antes da entrada.",
+      "passos": [
+        {
+          "titulo": "Escolher o tipo de material",
+          "papel": "Cadastro",
+          "transacao": "MM01 · ROH"
+        },
+        {
+          "titulo": "Preencher visões de compras e MRP",
+          "papel": "Cadastro",
+          "transacao": "MM01"
+        },
+        {
+          "titulo": "Preencher contabilidade (classe e preço)",
+          "papel": "Cadastro",
+          "transacao": "MM01 · Contab. 1"
+        },
+        {
+          "titulo": "Criar o pedido",
+          "papel": "Comprador",
+          "transacao": "ME21N"
+        },
+        {
+          "titulo": "Entrada lança na conta da classe",
+          "papel": "Almoxarifado",
+          "transacao": "MIGO · BSX"
+        }
+      ]
+    }
   ]
 }

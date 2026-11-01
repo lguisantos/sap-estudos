@@ -130,5 +130,60 @@
       "titulo": "Customer/Vendor Master Data and SAP Business Partner (SAP Help)",
       "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/2240005993f2429088e42085ebf697c5/9aa2cf535b804808e10000000a174cb4.html"
     }
+  ],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "O cliente no S/4HANA",
+      "legenda": "Um único Business Partner com papéis e dados por empresa e por área de vendas.",
+      "raiz": {
+        "nome": "Business Partner",
+        "sub": "dados gerais: nome, endereço, CNPJ",
+        "filhos": [
+          {
+            "nome": "Papel FLCU00",
+            "sub": "empresa 1000",
+            "filhos": [
+              {
+                "nome": "Conta de reconciliação",
+                "sub": "clientes nacionais"
+              },
+              {
+                "nome": "Condição de pagamento",
+                "sub": "28 dias"
+              }
+            ]
+          },
+          {
+            "nome": "Papel FLCU01",
+            "sub": "vendas",
+            "filhos": [
+              {
+                "nome": "Área de vendas 1000/10/00",
+                "sub": "org · canal · setor",
+                "filhos": [
+                  {
+                    "nome": "Pedidos",
+                    "sub": "grupo de clientes, moeda"
+                  },
+                  {
+                    "nome": "Remessa",
+                    "sub": "condição de expedição"
+                  },
+                  {
+                    "nome": "Faturamento",
+                    "sub": "Incoterms, grupo contábil"
+                  },
+                  {
+                    "nome": "Funções de parceiro",
+                    "sub": "AG · WE · RE · RG"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

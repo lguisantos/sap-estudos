@@ -93,5 +93,44 @@
       "motivo": "A demanda de vendas dispara o planejamento."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Da demanda ao produto acabado",
+      "legenda": "O MRP transforma a demanda em compras e produção; a ordem consome e entrega.",
+      "passos": [
+        {
+          "titulo": "Demanda da ordem de venda",
+          "papel": "Vendas",
+          "transacao": "VA01"
+        },
+        {
+          "titulo": "Calcular necessidades",
+          "papel": "Planejador",
+          "transacao": "MD01N / MD04"
+        },
+        {
+          "titulo": "Comprar o componente em falta",
+          "papel": "Comprador",
+          "transacao": "ME21N"
+        },
+        {
+          "titulo": "Converter em ordem de produção",
+          "papel": "Planejador",
+          "transacao": "CO01"
+        },
+        {
+          "titulo": "Confirmar operações",
+          "papel": "Produção",
+          "transacao": "CO11N"
+        },
+        {
+          "titulo": "Entrada do produto acabado",
+          "papel": "Produção",
+          "transacao": "mov. 101 da ordem"
+        }
+      ]
+    }
+  ]
 }

@@ -93,5 +93,56 @@
       "motivo": "Vendas usam a área de vendas (org. vendas + canal + setor)."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Estrutura organizacional da empresa do exemplo",
+      "legenda": "Cada documento de MM e SD aponta para essas unidades; a ligação entre elas é configurada uma vez.",
+      "raiz": {
+        "nome": "Mandante 100",
+        "sub": "sistema produtivo",
+        "filhos": [
+          {
+            "nome": "Empresa 1000",
+            "sub": "CNPJ matriz · balanço",
+            "filhos": [
+              {
+                "nome": "Centro GO01",
+                "sub": "fábrica",
+                "filhos": [
+                  {
+                    "nome": "Depósito MP",
+                    "sub": "matéria-prima"
+                  },
+                  {
+                    "nome": "Depósito PA",
+                    "sub": "produto acabado"
+                  }
+                ]
+              },
+              {
+                "nome": "Centro SP01",
+                "sub": "centro de distribuição",
+                "filhos": [
+                  {
+                    "nome": "Depósito EXP",
+                    "sub": "expedição"
+                  }
+                ]
+              },
+              {
+                "nome": "Org. de compras 1000",
+                "sub": "compra para GO01 e SP01"
+              },
+              {
+                "nome": "Org. de vendas BR10",
+                "sub": "canal 10 · setor 00"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

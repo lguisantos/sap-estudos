@@ -9,19 +9,52 @@
   "nivel": "avançado",
   "resumo": "O Joule for Developers traz IA generativa para o ABAP Development Tools (ADT). Ele completa código, explica ABAP e CDS, gera testes unitários, cria um RAP business object a partir de um pacote vazio e explica achados do ATC na migração de código customizado. Para quem já desenvolve ABAP, a mudança é passar a revisar e dirigir código gerado, mantendo as regras do clean core.",
   "conceitos": [
-    { "termo": "Joule for Developers (ABAP)", "explicacao": "Recursos de IA dentro do ADT (Eclipse): sugestões preditivas enquanto você digita (ghost text), explicação de código e geração de artefatos." },
-    { "termo": "OData UI Service from Scratch", "explicacao": "Geração de um RAP business object completo, com CDS, behavior definition, projeção e serviço de UI, a partir de um pacote vazio e de uma descrição." },
-    { "termo": "RAP Business Logic Prediction", "explicacao": "Sugestão da implementação de determinations e validations do RAP com base no modelo de dados e na intenção descrita." },
-    { "termo": "Geração de ABAP Unit", "explicacao": "Criação de classes de teste para ABAP e CDS. Ainda exige revisão: o teste gerado precisa verificar a regra de negócio, não só cobrir linhas." },
-    { "termo": "ATC e simplificações", "explicacao": "O ABAP Test Cockpit aponta código incompatível com o S/4HANA ou com o ABAP Cloud. O Joule explica cada achado e o código legado envolvido." },
-    { "termo": "Licença por AI Units", "explicacao": "A SAP passou a cobrar recursos de IA por unidades de consumo. Datas de fim de promoção divergem entre páginas da SAP: confirme no seu contrato." }
+    {
+      "termo": "Joule for Developers (ABAP)",
+      "explicacao": "Recursos de IA dentro do ADT (Eclipse): sugestões preditivas enquanto você digita (ghost text), explicação de código e geração de artefatos."
+    },
+    {
+      "termo": "OData UI Service from Scratch",
+      "explicacao": "Geração de um RAP business object completo, com CDS, behavior definition, projeção e serviço de UI, a partir de um pacote vazio e de uma descrição."
+    },
+    {
+      "termo": "RAP Business Logic Prediction",
+      "explicacao": "Sugestão da implementação de determinations e validations do RAP com base no modelo de dados e na intenção descrita."
+    },
+    {
+      "termo": "Geração de ABAP Unit",
+      "explicacao": "Criação de classes de teste para ABAP e CDS. Ainda exige revisão: o teste gerado precisa verificar a regra de negócio, não só cobrir linhas."
+    },
+    {
+      "termo": "ATC e simplificações",
+      "explicacao": "O ABAP Test Cockpit aponta código incompatível com o S/4HANA ou com o ABAP Cloud. O Joule explica cada achado e o código legado envolvido."
+    },
+    {
+      "termo": "Licença por AI Units",
+      "explicacao": "A SAP passou a cobrar recursos de IA por unidades de consumo. Datas de fim de promoção divergem entre páginas da SAP: confirme no seu contrato."
+    }
   ],
   "transacoes": [
-    { "codigo": "ADT (Eclipse)", "descricao": "IDE onde o Joule for Developers funciona" },
-    { "codigo": "ATC", "descricao": "ABAP Test Cockpit: verificações de qualidade e prontidão para nuvem" },
-    { "codigo": "Custom Code Migration", "descricao": "App Fiori para analisar código customizado na migração" },
-    { "codigo": "/IWFND/MAINT_SERVICE", "descricao": "Serviços OData V2 (ambientes on-premise)" },
-    { "codigo": "SE80 / SE38", "descricao": "Ferramentas clássicas, úteis para comparar com o código gerado" }
+    {
+      "codigo": "ADT (Eclipse)",
+      "descricao": "IDE onde o Joule for Developers funciona"
+    },
+    {
+      "codigo": "ATC",
+      "descricao": "ABAP Test Cockpit: verificações de qualidade e prontidão para nuvem"
+    },
+    {
+      "codigo": "Custom Code Migration",
+      "descricao": "App Fiori para analisar código customizado na migração"
+    },
+    {
+      "codigo": "/IWFND/MAINT_SERVICE",
+      "descricao": "Serviços OData V2 (ambientes on-premise)"
+    },
+    {
+      "codigo": "SE80 / SE38",
+      "descricao": "Ferramentas clássicas, úteis para comparar com o código gerado"
+    }
   ],
   "codigo": {
     "linguagem": "abap",
@@ -50,17 +83,79 @@
     "resposta": "failed diz ao framework que a instância não pode ser salva; reported leva a mensagem para o usuário. Só com failed o save é rejeitado, mas o usuário não vê o motivo nem o campo destacado no Fiori."
   },
   "novidades": [
-    { "titulo": "Geração de RAP a partir de pacote vazio", "resumo": "O blog da SAP sobre Joule for Developers descreve a criação de um RAP BO e serviço de UI completos a partir de um pacote vazio, e a previsão de lógica de determinations e validations.", "fonte": "SAP Community", "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/joule-for-developers/ba-p/14420721" },
-    { "titulo": "Licenciamento por AI Units", "resumo": "O mesmo blog diz que a licença promocional terminou em 1º de junho de 2026; páginas regionais da SAP citam 30 de setembro de 2026. As fontes divergem: confirme no contrato.", "fonte": "SAP", "url": "https://www.sap.com/brazil/products/artificial-intelligence/joule-for-developers-abap-ai-capabilities.html" }
+    {
+      "titulo": "Geração de RAP a partir de pacote vazio",
+      "resumo": "O blog da SAP sobre Joule for Developers descreve a criação de um RAP BO e serviço de UI completos a partir de um pacote vazio, e a previsão de lógica de determinations e validations.",
+      "fonte": "SAP Community",
+      "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/joule-for-developers/ba-p/14420721"
+    },
+    {
+      "titulo": "Licenciamento por AI Units",
+      "resumo": "O mesmo blog diz que a licença promocional terminou em 1º de junho de 2026; páginas regionais da SAP citam 30 de setembro de 2026. As fontes divergem: confirme no contrato.",
+      "fonte": "SAP",
+      "url": "https://www.sap.com/brazil/products/artificial-intelligence/joule-for-developers-abap-ai-capabilities.html"
+    }
   ],
   "links": [
-    { "id": "base-abap", "motivo": "Base de ABAP Cloud, CDS, RAP e clean core." },
-    { "id": "base-fiori", "motivo": "O serviço RAP gerado vira um app Fiori Elements." },
-    { "id": "base-projeto", "motivo": "A migração de código customizado é parte do projeto de conversão." },
-    { "id": "2026-10-30-funcional-joule-agentes", "motivo": "O lado funcional: agentes Joule nos processos de negócio." }
+    {
+      "id": "base-abap",
+      "motivo": "Base de ABAP Cloud, CDS, RAP e clean core."
+    },
+    {
+      "id": "base-fiori",
+      "motivo": "O serviço RAP gerado vira um app Fiori Elements."
+    },
+    {
+      "id": "base-projeto",
+      "motivo": "A migração de código customizado é parte do projeto de conversão."
+    },
+    {
+      "id": "2026-10-30-funcional-joule-agentes",
+      "motivo": "O lado funcional: agentes Joule nos processos de negócio."
+    }
   ],
   "fontes": [
-    { "titulo": "Joule for Developers (SAP Community)", "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/joule-for-developers/ba-p/14420721" },
-    { "titulo": "Accelerate your ABAP Cloud development (SAP)", "url": "https://www.sap.com/brazil/products/artificial-intelligence/joule-for-developers-abap-ai-capabilities.html" }
+    {
+      "titulo": "Joule for Developers (SAP Community)",
+      "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/joule-for-developers/ba-p/14420721"
+    },
+    {
+      "titulo": "Accelerate your ABAP Cloud development (SAP)",
+      "url": "https://www.sap.com/brazil/products/artificial-intelligence/joule-for-developers-abap-ai-capabilities.html"
+    }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Migrando um relatório Z com Joule",
+      "legenda": "O Joule acelera cada etapa, mas a revisão e o ATC continuam decidindo.",
+      "passos": [
+        {
+          "titulo": "Rodar o ATC de prontidão",
+          "papel": "Desenvolvedor",
+          "transacao": "ATC"
+        },
+        {
+          "titulo": "Pedir explicação dos achados",
+          "papel": "Joule",
+          "transacao": "ADT · Joule"
+        },
+        {
+          "titulo": "Reescrever com CDS e RAP",
+          "papel": "Desenvolvedor",
+          "transacao": "ADT"
+        },
+        {
+          "titulo": "Gerar e completar testes",
+          "papel": "Joule",
+          "transacao": "ABAP Unit"
+        },
+        {
+          "titulo": "ATC sem achados críticos",
+          "papel": "Desenvolvedor",
+          "transacao": "ATC"
+        }
+      ]
+    }
   ]
 }

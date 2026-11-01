@@ -85,5 +85,74 @@
       "motivo": "Apps Fiori modernos são construídos sobre CDS e RAP."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Como o acesso a um app é montado",
+      "legenda": "O papel junta o que o usuário vê (espaços e páginas) e o que ele pode executar (catálogos e autorizações).",
+      "raiz": {
+        "nome": "Papel (PFCG)",
+        "sub": "atribuído ao usuário",
+        "filhos": [
+          {
+            "nome": "Catálogo",
+            "sub": "apps técnicos permitidos",
+            "filhos": [
+              {
+                "nome": "App Fiori",
+                "sub": "precisa do serviço OData ativo"
+              }
+            ]
+          },
+          {
+            "nome": "Espaço",
+            "sub": "organização visual",
+            "filhos": [
+              {
+                "nome": "Página",
+                "sub": "seções com blocos"
+              }
+            ]
+          },
+          {
+            "nome": "Autorizações",
+            "sub": "objetos de autorização"
+          }
+        ]
+      }
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "Por que o app não abre? Roteiro de verificação",
+      "legenda": "Ordem das verificações quando o bloco aparece mas o app dá erro.",
+      "passos": [
+        {
+          "titulo": "Usuário relata o erro",
+          "papel": "Usuário",
+          "transacao": "Launchpad"
+        },
+        {
+          "titulo": "App está no catálogo do papel?",
+          "papel": "Suporte",
+          "transacao": "PFCG · /UI2/FLPD_CUST"
+        },
+        {
+          "titulo": "Serviço OData está ativo?",
+          "papel": "Basis",
+          "transacao": "/IWFND/MAINT_SERVICE"
+        },
+        {
+          "titulo": "Falta autorização?",
+          "papel": "Suporte",
+          "transacao": "SU53"
+        },
+        {
+          "titulo": "Ajustar o papel e testar",
+          "papel": "Suporte",
+          "transacao": "PFCG"
+        }
+      ]
+    }
+  ]
 }

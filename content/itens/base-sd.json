@@ -93,5 +93,39 @@
       "motivo": "A área de vendas vem da estrutura organizacional."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Order-to-Cash em cinco passos",
+      "legenda": "Do pedido do cliente ao recebimento; cada passo é detalhado nos processos de SD.",
+      "passos": [
+        {
+          "titulo": "Criar a ordem de venda",
+          "papel": "Vendedor",
+          "transacao": "VA01"
+        },
+        {
+          "titulo": "Criar remessa e separar",
+          "papel": "Expedição",
+          "transacao": "VL01N"
+        },
+        {
+          "titulo": "Saída de mercadoria",
+          "papel": "Expedição",
+          "transacao": "VL02N · mov. 601"
+        },
+        {
+          "titulo": "Faturar o cliente",
+          "papel": "Faturamento",
+          "transacao": "VF01"
+        },
+        {
+          "titulo": "Receber o pagamento",
+          "papel": "Contas a receber",
+          "transacao": "F-28"
+        }
+      ]
+    }
+  ]
 }

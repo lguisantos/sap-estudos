@@ -334,3 +334,28 @@ button.tr-etapa:hover { border-color: var(--accent); }
 .m-seq-linha { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-dasharray: 5 4; }
 .seq-ponta { fill: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .m-aresta, .m-no { transition: none; } }
+
+/* Ilustrações: dependências e hierarquia */
+svg.diag { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.raias-box:has(svg.diag) { padding: 12px; }
+.diag-leg { margin: 0 0 6px; max-width: 70ch; }
+.dp-col { fill: var(--muted); font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .08em; }
+.dp-linha { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.dp-ponta { fill: var(--muted); }
+.dp-sep { stroke: var(--line); stroke-dasharray: 4 4; }
+.dp-no { cursor: pointer; }
+.dp-no rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.4; }
+.dp-no:hover rect, .dp-no:focus rect { stroke: var(--accent); stroke-width: 2.4; }
+.dp-no:focus { outline: none; }
+.dp-no.g-MM rect { stroke: var(--mapa-mm); } .dp-no.g-SD rect { stroke: var(--mapa-sd); } .dp-no.g-base rect { stroke: var(--ink); } .dp-no.g-semanal rect { stroke: var(--mapa-sem); }
+.dp-no.estudado rect { fill: color-mix(in srgb, var(--done) 14%, var(--panel)); }
+.dp-tit { fill: var(--ink); font: 600 12.5px var(--body); }
+.dp-sub { fill: var(--muted); font: 400 11px var(--body); }
+.dp-centro rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+.dp-ctit { fill: var(--ink); font: 700 15.5px var(--display); }
+.dp-csub { fill: var(--accent); font: 600 11px var(--body); }
+.hq-linha { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+.hq-no rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+.hq-no.folha rect { fill: var(--panel); stroke: var(--line); }
+.hq-tit { fill: var(--ink); font: 600 12px var(--body); }
+.hq-sub { fill: var(--muted); font: 400 10.5px var(--body); }

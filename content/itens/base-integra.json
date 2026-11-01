@@ -93,5 +93,34 @@
       "motivo": "A classe de avaliação no material é a chave do processo."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Os lançamentos automáticos de uma compra e uma venda",
+      "legenda": "Item com preço standard 10,00 comprado a 10,50 e vendido a 18,00. A diferença de 0,50 na entrada vai para a conta de diferença de preço (PRD). Na linha de baixo de cada bloco, as chaves de conta usadas.",
+      "passos": [
+        {
+          "titulo": "Entrada: D estoque 10 · C GR/IR 10,50",
+          "papel": "Almoxarifado",
+          "transacao": "BSX · PRD · WRX"
+        },
+        {
+          "titulo": "Fatura: D GR/IR 10,50 · C fornecedor",
+          "papel": "Contas a pagar",
+          "transacao": "WRX"
+        },
+        {
+          "titulo": "Saída: D CMV 10 · C estoque 10",
+          "papel": "Expedição",
+          "transacao": "GBB-VAX · BSX"
+        },
+        {
+          "titulo": "Venda: D cliente · C receita 18",
+          "papel": "Faturamento",
+          "transacao": "VKOA · ERL"
+        }
+      ]
+    }
+  ]
 }

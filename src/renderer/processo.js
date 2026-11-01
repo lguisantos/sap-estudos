@@ -79,6 +79,9 @@
   }
 
   /** Corpo completo de um processo (depois do cabeçalho), usando o mesmo construtor de seções do leitor. */
+  // Reaproveitado pelos diagramas de fluxo dos outros tipos de tema.
+  window.desenharRaias = raias;
+
   window.renderProcesso = function (it, sec) {
     let h = sec("O fluxo em uma imagem", `<p class="hint">Cada faixa é um responsável; clique num passo para ir à explicação.</p><div class="raias-box">${raias(it.fluxo)}</div>`);
     h += sec("Quando usar", `<ul class="plain">${it.quando.map(q => `<li>${esc(q)}</li>`).join("")}</ul>`);

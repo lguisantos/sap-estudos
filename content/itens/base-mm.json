@@ -93,5 +93,39 @@
       "motivo": "A fatura gera a obrigação com o fornecedor em contas a pagar."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Procure-to-Pay em cinco passos",
+      "legenda": "Da necessidade ao pagamento; cada passo é detalhado nos processos de MM.",
+      "passos": [
+        {
+          "titulo": "Registrar a necessidade",
+          "papel": "Solicitante",
+          "transacao": "ME51N"
+        },
+        {
+          "titulo": "Criar o pedido de compra",
+          "papel": "Comprador",
+          "transacao": "ME21N"
+        },
+        {
+          "titulo": "Receber a mercadoria",
+          "papel": "Almoxarifado",
+          "transacao": "MIGO · mov. 101"
+        },
+        {
+          "titulo": "Lançar a fatura",
+          "papel": "Contas a pagar",
+          "transacao": "MIRO"
+        },
+        {
+          "titulo": "Pagar o fornecedor",
+          "papel": "Contas a pagar",
+          "transacao": "F110"
+        }
+      ]
+    }
+  ]
 }

@@ -93,5 +93,39 @@
       "motivo": "Contas do razão e BP são cadastros mestres que o FI usa."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Rotina de pagamentos e fechamento",
+      "legenda": "Do título em aberto ao período fechado.",
+      "passos": [
+        {
+          "titulo": "Fatura de fornecedor em aberto",
+          "papel": "Contas a pagar",
+          "transacao": "MIRO / FB60"
+        },
+        {
+          "titulo": "Rodar o programa de pagamento",
+          "papel": "Contas a pagar",
+          "transacao": "F110"
+        },
+        {
+          "titulo": "Provisões e ajustes do mês",
+          "papel": "Contabilidade",
+          "transacao": "FB50"
+        },
+        {
+          "titulo": "Conferir saldos e partidas",
+          "papel": "Contabilidade",
+          "transacao": "FAGLL03"
+        },
+        {
+          "titulo": "Fechar o período anterior",
+          "papel": "Contabilidade",
+          "transacao": "OB52"
+        }
+      ]
+    }
+  ]
 }

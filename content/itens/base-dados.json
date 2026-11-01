@@ -85,5 +85,60 @@
       "motivo": "Pedidos de compra usam BP e material."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Os três grandes cadastros e seus níveis",
+      "legenda": "Cada cadastro tem uma parte geral e partes por unidade organizacional.",
+      "raiz": {
+        "nome": "Dados mestres",
+        "sub": "S/4HANA",
+        "filhos": [
+          {
+            "nome": "Business Partner",
+            "sub": "geral: nome, endereço, CNPJ",
+            "filhos": [
+              {
+                "nome": "Fornecedor",
+                "sub": "papéis FLVN00 / FLVN01"
+              },
+              {
+                "nome": "Cliente",
+                "sub": "papéis FLCU00 / FLCU01"
+              }
+            ]
+          },
+          {
+            "nome": "Material",
+            "sub": "dados básicos (mandante)",
+            "filhos": [
+              {
+                "nome": "Compras · MRP",
+                "sub": "por centro"
+              },
+              {
+                "nome": "Vendas",
+                "sub": "por org. vendas e canal"
+              },
+              {
+                "nome": "Contabilidade",
+                "sub": "por área de avaliação"
+              }
+            ]
+          },
+          {
+            "nome": "Conta do razão",
+            "sub": "plano de contas",
+            "filhos": [
+              {
+                "nome": "Dados da empresa",
+                "sub": "moeda, controle de partidas"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

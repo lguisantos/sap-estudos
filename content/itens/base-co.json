@@ -89,5 +89,39 @@
       "motivo": "A receita das vendas alimenta a análise de margem."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Custo de uma campanha com ordem interna",
+      "legenda": "A ordem coleta os custos temporários e depois os entrega ao objeto final.",
+      "passos": [
+        {
+          "titulo": "Criar a ordem com orçamento",
+          "papel": "Controladoria",
+          "transacao": "KO01"
+        },
+        {
+          "titulo": "Lançar faturas na ordem",
+          "papel": "Contas a pagar",
+          "transacao": "MIRO / FB60"
+        },
+        {
+          "titulo": "Acompanhar real × orçado",
+          "papel": "Controladoria",
+          "transacao": "KOB1 · relatórios"
+        },
+        {
+          "titulo": "Liquidar a ordem",
+          "papel": "Controladoria",
+          "transacao": "KO88"
+        },
+        {
+          "titulo": "Custo no resultado da linha",
+          "papel": "Controladoria",
+          "transacao": "Centro de lucro"
+        }
+      ]
+    }
+  ]
 }

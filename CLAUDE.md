@@ -84,6 +84,28 @@ Nome do arquivo e `id`: edições semanais `AAAA-MM-DD-<trilha>-<slug>.json`; gu
 
 `codigo` e `novidades` são opcionais; o resto é obrigatório.
 
+## Ilustrações (obrigatório em todo tema)
+
+Todo tema tem ilustração. O app gera sozinho o diagrama **"Onde este tema se encaixa"** (o que vem
+antes, o que destrava depois) a partir da trilha e dos `links` — por isso os links precisam estar
+completos. Além dele, todo tema que não é `processo` precisa de pelo menos um item em `diagramas`
+que mostre o assunto em si (processos já são ilustrados pelo próprio `fluxo`):
+
+```json
+"diagramas": [
+  { "tipo": "fluxo", "titulo": "Procure-to-Pay em cinco passos", "legenda": "o que observar",
+    "passos": [{ "titulo": "Criar o pedido (máx. 48)", "papel": "Comprador", "transacao": "ME21N" }] },
+  { "tipo": "hierarquia", "titulo": "Estrutura organizacional", "legenda": "…",
+    "raiz": { "nome": "Empresa 1000", "sub": "CNPJ matriz", "filhos": [{ "nome": "Centro GO01", "sub": "fábrica" }] } }
+]
+```
+
+- `fluxo`: sequência com responsáveis (vira raias). Pelo menos 3 passos, no máximo 5 papéis;
+  `transacao` curta (aparece na última linha do bloco). Use para processos, rotinas e "como investigar".
+- `hierarquia`: árvore da esquerda para a direita, no máximo 4 níveis. Use para estruturas,
+  cadastros, níveis de configuração e classificações.
+- Escolha o que mais ajuda o iniciante a enxergar o assunto; dois diagramas (estrutura + fluxo) são bem-vindos.
+
 ## Processos (tipo `processo`)
 
 Explicações completas de processos por módulo (hoje MM e SD), em `content/itens/proc-<mod>-<nn>-<slug>.json`.

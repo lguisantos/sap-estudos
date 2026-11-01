@@ -85,5 +85,71 @@
       "motivo": "A interface moderna pela qual você vai operar o sistema."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Uma venda atravessando os módulos",
+      "legenda": "Um único evento de negócio passa por SD, MM, FI e CO sem redigitação: cada passo grava no mesmo banco.",
+      "passos": [
+        {
+          "titulo": "Criar a ordem de venda",
+          "papel": "Vendas (SD)",
+          "transacao": "VA01"
+        },
+        {
+          "titulo": "Saída de mercadoria baixa o estoque",
+          "papel": "Logística (MM)",
+          "transacao": "VL02N · mov. 601"
+        },
+        {
+          "titulo": "Lançamento contábil automático",
+          "papel": "Finanças (FI)",
+          "transacao": "ACDOCA"
+        },
+        {
+          "titulo": "Faturamento gera a receita",
+          "papel": "Vendas (SD)",
+          "transacao": "VF01"
+        },
+        {
+          "titulo": "Margem por produto e cliente",
+          "papel": "Controladoria (CO)",
+          "transacao": "Fiori · CO-PA"
+        }
+      ]
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "O caminho de uma mudança no sistema",
+      "legenda": "Nada é configurado direto em produção: a mudança nasce em DEV, é testada em QAS e só então vai para PRD.",
+      "passos": [
+        {
+          "titulo": "Configurar ou desenvolver em DEV",
+          "papel": "Consultor / Dev",
+          "transacao": "SPRO · SE80"
+        },
+        {
+          "titulo": "Liberar a ordem de transporte",
+          "papel": "Consultor / Dev",
+          "transacao": "SE09"
+        },
+        {
+          "titulo": "Importar em QAS",
+          "papel": "Basis",
+          "transacao": "STMS"
+        },
+        {
+          "titulo": "Testar com o usuário-chave",
+          "papel": "Usuário-chave",
+          "transacao": "Cenários de teste"
+        },
+        {
+          "titulo": "Importar em produção",
+          "papel": "Basis",
+          "transacao": "STMS"
+        }
+      ]
+    }
+  ]
 }

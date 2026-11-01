@@ -89,5 +89,73 @@
       "motivo": "O nível de customização impacta custo e prazo do projeto."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Onde cada tipo de extensão mora (clean core)",
+      "legenda": "Da opção mais simples para a mais flexível; o padrão SAP não é modificado em nenhuma delas.",
+      "raiz": {
+        "nome": "Extensibilidade S/4HANA",
+        "sub": "clean core",
+        "filhos": [
+          {
+            "nome": "No próprio sistema",
+            "sub": "on-stack",
+            "filhos": [
+              {
+                "nome": "Key user",
+                "sub": "campos e lógica simples"
+              },
+              {
+                "nome": "Developer (ABAP Cloud)",
+                "sub": "RAP, CDS, BAdIs liberados"
+              }
+            ]
+          },
+          {
+            "nome": "Fora do sistema",
+            "sub": "side-by-side · BTP",
+            "filhos": [
+              {
+                "nome": "CAP / SAP Build",
+                "sub": "apps por APIs"
+              },
+              {
+                "nome": "Integration Suite",
+                "sub": "integrações"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "Novo campo na ordem sem modificar o padrão",
+      "legenda": "O caso do campo 'Origem do lead', feito só com ferramentas de key user.",
+      "passos": [
+        {
+          "titulo": "Criar o campo customizado",
+          "papel": "Key user",
+          "transacao": "Custom Fields"
+        },
+        {
+          "titulo": "Habilitar na tela e relatórios",
+          "papel": "Key user",
+          "transacao": "Custom Fields"
+        },
+        {
+          "titulo": "Validar em BAdI de key user",
+          "papel": "Key user",
+          "transacao": "Custom Logic"
+        },
+        {
+          "titulo": "Upgrade sem retrabalho",
+          "papel": "Basis",
+          "transacao": "—"
+        }
+      ]
+    }
+  ]
 }

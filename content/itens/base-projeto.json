@@ -85,5 +85,44 @@
       "motivo": "Fecha a trilha: volte ao mapa com outro olhar."
     }
   ],
-  "fontes": []
+  "fontes": [],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "As fases do SAP Activate",
+      "legenda": "Cada fase tem entregas próprias; o fit-to-standard acontece no Explore.",
+      "passos": [
+        {
+          "titulo": "Discover: avaliar o cenário",
+          "papel": "Gestão do projeto",
+          "transacao": "Roadmap"
+        },
+        {
+          "titulo": "Prepare: plano e equipe",
+          "papel": "Gestão do projeto",
+          "transacao": "Plano"
+        },
+        {
+          "titulo": "Explore: fit-to-standard",
+          "papel": "Consultores + negócio",
+          "transacao": "Workshops"
+        },
+        {
+          "titulo": "Realize: configurar e testar",
+          "papel": "Consultores",
+          "transacao": "SPRO · testes"
+        },
+        {
+          "titulo": "Deploy: migração e cutover",
+          "papel": "Consultores + negócio",
+          "transacao": "Migration Cockpit"
+        },
+        {
+          "titulo": "Run: hypercare e suporte",
+          "papel": "Suporte",
+          "transacao": "Cloud ALM"
+        }
+      ]
+    }
+  ]
 }
