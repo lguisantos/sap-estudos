@@ -1,0 +1,191 @@
+{
+  "id": "proc-ewm-04-monitor",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 4,
+  "publicado": "2026-11-19",
+  "area": "Controle (EWM)",
+  "curto": "Monitor do armazém",
+  "nivel": "intermediário",
+  "titulo": "Monitor do armazém: acompanhar tarefas, ordens, estoques e exceções",
+  "resumo": "O monitor do armazém (/SCWM/MON) é a principal ferramenta do supervisor e do consultor: mostra entregas, ondas, ordens e tarefas de depósito, estoque por posição, recursos e alertas, e permite agir sobre eles (confirmar, cancelar, reatribuir). Quase toda investigação de problema no EWM começa aqui.",
+  "quando": [
+    "Acompanhar o andamento do dia.",
+    "Investigar um recebimento ou expedição parado.",
+    "Conferir estoque por posição."
+  ],
+  "prerequisitos": [
+    "Autorização para o monitor e o número de depósito.",
+    "Variantes de seleção úteis criadas para o time."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Abrir o monitor do depósito",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/MON",
+      "descricao": "Escolher o número de depósito e o monitor (padrão SAP ou personalizado).",
+      "detalhes": [
+        "Árvore de nós: documentos, estoque e posições, recursos, alertas.",
+        "Cada nó tem filtros e variantes."
+      ],
+      "resultado": "Visão geral do armazém."
+    },
+    {
+      "titulo": "Ver documentos abertos",
+      "papel": "Supervisor",
+      "transacao": "Nó Documentos",
+      "descricao": "Entregas de entrada, ordens de saída, ondas, ordens e tarefas de depósito com status.",
+      "detalhes": [
+        "Tarefas abertas mostram origem, destino, recurso e idade.",
+        "Ordens podem ser filtradas por fila."
+      ],
+      "resultado": "Pendências identificadas.",
+      "exemplo": "15 tarefas de armazenagem abertas há mais de 2 horas."
+    },
+    {
+      "titulo": "Conferir estoque e posições",
+      "papel": "Supervisor",
+      "transacao": "Nó Estoque e posição",
+      "descricao": "Estoque por produto, posição, tipo de estoque e unidade de manuseio.",
+      "detalhes": [
+        "Mostra também estoque em ROD e em áreas de preparação.",
+        "Permite ver posições vazias e bloqueadas."
+      ],
+      "resultado": "Situação física conhecida."
+    },
+    {
+      "titulo": "Agir sobre o problema",
+      "papel": "Supervisor",
+      "transacao": "Métodos do monitor",
+      "descricao": "Confirmar, cancelar ou reatribuir tarefas, liberar ondas, bloquear posições.",
+      "detalhes": [
+        "Os métodos variam por nó.",
+        "Ações ficam registradas."
+      ],
+      "resultado": "Fluxo destravado.",
+      "exemplo": "Ordens reatribuídas para outro recurso."
+    },
+    {
+      "titulo": "Acompanhar recursos e alertas",
+      "papel": "Supervisor",
+      "transacao": "Nó Recursos / Alertas",
+      "descricao": "Quem está logado, em qual fila, e alertas como ondas atrasadas.",
+      "detalhes": [
+        "Ajuda a redistribuir a mão de obra.",
+        "Alertas podem ser configurados por limite."
+      ],
+      "resultado": "Capacidade ajustada à demanda."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Monitor (variantes)",
+      "tabelas": "/SCWM/MON",
+      "descricao": "Não cria documento; lê e age sobre os existentes."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Nó do monitor",
+      "explicacao": "Cada categoria de objeto na árvore (entregas, tarefas, estoque)."
+    },
+    {
+      "termo": "Método",
+      "explicacao": "Ação disponível sobre os objetos selecionados no nó."
+    },
+    {
+      "termo": "Fila",
+      "explicacao": "Agrupa ordens de depósito por área e atividade para os recursos."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/MON",
+      "descricao": "Monitor do armazém"
+    },
+    {
+      "codigo": "/SCWM/TO_CONF",
+      "descricao": "Confirmar tarefas"
+    },
+    {
+      "codigo": "/SCWM/TO_CANC",
+      "descricao": "Cancelar tarefas"
+    },
+    {
+      "codigo": "/SCWM/WAVE",
+      "descricao": "Ondas"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Monitor personalizado",
+      "onde": "SPRO › EWM › Monitoramento › Monitor do armazém",
+      "explicacao": "Nós, layouts e métodos próprios."
+    },
+    {
+      "item": "Alertas",
+      "onde": "SPRO › EWM › Monitoramento",
+      "explicacao": "Limites para avisos."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM / SD",
+      "explicacao": "As entregas vistas no monitor vêm do MM e do SD."
+    },
+    {
+      "com": "Mão de obra",
+      "explicacao": "Com gestão de mão de obra, mostra desempenho dos recursos."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Apps Fiori de monitoramento",
+      "explicacao": "Apps de visão geral de tarefas e entregas complementam o monitor."
+    }
+  ],
+  "caso": {
+    "titulo": "Recebimento parado no fim da tarde",
+    "contexto": "O comercial reclama que o produto recebido de manhã não aparece como disponível.",
+    "passos": [
+      "No monitor, tarefas de armazenagem abertas do produto.",
+      "Filtro por fila mostra que estão na fila do turno da manhã.",
+      "Ordens reatribuídas para a fila do turno da tarde.",
+      "Operadores confirmam; estoque passa a F2.",
+      "Comercial vê o estoque disponível."
+    ]
+  },
+  "armadilhas": [
+    "Cancelar tarefas sem entender a origem: a entrega volta a precisar de tarefa.",
+    "Usar só o monitor padrão sem variantes: perde-se tempo filtrando."
+  ],
+  "fixacao": {
+    "pergunta": "Um produto recebido não está disponível para venda. Onde começar?",
+    "resposta": "No monitor do armazém: procurar tarefas de armazenagem abertas daquele produto. Enquanto a tarefa não é confirmada, o estoque fica em ROD (F1)."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-05-movimentacoes",
+      "motivo": "Etapa anterior da trilha."
+    },
+    {
+      "id": "proc-ewm-06-ondas",
+      "motivo": "Próximo passo: ondas."
+    },
+    {
+      "id": "proc-ewm-01-recebimento",
+      "motivo": "Tarefas de recebimento vistas no monitor."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Warehouse Management Monitor",
+      "url": "https://help.sap.com/docs/SAP_SUPPLY_CHAIN_MANAGEMENT/57574d15fa1d414792d74047b66c3e41/b63f3e1d-b99f-43ae-b7dd-86fbc5d4e115.html"
+    },
+    {
+      "titulo": "EWM Transaction Codes (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3354623031.html"
+    }
+  ]
+}

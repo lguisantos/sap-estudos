@@ -1,0 +1,223 @@
+{
+  "id": "proc-ewm-08-inventario",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 8,
+  "publicado": "2026-11-19",
+  "area": "Controle (EWM)",
+  "curto": "Inventário no EWM",
+  "nivel": "intermediário",
+  "titulo": "Inventário físico no EWM: por posição ou por produto",
+  "resumo": "No EWM o inventário é feito por posição ou por produto, com documento de inventário, contagem (muitas vezes no coletor) e lançamento das diferenças. As diferenças passam pelo analisador de diferenças, que as envia ao MM (ajuste de quantidade e valor). Existem procedimentos anuais, rotativos e pontuais.",
+  "quando": [
+    "Inventário anual.",
+    "Inventário rotativo por classe ABC.",
+    "Contagem pontual ao encontrar divergência."
+  ],
+  "prerequisitos": [
+    "Procedimentos de inventário ativos no número de depósito.",
+    "Indicador de inventário rotativo no produto (para rotativo).",
+    "Tolerâncias por grupo de usuário."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar o documento de inventário",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/PI_CREATE",
+      "descricao": "Escolher procedimento (anual, rotativo, pontual) e seleção (posições ou produtos).",
+      "detalhes": [
+        "Específico por posição: conta tudo da posição.",
+        "Específico por produto: conta o produto em todas as posições.",
+        "Criação em massa por job (anual e rotativo)."
+      ],
+      "resultado": "Documento de inventário ativo.",
+      "exemplo": "Documento 2000001: corredor 01 inteiro."
+    },
+    {
+      "titulo": "Contar",
+      "papel": "Operador",
+      "transacao": "/SCWM/RFUI · /SCWM/PI_COUNT",
+      "descricao": "Contagem por coletor ou digitada; app Fiori permite criar e contar num passo.",
+      "detalhes": [
+        "Contagem às cegas recomendada.",
+        "Posições bloqueadas durante a contagem, se configurado."
+      ],
+      "resultado": "Contagem registrada."
+    },
+    {
+      "titulo": "Recontar se necessário",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/PI_PROCESS",
+      "descricao": "Diferenças acima do limite podem ir para recontagem.",
+      "detalhes": [
+        "Nova contagem no mesmo documento.",
+        "Histórico mantido."
+      ],
+      "resultado": "Contagem confiável."
+    },
+    {
+      "titulo": "Lançar no EWM",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/PI_PROCESS",
+      "descricao": "O lançamento ajusta o estoque da posição no EWM e manda a diferença para uma área de diferenças.",
+      "detalhes": [
+        "Tolerância do usuário limita o que ele pode lançar.",
+        "Estoque físico do EWM fica correto."
+      ],
+      "resultado": "Diferença na área de diferenças."
+    },
+    {
+      "titulo": "Enviar ao MM pelo analisador",
+      "papel": "Controladoria",
+      "transacao": "/SCWM/DIFF_ANALYZER",
+      "descricao": "O analisador de diferenças compensa diferenças entre posições e lança o saldo no MM (perda ou ganho).",
+      "detalhes": [
+        "Diferenças opostas no mesmo produto se anulam antes do lançamento.",
+        "Gera documento de material e contábil (perdas/ganhos de inventário)."
+      ],
+      "resultado": "Estoque do MM ajustado.",
+      "exemplo": "−8 PC lançados como perda."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Documento de inventário EWM",
+      "tabelas": "/LIME/PI_DOC_*",
+      "descricao": "Documento e itens de contagem."
+    },
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC (701/702)",
+      "descricao": "Ajuste no MM pelo analisador."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Por posição × por produto",
+      "explicacao": "Contar uma posição inteira ou um produto em todas as posições."
+    },
+    {
+      "termo": "Inventário rotativo",
+      "explicacao": "Contagem frequente por classe (A, B, C) do produto."
+    },
+    {
+      "termo": "Área de diferenças",
+      "explicacao": "Onde o EWM guarda as diferenças até mandá-las ao MM."
+    },
+    {
+      "termo": "Analisador de diferenças",
+      "explicacao": "Compensa e lança as diferenças no MM."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/PI_CREATE",
+      "descricao": "Criar documento"
+    },
+    {
+      "codigo": "/SCWM/PI_COUNT",
+      "descricao": "Registrar contagem"
+    },
+    {
+      "codigo": "/SCWM/PI_PROCESS",
+      "descricao": "Processar e lançar"
+    },
+    {
+      "codigo": "/SCWM/DIFF_ANALYZER",
+      "descricao": "Analisador de diferenças"
+    },
+    {
+      "codigo": "Manage Physical Inventory Count",
+      "descricao": "App Fiori"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Procedimentos",
+      "onde": "SPRO › EWM › Processos internos › Inventário físico",
+      "explicacao": "Ativar procedimentos por número de depósito."
+    },
+    {
+      "item": "Tolerâncias",
+      "onde": "SPRO › EWM › Inventário físico › Grupos de tolerância",
+      "explicacao": "Limites por usuário."
+    },
+    {
+      "item": "Inventário rotativo",
+      "onde": "SPRO › EWM › Inventário físico › Inventário rotativo",
+      "explicacao": "Intervalos por classe."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM / FI",
+      "explicacao": "O analisador gera o ajuste contábil, como o MI07 no MM."
+    },
+    {
+      "com": "Auditoria",
+      "explicacao": "Documentos e diferenças rastreáveis."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Inventário na armazenagem",
+      "explicacao": "Conta posições vazias durante a armazenagem."
+    },
+    {
+      "nome": "Verificação de estoque baixo",
+      "explicacao": "Conta quando a posição fica com pouco estoque na separação."
+    }
+  ],
+  "caso": {
+    "titulo": "Diferença de 8 caixas",
+    "contexto": "Inventário rotativo de produtos A.",
+    "passos": [
+      "Job cria documentos para produtos A.",
+      "Contagem no coletor: 492 em vez de 500.",
+      "Recontagem confirma.",
+      "Lançamento no EWM.",
+      "Analisador lança −8 no MM como perda."
+    ]
+  },
+  "armadilhas": [
+    "Lançar no EWM e esquecer o analisador: MM fica diferente.",
+    "Contar com tarefas abertas na posição: diferença falsa."
+  ],
+  "fixacao": {
+    "pergunta": "Qual o papel do analisador de diferenças?",
+    "resposta": "Compensar diferenças do EWM (por exemplo, falta numa posição e sobra em outra do mesmo produto) e lançar o saldo no MM, gerando o ajuste contábil."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-07-reabastecimento",
+      "motivo": "Etapa anterior da trilha."
+    },
+    {
+      "id": "guia-ewm-integracao",
+      "motivo": "Próximo passo: integração com MM e finanças."
+    },
+    {
+      "id": "proc-mm-11-inventario",
+      "motivo": "O inventário do MM sem EWM."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Physical Inventory (EWM)",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/4cb4e7d54c1f1921e10000000a15822b.html"
+    },
+    {
+      "titulo": "Cycle Counting (EWM)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4cb4e7e04c1f1921e10000000a15822b.html"
+    },
+    {
+      "titulo": "Manage Physical Inventory Count",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/32da8359c8ee4e8b8e8c5e15cacba5aa/465fde923715498eb21f2efeb080ddbc.html"
+    },
+    {
+      "titulo": "EWM Transaction Codes (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3354623031.html"
+    }
+  ]
+}

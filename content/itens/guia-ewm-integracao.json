@@ -1,0 +1,200 @@
+{
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "publicado": "2026-11-19",
+  "id": "guia-ewm-integracao",
+  "area": "Integração (EWM)",
+  "nivel": "intermediário",
+  "titulo": "Integração do EWM com MM, SD, QM e finanças",
+  "curto": "Integração do EWM",
+  "resumo": "O EWM não trabalha sozinho: as entregas nascem no MM e no SD, o estoque continua existindo no MM-IM (com valor contábil), a qualidade pode inspecionar no recebimento e a produção pode puxar materiais do armazém. Entender por onde cada informação passa é o que permite investigar por que um recebimento não apareceu ou por que o estoque do MM difere do EWM.",
+  "conceitos": [
+    {
+      "termo": "Depósito do MM ligado ao EWM",
+      "explicacao": "Um depósito do MM é marcado como gerenciado pelo EWM e ligado a um número de depósito. Movimentos nele viram entregas ou documentos no EWM."
+    },
+    {
+      "termo": "ROD e AFS",
+      "explicacao": "Received on Dock (recebido na doca, ainda não disponível) e Available for Sale (disponível para venda). São depósitos do MM ligados a grupos de disponibilidade no EWM; a armazenagem move o estoque de ROD para AFS."
+    },
+    {
+      "termo": "Tipos de estoque do EWM",
+      "explicacao": "F1 livre em recebimento, F2 livre disponível, Q1/Q2 em qualidade, B1/B2 bloqueado. Representam o tipo de estoque do MM combinado com o depósito."
+    },
+    {
+      "termo": "Grupo de disponibilidade",
+      "explicacao": "Liga tipos de estoque do EWM a um depósito do MM; é assim que uma mudança de F1 para F2 aparece como transferência no MM."
+    },
+    {
+      "termo": "Entregas",
+      "explicacao": "A entrega de entrada (VL31N) e a de saída (VL01N) do S/4HANA são distribuídas ao EWM, onde viram entrega de entrada e ordem de entrega de saída."
+    },
+    {
+      "termo": "Lançamentos contábeis",
+      "explicacao": "Entradas e saídas confirmadas no EWM geram documento de material e contábil no S/4HANA, como no MM puro (101, 601)."
+    },
+    {
+      "termo": "Inspeção de qualidade",
+      "explicacao": "Com QM, o recebimento pode criar lote de inspeção e o estoque fica em Q1/Q2 até a decisão."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "SPRO › EWM › Interfaces",
+      "descricao": "Ligação depósito do MM ↔ número de depósito"
+    },
+    {
+      "codigo": "/SCWM/POST",
+      "descricao": "Transferência de tipo de estoque no EWM"
+    },
+    {
+      "codigo": "MMBE / /SCWM/MON",
+      "descricao": "Comparar estoque no MM e no EWM"
+    },
+    {
+      "codigo": "/SCWM/ERP_STOCKCHECK",
+      "descricao": "Comparação de estoque MM × EWM"
+    },
+    {
+      "codigo": "SMQ1 / SMQ2",
+      "descricao": "Filas de comunicação (EWM descentralizado)"
+    }
+  ],
+  "caso": {
+    "titulo": "Estoque do MM maior que o do EWM",
+    "contexto": "No fim do mês, o MM mostrava 1.000 PC no depósito AFS e o EWM só 980.",
+    "passos": [
+      "Comparação de estoque MM × EWM aponta a diferença no produto FG-200.",
+      "No monitor do EWM, uma tarefa de armazenagem estava aberta: 20 PC ainda em ROD (F1).",
+      "Confirmada a tarefa, o estoque passou de F1 para F2 e de ROD para AFS no MM.",
+      "A diferença zerou sem ajuste contábil, porque era só posição e tipo de estoque."
+    ]
+  },
+  "armadilhas": [
+    "Lançar movimento direto no MM (MIGO) num depósito gerenciado pelo EWM: o EWM fica sem o documento correspondente.",
+    "Confundir diferença de valor com diferença de posição: a maioria das divergências MM × EWM é tarefa aberta, não perda.",
+    "No descentralizado, ignorar filas travadas (SMQ1/SMQ2): entregas simplesmente não chegam."
+  ],
+  "fixacao": {
+    "pergunta": "O que acontece no MM quando o EWM confirma a armazenagem de uma mercadoria recebida?",
+    "resposta": "O estoque passa do tipo F1 (depósito ROD) para F2 (depósito AFS): no MM isso aparece como transferência entre depósitos, sem mudança de valor."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-08-inventario",
+      "motivo": "Etapa anterior da trilha."
+    },
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "A entrada de mercadorias do MM, que num depósito EWM é lançada pelo EWM."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "A remessa do SD que vira ordem de entrega no EWM."
+    },
+    {
+      "id": "base-integra",
+      "motivo": "Os lançamentos contábeis que continuam valendo."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Posting Change for Stocks",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/224860538ca27e0de10000000a4450e5.html"
+    },
+    {
+      "titulo": "Quant – Extended Warehouse Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4bc49585921f4c88e10000000a42189e.html"
+    },
+    {
+      "titulo": "Goods Receipt Posting Triggered by EWM",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/cf7fa9523134225ce10000000a44538d-231.html"
+    },
+    {
+      "titulo": "Integration of SAP S/4HANA with Decentralized EWM (guia)",
+      "url": "https://help.sap.com/doc/cae0ee080f144ca08e969756db05ae90/2021.001/en-US/HTG_Integration__Decentralized_EWM_based_on_SAP_S4HANA.pdf"
+    }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "O caminho de um recebimento entre MM, EWM e finanças",
+      "legenda": "O MM cria a entrega; o EWM executa e lança; a contabilidade recebe o documento como sempre.",
+      "passos": [
+        {
+          "titulo": "Entrega de entrada",
+          "papel": "MM",
+          "transacao": "VL31N"
+        },
+        {
+          "titulo": "Entrega no EWM",
+          "papel": "EWM",
+          "transacao": "/SCWM/PRDI"
+        },
+        {
+          "titulo": "Entrada lançada (F1, depósito ROD)",
+          "papel": "EWM",
+          "transacao": "mov. 101"
+        },
+        {
+          "titulo": "Estoque × GR/IR",
+          "papel": "Finanças",
+          "transacao": "BSX · WRX"
+        },
+        {
+          "titulo": "Armazenado: F1 → F2 (ROD → AFS)",
+          "papel": "EWM",
+          "transacao": "/SCWM/TO_CONF"
+        }
+      ]
+    },
+    {
+      "tipo": "hierarquia",
+      "titulo": "Tipos de estoque do EWM e depósitos do MM",
+      "legenda": "Cada tipo de estoque do EWM corresponde a um tipo de estoque do MM num depósito.",
+      "raiz": {
+        "nome": "Nº de depósito SP01",
+        "sub": "EWM",
+        "filhos": [
+          {
+            "nome": "Depósito ROD",
+            "sub": "recebido na doca",
+            "filhos": [
+              {
+                "nome": "F1",
+                "sub": "livre"
+              },
+              {
+                "nome": "Q1",
+                "sub": "em qualidade"
+              },
+              {
+                "nome": "B1",
+                "sub": "bloqueado"
+              }
+            ]
+          },
+          {
+            "nome": "Depósito AFS",
+            "sub": "disponível",
+            "filhos": [
+              {
+                "nome": "F2",
+                "sub": "livre"
+              },
+              {
+                "nome": "Q2",
+                "sub": "em qualidade"
+              },
+              {
+                "nome": "B2",
+                "sub": "bloqueado"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

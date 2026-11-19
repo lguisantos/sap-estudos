@@ -1,0 +1,235 @@
+{
+  "id": "proc-ewm-02-armazenagem",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 2,
+  "publicado": "2026-11-19",
+  "area": "Entrada (EWM)",
+  "curto": "Armazenagem e estratégias",
+  "nivel": "intermediário",
+  "titulo": "Armazenagem: como o EWM escolhe a posição de destino",
+  "resumo": "Quando uma tarefa de armazenagem é criada, o EWM decide sozinho para onde levar o produto. Ele procura primeiro o tipo de depósito (pela sequência de busca), depois a seção e o tipo de posição, e aplica a regra de armazenagem do tipo: posição vazia, adição a estoque existente, posição fixa ou perto da posição fixa de picking. Entender essa cadeia explica 90% dos 'por que foi parar ali?'.",
+  "quando": [
+    "Toda tarefa de armazenagem (recebimento, devolução, retorno da produção).",
+    "Quando o operador reclama que o sistema sugere posições ruins.",
+    "Ao desenhar um armazém novo."
+  ],
+  "prerequisitos": [
+    "Produto de depósito com indicador de controle de armazenagem.",
+    "Sequências de busca, seções e tipos de posição configurados.",
+    "Capacidade das posições definida (peso, volume ou quantidade)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Determinar a sequência de tipos",
+      "papel": "Sistema",
+      "transacao": "Sequência de busca",
+      "descricao": "O indicador de controle de armazenagem do produto, com o tipo de processo e o tipo de estoque, aponta uma sequência de busca de tipos de depósito.",
+      "detalhes": [
+        "Ex.: paletes inteiros → 0010 porta-paletes, depois 0020 blocado.",
+        "A ordem da sequência é a ordem de tentativa."
+      ],
+      "resultado": "Lista ordenada de tipos candidatos.",
+      "exemplo": "Sequência PAL: 0010 → 0020."
+    },
+    {
+      "titulo": "Escolher seção e tipo de posição",
+      "papel": "Sistema",
+      "transacao": "Busca de seção · tipo de posição",
+      "descricao": "Dentro do tipo, o EWM filtra pelas seções permitidas (ex.: alto giro) e pelos tipos de posição que comportam a unidade de manuseio.",
+      "detalhes": [
+        "Seções são opcionais: só se o tipo usa controle por seção.",
+        "O tipo de unidade de manuseio (palete europeu, meio palete) limita o tipo de posição."
+      ],
+      "resultado": "Conjunto de posições possíveis."
+    },
+    {
+      "titulo": "Aplicar a regra de armazenagem",
+      "papel": "Sistema",
+      "transacao": "Regra do tipo de depósito",
+      "descricao": "A regra define como escolher entre as posições possíveis.",
+      "detalhes": [
+        "Posição vazia: para armazéns caóticos (qualquer endereço livre).",
+        "Adição a estoque existente: completa posições com o mesmo produto.",
+        "Posição fixa: o produto sempre vai para a sua posição.",
+        "Perto da posição fixa de picking: busca na mesma coluna, de baixo para cima, depois à direita e à esquerda no corredor."
+      ],
+      "resultado": "Posição de destino escolhida.",
+      "exemplo": "Posição vazia 01-02-03 no alto giro."
+    },
+    {
+      "titulo": "Verificar capacidade",
+      "papel": "Sistema",
+      "transacao": "Verificação de capacidade",
+      "descricao": "O EWM confere se a posição comporta o peso, volume ou quantidade.",
+      "detalhes": [
+        "Sem capacidade, passa à próxima posição ou ao próximo tipo da sequência.",
+        "Se nada servir, a tarefa não é criada e aparece erro no log."
+      ],
+      "resultado": "Posição válida reservada."
+    },
+    {
+      "titulo": "Criar a tarefa de armazenagem",
+      "papel": "Sistema",
+      "transacao": "/SCWM/PRDI · PPF",
+      "descricao": "A tarefa é criada da zona de recebimento até a posição e entra numa ordem de depósito.",
+      "detalhes": [
+        "Regras de criação de ordens agrupam tarefas por fila e limite.",
+        "A tarefa pode ser impressa ou enviada ao coletor."
+      ],
+      "resultado": "Tarefa aberta para o operador."
+    },
+    {
+      "titulo": "Confirmar ou tratar exceção",
+      "papel": "Operador",
+      "transacao": "/SCWM/RFUI",
+      "descricao": "O operador confirma; se a posição estiver ocupada ou danificada, usa um código de exceção e o EWM redetermina o destino.",
+      "detalhes": [
+        "Exceções ficam registradas para análise.",
+        "Mudança manual de posição pode ser permitida ou proibida por configuração."
+      ],
+      "resultado": "Produto armazenado."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Tarefa de depósito",
+      "tabelas": "/SCWM/ORDIM_O · /SCWM/ORDIM_C",
+      "descricao": "Origem, destino e status da armazenagem."
+    },
+    {
+      "nome": "Quant",
+      "tabelas": "/SCWM/AQUA",
+      "descricao": "Estoque na posição após a confirmação."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Sequência de busca de tipos",
+      "explicacao": "Lista ordenada de tipos de depósito onde procurar posição."
+    },
+    {
+      "termo": "Regra de armazenagem",
+      "explicacao": "Posição vazia, adição a estoque, posição fixa, perto da posição fixa."
+    },
+    {
+      "termo": "Tipo de posição",
+      "explicacao": "Tamanho/forma da posição, combinado com o tipo de unidade de manuseio."
+    },
+    {
+      "termo": "Código de exceção",
+      "explicacao": "Motivo informado pelo operador quando não consegue seguir a tarefa (posição cheia, produto avariado)."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/MAT1",
+      "descricao": "Indicador de controle de armazenagem"
+    },
+    {
+      "codigo": "/SCWM/PRDI",
+      "descricao": "Criar tarefas para a entrega"
+    },
+    {
+      "codigo": "/SCWM/RFUI",
+      "descricao": "Confirmar com exceção"
+    },
+    {
+      "codigo": "/SCWM/MON",
+      "descricao": "Ver tarefas e logs"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Sequência de busca de tipos",
+      "onde": "SPRO › EWM › Processamento de mercadorias › Estratégias › Armazenagem",
+      "explicacao": "Ordem dos tipos por indicador de controle."
+    },
+    {
+      "item": "Regras por tipo de depósito",
+      "onde": "SPRO › EWM › Estrutura mestre › Tipo de depósito",
+      "explicacao": "Regra de armazenagem e verificação de capacidade."
+    },
+    {
+      "item": "BAdIs de estratégia",
+      "onde": "Enhancement spot /SCWM/ES_CORE_PTS",
+      "explicacao": "Ajustar a lógica de armazenagem quando o padrão não atende."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM",
+      "explicacao": "Não altera valor; só a posição física do estoque já recebido."
+    },
+    {
+      "com": "Produção",
+      "explicacao": "Retornos da produção usam as mesmas estratégias."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Armazenagem caótica",
+      "explicacao": "Posição vazia em qualquer lugar: máximo aproveitamento."
+    },
+    {
+      "nome": "Armazenagem por posição fixa",
+      "explicacao": "Produtos sempre no mesmo endereço: fácil para o operador."
+    }
+  ],
+  "caso": {
+    "titulo": "Por que o palete foi para o blocado?",
+    "contexto": "O supervisor esperava o palete no porta-paletes, mas a tarefa apontou o tipo 0020.",
+    "passos": [
+      "Sequência PAL: 0010 → 0020.",
+      "No 0010, a seção alto giro estava sem posição vazia compatível com palete europeu.",
+      "Verificação de capacidade falhou nas posições restantes.",
+      "O EWM passou ao próximo tipo da sequência, 0020.",
+      "Solução: liberar posições no alto giro ou incluir a seção baixo giro."
+    ]
+  },
+  "armadilhas": [
+    "Sequência com um só tipo: quando lota, nenhuma tarefa é criada.",
+    "Capacidade mal cadastrada: o EWM rejeita posições que na prática servem."
+  ],
+  "fixacao": {
+    "pergunta": "Em que ordem o EWM decide a posição de armazenagem?",
+    "resposta": "Primeiro o tipo de depósito pela sequência de busca; depois seção e tipo de posição; então aplica a regra de armazenagem do tipo e verifica a capacidade."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-01-recebimento",
+      "motivo": "Etapa anterior: o recebimento que gera a tarefa."
+    },
+    {
+      "id": "proc-ewm-03-expedicao",
+      "motivo": "Próximo passo: o caminho inverso, a saída."
+    },
+    {
+      "id": "guia-ewm-estrutura",
+      "motivo": "Tipos, seções e posições usados na busca."
+    },
+    {
+      "id": "guia-ewm-dados-mestres",
+      "motivo": "Indicador de controle de armazenagem do produto."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Putaway Strategies",
+      "url": "https://help.sap.com/docs/sap_extended_warehouse_management/3d97bec9bf1649099384bb8167df3cf2/4cb4cf6b0c056642e10000000a15822b.html"
+    },
+    {
+      "titulo": "Storage Bin Determination for Putaway",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/4acdcb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Strategy: Near Picking Fixed Bin",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4c4dcf22b0da6f86e10000000a42189e.html"
+    },
+    {
+      "titulo": "Storage Type",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/07cdcb53ad377114e10000000a174cb4.html"
+    }
+  ]
+}

@@ -241,6 +241,10 @@
     {
       "id": "base-integra",
       "motivo": "Determinação de contas BSX/WRX."
+    },
+    {
+      "id": "proc-ewm-01-recebimento",
+      "motivo": "O mesmo recebimento num depósito gerenciado pelo EWM."
     }
   ],
   "fontes": [

@@ -91,6 +91,10 @@
     {
       "id": "base-sd",
       "motivo": "Vendas usam a área de vendas (org. vendas + canal + setor)."
+    },
+    {
+      "id": "guia-ewm-estrutura",
+      "motivo": "Como o depósito do MM se liga ao número de depósito do EWM."
     }
   ],
   "fontes": [],

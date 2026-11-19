@@ -1,0 +1,255 @@
+{
+  "id": "proc-ewm-01-recebimento",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 1,
+  "publicado": "2026-11-19",
+  "area": "Entrada (EWM)",
+  "curto": "Recebimento no armazém",
+  "nivel": "básico",
+  "titulo": "Recebimento no EWM: da entrega de entrada à mercadoria disponível",
+  "resumo": "No armazém com EWM, a entrada de mercadorias não é mais um lançamento único na MIGO: ela vira uma sequência controlada. A entrega de entrada chega ao EWM, a carga é descarregada na doca, a entrada é lançada (o estoque fica recebido na doca, ainda indisponível) e tarefas de armazenagem levam cada palete até a posição definitiva, onde o estoque fica disponível.",
+  "quando": [
+    "Toda compra recebida num depósito gerenciado pelo EWM.",
+    "Recebimento de produção ou de transferência entre centros.",
+    "Quando é preciso saber em que posição física cada palete foi guardado."
+  ],
+  "prerequisitos": [
+    "Pedido de compra liberado para um depósito ligado ao EWM.",
+    "Produto de depósito com indicador de controle de armazenagem.",
+    "Posições, tipos de depósito e estratégias configurados."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar a entrega de entrada",
+      "papel": "Comprador / Fornecedor",
+      "transacao": "VL31N · aviso EDI",
+      "descricao": "A entrega de entrada é criada no S/4HANA a partir do pedido, à mão ou pelo aviso de remessa do fornecedor.",
+      "detalhes": [
+        "Traz produto, quantidade, data prevista e, às vezes, lote e unidades de manuseio.",
+        "No embarcado, a entrega é distribuída automaticamente ao EWM; no descentralizado, por filas qRFC."
+      ],
+      "resultado": "Entrega de entrada no S/4HANA e no EWM.",
+      "exemplo": "Entrega 180000123: 40 caixas de FG-200, chegada 21/11."
+    },
+    {
+      "titulo": "Conferir a entrega no EWM",
+      "papel": "Recebimento",
+      "transacao": "/SCWM/PRDI",
+      "descricao": "No EWM, a entrega de entrada (warehouse request) mostra o que deve chegar e o status de cada etapa.",
+      "detalhes": [
+        "Status de descarga, de entrada de mercadorias e de armazenagem por item.",
+        "O tipo de processo de armazém (WPT) é determinado aqui e controla as tarefas."
+      ],
+      "resultado": "Entrega pronta para receber."
+    },
+    {
+      "titulo": "Registrar chegada e descarregar",
+      "papel": "Recebimento",
+      "transacao": "/SCWM/UNLOAD · doca",
+      "descricao": "O caminhão encosta na doca; a descarga é registrada, com ou sem tarefa, e a mercadoria vai para a zona de recebimento.",
+      "detalhes": [
+        "Unidades de manuseio (paletes) podem ser criadas ou lidas na descarga.",
+        "Divergências de quantidade são registradas na entrega."
+      ],
+      "resultado": "Mercadoria na zona de recebimento.",
+      "exemplo": "Doca DR02, 1 palete de 40 caixas."
+    },
+    {
+      "titulo": "Lançar a entrada de mercadorias",
+      "papel": "Recebimento",
+      "transacao": "/SCWM/PRDI (Entrada)",
+      "descricao": "O lançamento no EWM gera o documento de material e contábil no S/4HANA, com o estoque em F1 no depósito ROD.",
+      "detalhes": [
+        "Movimento 101 contra o pedido; GR/IR atualizada como no MM.",
+        "O estoque existe, mas ainda não está disponível para venda.",
+        "A entrada também pode ser lançada parcialmente ao confirmar tarefas."
+      ],
+      "resultado": "Estoque recebido na doca (F1/ROD)."
+    },
+    {
+      "titulo": "Criar tarefas de armazenagem",
+      "papel": "Sistema",
+      "transacao": "PPF · /SCWM/PRDI",
+      "descricao": "O EWM cria tarefas de armazenagem automaticamente (ação PPF) ou à mão, com a posição de destino escolhida pelas estratégias.",
+      "detalhes": [
+        "A busca usa a sequência de tipos de depósito do produto e a regra de armazenagem.",
+        "Tarefas são agrupadas em ordens de depósito para os operadores."
+      ],
+      "resultado": "Tarefas com posição de destino.",
+      "exemplo": "Tarefa: palete → posição 01-02-03 (tipo 0010)."
+    },
+    {
+      "titulo": "Armazenar e confirmar",
+      "papel": "Operador",
+      "transacao": "/SCWM/RFUI · /SCWM/TO_CONF",
+      "descricao": "O operador leva o palete e confirma no coletor, lendo a posição.",
+      "detalhes": [
+        "Se a posição estiver cheia, informa exceção e o sistema propõe outra.",
+        "A confirmação move o estoque de F1 para F2 (ROD → AFS)."
+      ],
+      "resultado": "Estoque disponível na posição definitiva."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Entrega de entrada S/4HANA",
+      "tabelas": "LIKP · LIPS",
+      "descricao": "Origem do recebimento.",
+      "exemplo": "180000123"
+    },
+    {
+      "nome": "Entrega de entrada EWM",
+      "tabelas": "/SCDL/DB_PROCH_I · /SCDL/DB_PROCI_I",
+      "descricao": "Warehouse request de entrada no EWM."
+    },
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC",
+      "descricao": "Entrada 101 lançada pelo EWM."
+    },
+    {
+      "nome": "Tarefas e ordens de depósito",
+      "tabelas": "/SCWM/ORDIM_O · /SCWM/ORDIM_C · /SCWM/WHO",
+      "descricao": "Tarefas abertas, confirmadas e ordens."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Warehouse request",
+      "explicacao": "Documento do EWM que representa a necessidade de movimentar: entrega de entrada, ordem de entrega de saída, transferência."
+    },
+    {
+      "termo": "Tipo de processo de armazém (WPT)",
+      "explicacao": "Controla como a tarefa é processada: tipo de movimento, confirmação imediata, impressão."
+    },
+    {
+      "termo": "ROD / AFS",
+      "explicacao": "Recebido na doca × disponível para venda: estoque antes e depois da armazenagem."
+    },
+    {
+      "termo": "Ação PPF",
+      "explicacao": "Post Processing Framework: dispara ações automáticas, como criar tarefas ao lançar a entrada."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/PRDI",
+      "descricao": "Entrega de entrada no EWM"
+    },
+    {
+      "codigo": "/SCWM/UNLOAD",
+      "descricao": "Descarga"
+    },
+    {
+      "codigo": "/SCWM/TO_CONF",
+      "descricao": "Confirmar tarefas"
+    },
+    {
+      "codigo": "/SCWM/RFUI",
+      "descricao": "Coletor RF"
+    },
+    {
+      "codigo": "VL31N / VL33N",
+      "descricao": "Entrega de entrada no S/4HANA"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Ligação depósito ↔ número de depósito",
+      "onde": "SPRO › EWM › Interfaces › ERP Integration",
+      "explicacao": "Quais depósitos do MM são gerenciados pelo EWM."
+    },
+    {
+      "item": "Tipo de processo de armazém",
+      "onde": "SPRO › EWM › Configurações gerais › Tarefa de depósito",
+      "explicacao": "Determinação e controle do WPT de armazenagem."
+    },
+    {
+      "item": "Ações PPF da entrega",
+      "onde": "SPRO › EWM › Processamento de mercadorias › Entrega",
+      "explicacao": "Criação automática de tarefas na entrada."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM",
+      "explicacao": "O pedido e a entrega de entrada vêm do MM; o lançamento 101 atualiza estoque e GR/IR."
+    },
+    {
+      "com": "QM",
+      "explicacao": "Com inspeção, o estoque entra em Q1 e só segue após decisão."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Documento contábil igual ao do MM puro."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Armazenagem com controle orientado ao processo (POSC)",
+      "explicacao": "Etapas intermediárias: descarregar → desconsolidar → inspecionar → armazenar."
+    },
+    {
+      "nome": "Entrada sem armazenagem",
+      "explicacao": "Itens não relevantes para armazenagem vão para posição de movimento sem tarefa."
+    }
+  ],
+  "caso": {
+    "titulo": "Recebimento de 40 caixas de FG-200",
+    "contexto": "Pedido de 40 caixas para o CD SP01.",
+    "passos": [
+      "Fornecedor envia aviso; entrega 180000123 criada e distribuída ao EWM.",
+      "Descarga na doca DR02.",
+      "Entrada lançada: estoque F1 no ROD; GR/IR atualizada.",
+      "PPF cria tarefa para a posição 01-02-03.",
+      "Operador confirma no coletor; estoque F2 no AFS."
+    ]
+  },
+  "armadilhas": [
+    "Lançar MIGO direto no depósito EWM: o EWM fica sem a entrega.",
+    "Deixar tarefas abertas: o estoque fica em ROD e não pode ser vendido.",
+    "Produto sem indicador de armazenagem: tarefa não é criada."
+  ],
+  "fixacao": {
+    "pergunta": "Em que momento o estoque recebido fica disponível para venda?",
+    "resposta": "Quando a tarefa de armazenagem é confirmada: o estoque passa de F1 (ROD) para F2 (AFS). Logo após o lançamento da entrada ele ainda está recebido na doca."
+  },
+  "links": [
+    {
+      "id": "guia-ewm-dados-mestres",
+      "motivo": "Etapa anterior: os cadastros usados no recebimento."
+    },
+    {
+      "id": "proc-ewm-02-armazenagem",
+      "motivo": "Próximo passo: como a posição de destino é escolhida."
+    },
+    {
+      "id": "proc-mm-09-entrada",
+      "motivo": "A entrada de mercadorias do MM, equivalente sem EWM."
+    },
+    {
+      "id": "guia-ewm-integracao",
+      "motivo": "ROD, AFS e tipos de estoque em detalhe."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Inbound Process",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/e15a4205bb284393add14c9d419fef45.html"
+    },
+    {
+      "titulo": "Goods Receipt Posting Triggered by EWM",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/cf7fa9523134225ce10000000a44538d-231.html"
+    },
+    {
+      "titulo": "Delivery Processing",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/13cccb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Quant – Extended Warehouse Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4bc49585921f4c88e10000000a42189e.html"
+    }
+  ]
+}

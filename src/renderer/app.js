@@ -55,7 +55,9 @@ const rotuloTipo = it => it.tipo === "processo" ? "Processo" : it.tipo === "guia
 
 function renderTrilha() {
   const t = trilhaAtiva();
-  document.querySelectorAll(".tr-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tmod === st.tmod));
+  // Uma aba por trilha existente no conteúdo (MM, SD, EWM...).
+  $("tr-tabs").innerHTML = (st.trilhas ? st.trilhas.trilhas : []).map(x =>
+    `<button role="tab" data-tmod="${esc(x.id)}" aria-selected="${t && x.id === t.id}">${esc(x.titulo)}</button>`).join("");
   if (!t) { $("trilha-corpo").innerHTML = `<p class="empty">Trilhas ainda não disponíveis neste conteúdo.</p>`; return; }
   const es = etapasDa(t);
   const escritas = es.filter(e => e.existe);
@@ -100,7 +102,11 @@ function renderTrilha() {
     <details class="tr-principio"><summary>Por que essa ordem?</summary><p>${esc(st.trilhas.principio)}</p></details>
     ${niveis}`;
 }
-document.querySelectorAll(".tr-tabs button").forEach(b => (b.onclick = () => { st.tmod = b.dataset.tmod; gravarPref("tmod", st.tmod); renderTrilha(); renderLista(); }));
+$("tr-tabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-tmod]");
+  if (!b) return;
+  st.tmod = b.dataset.tmod; gravarPref("tmod", st.tmod); renderTrilha(); renderLista();
+});
 
 // Barra de navegação da trilha dentro do leitor.
 function barraTrilha(it) {

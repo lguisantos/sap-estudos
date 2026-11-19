@@ -221,6 +221,10 @@
     {
       "id": "proc-mm-16-transferencia",
       "motivo": "STO também usa remessa."
+    },
+    {
+      "id": "proc-ewm-03-expedicao",
+      "motivo": "A remessa executada no armazém com EWM."
     }
   ],
   "fontes": [

@@ -14,7 +14,7 @@
     return linhas;
   }
   const tspans = (linhas, x, dy) => linhas.map((l, j) => `<tspan x="${x}" dy="${j ? dy : 0}">${esc(l)}</tspan>`).join("");
-  const grupo = it => it.tipo === "fundamentos" ? "base" : it.tipo === "semanal" ? "semanal" : (it.modulo === "MM" || it.modulo === "SD") ? it.modulo : "outro";
+  const grupo = it => it.tipo === "fundamentos" ? "base" : it.tipo === "semanal" ? "semanal" : ["MM", "SD", "EWM"].includes(it.modulo) ? it.modulo : "outro";
 
   /**
    * Dependências: à esquerda o que vem antes (base necessária), no centro o tema, à direita o que ele

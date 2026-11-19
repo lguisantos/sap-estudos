@@ -1,0 +1,204 @@
+{
+  "id": "proc-ewm-05-movimentacoes",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 5,
+  "publicado": "2026-11-19",
+  "area": "Controle (EWM)",
+  "curto": "Movimentações internas",
+  "nivel": "intermediário",
+  "titulo": "Movimentações internas e transferências de estoque no EWM",
+  "resumo": "Dentro do armazém, o estoque também muda de lugar e de situação sem entrada nem saída: um palete é remanejado, um produto avariado vai para bloqueado, uma posição é liberada. No EWM, a mudança física é uma tarefa ad hoc e a mudança de situação (tipo de estoque, lote) é uma transferência de estoque (posting change), comunicada ao MM quando afeta o estoque dele.",
+  "quando": [
+    "Remanejar estoque entre posições.",
+    "Mudar tipo de estoque (livre → bloqueado, qualidade → livre).",
+    "Corrigir lote ou produto avariado."
+  ],
+  "prerequisitos": [
+    "Tipos de processo de armazém para movimentos internos.",
+    "Regras do que pode ser transferido (BAdI de verificação, se usado)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Identificar a necessidade",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/MON",
+      "descricao": "Ex.: posição danificada, produto avariado, reorganização por giro.",
+      "detalhes": [
+        "O monitor mostra o estoque por posição e tipo.",
+        "Remanejamento também pode ser sugerido pelo próprio EWM (rearrumação)."
+      ],
+      "resultado": "Movimento definido."
+    },
+    {
+      "titulo": "Criar tarefa ad hoc",
+      "papel": "Operador",
+      "transacao": "/SCWM/ADPROD · /SCWM/ADHU",
+      "descricao": "Tarefa de produto ou de unidade de manuseio da posição de origem para a de destino.",
+      "detalhes": [
+        "Destino informado ou determinado por estratégia.",
+        "Sem efeito no MM: o estoque continua no mesmo depósito."
+      ],
+      "resultado": "Tarefa aberta.",
+      "exemplo": "Palete de 01-02-03 para 04-05-01."
+    },
+    {
+      "titulo": "Confirmar o movimento",
+      "papel": "Operador",
+      "transacao": "/SCWM/RFUI",
+      "descricao": "O operador move e confirma; o quant muda de posição.",
+      "detalhes": [
+        "Diferenças registradas como exceção.",
+        "Histórico fica na tarefa confirmada."
+      ],
+      "resultado": "Estoque na nova posição."
+    },
+    {
+      "titulo": "Transferir tipo de estoque",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/POST",
+      "descricao": "Mudança de situação: F2 → B6 (bloqueado), Q2 → F2, troca de lote.",
+      "detalhes": [
+        "Mudanças que afetam o MM (tipo de estoque/depósito) são comunicadas e geram documento de material.",
+        "Pode ser direta ou com tarefa, conforme configuração."
+      ],
+      "resultado": "Estoque com novo tipo; MM atualizado.",
+      "exemplo": "20 PC de F2 para B6 por avaria."
+    },
+    {
+      "titulo": "Conferir no MM",
+      "papel": "Controladoria",
+      "transacao": "MMBE / MB51",
+      "descricao": "O MM mostra a transferência correspondente quando há mudança de depósito ou tipo de estoque.",
+      "detalhes": [
+        "Mudanças só de posição não aparecem no MM.",
+        "Use a comparação MM × EWM em caso de dúvida."
+      ],
+      "resultado": "Estoques consistentes."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Tarefa ad hoc",
+      "tabelas": "/SCWM/ORDIM_C",
+      "descricao": "Movimento físico."
+    },
+    {
+      "nome": "Transferência (posting change)",
+      "tabelas": "documento EWM + MATDOC",
+      "descricao": "Mudança de tipo de estoque comunicada ao MM."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Tarefa ad hoc",
+      "explicacao": "Movimento interno sem documento de origem."
+    },
+    {
+      "termo": "Posting change",
+      "explicacao": "Mudança de atributo do estoque (tipo, lote, produto)."
+    },
+    {
+      "termo": "Rearrumação",
+      "explicacao": "Remanejamento planejado por giro (ex.: alto giro mais perto)."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/ADPROD",
+      "descricao": "Tarefa ad hoc de produto"
+    },
+    {
+      "codigo": "/SCWM/ADHU",
+      "descricao": "Tarefa ad hoc de unidade de manuseio"
+    },
+    {
+      "codigo": "/SCWM/POST",
+      "descricao": "Transferir estoque"
+    },
+    {
+      "codigo": "MMBE",
+      "descricao": "Estoque no MM"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Tipos de processo internos",
+      "onde": "SPRO › EWM › Processos internos",
+      "explicacao": "Movimentos ad hoc e transferências."
+    },
+    {
+      "item": "Verificações de movimento",
+      "onde": "BAdI de verificação de estoque",
+      "explicacao": "Impedir trocas indesejadas (ex.: troca de produto)."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "MM",
+      "explicacao": "Transferências de tipo de estoque geram documento no MM; mudanças de posição não."
+    },
+    {
+      "com": "QM",
+      "explicacao": "Liberação de qualidade move de Q para F."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Transferência planejada com entrega",
+      "explicacao": "Posting change com documento de entrega e tarefa."
+    }
+  ],
+  "caso": {
+    "titulo": "Caixas avariadas no porta-paletes",
+    "contexto": "Inventário encontrou 20 caixas amassadas.",
+    "passos": [
+      "Tarefa ad hoc leva as caixas para a área de avaria.",
+      "Transferência F2 → B6.",
+      "MM mostra estoque bloqueado.",
+      "Qualidade decide sucata.",
+      "Baixa por sucata no MM."
+    ]
+  },
+  "armadilhas": [
+    "Usar MIGO para mudar tipo de estoque num depósito EWM.",
+    "Mover fisicamente sem tarefa: o sistema perde a posição real."
+  ],
+  "fixacao": {
+    "pergunta": "Mover um palete entre posições do mesmo armazém aparece no MM?",
+    "resposta": "Não. Só mudanças que afetam depósito ou tipo de estoque (posting change) são comunicadas ao MM; mudança de posição fica só no EWM."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-03-expedicao",
+      "motivo": "Etapa anterior da trilha."
+    },
+    {
+      "id": "proc-ewm-04-monitor",
+      "motivo": "Próximo passo: o monitor."
+    },
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Movimentações no MM sem EWM."
+    },
+    {
+      "id": "guia-ewm-integracao",
+      "motivo": "Tipos de estoque e grupos de disponibilidade."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Posting Change for Stocks",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/224860538ca27e0de10000000a4450e5.html"
+    },
+    {
+      "titulo": "Direct Posting Change or Warehouse Task in EWM",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/b2916053d2ce6655e10000000a423f68.html"
+    },
+    {
+      "titulo": "Quant – Extended Warehouse Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4bc49585921f4c88e10000000a42189e.html"
+    }
+  ]
+}

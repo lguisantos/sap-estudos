@@ -12,7 +12,7 @@ Escreva sempre em português do Brasil, frases diretas, sem enrolação.
 ## Trilhas de aprendizado (prioridade)
 
 O Lucas é iniciante nos módulos funcionais. O conteúdo é organizado em `content/trilhas.json`:
-uma trilha por módulo (hoje MM e SD), com níveis do júnior ao consultor e etapas na ordem de
+uma trilha por módulo (hoje MM, SD e EWM), com níveis do júnior ao consultor e etapas na ordem de
 estudo. Cada etapa aponta para um item (`item`) e explica `porque` vem naquele ponto e o que o
 aluno `consegue` fazer depois. Etapas com `tema` e `tipo` ainda não foram escritas ("em breve").
 
@@ -30,8 +30,8 @@ defina cada termo, dê exemplo com números e diga o que muda no S/4HANA em rela
 
 Toda sexta, nesta ordem de prioridade:
 
-1. **Duas etapas "em breve" das trilhas**: a primeira pendente da trilha MM e a primeira pendente
-   da trilha SD (na ordem do `trilhas.json`). Tipo `guia` ou `processo`, conforme a etapa.
+1. **Uma etapa "em breve" de cada trilha**: a primeira pendente da trilha MM, a primeira da SD e a
+   primeira da EWM (na ordem do `trilhas.json`). Tipo `guia` ou `processo`, conforme a etapa.
 2. **Uma edição de atualidades** (tipo `semanal`), alternando a trilha `funcional` e a `tecnico`
    a cada semana (ABAP Cloud, RAP, CDS, BTP, integração, Fiori, performance no técnico).
 3. Quando não houver mais etapas pendentes, volte a duas edições semanais (uma funcional, uma técnica)
@@ -108,7 +108,7 @@ que mostre o assunto em si (processos já são ilustrados pelo próprio `fluxo`)
 
 ## Processos (tipo `processo`)
 
-Explicações completas de processos por módulo (hoje MM e SD), em `content/itens/proc-<mod>-<nn>-<slug>.json`.
+Explicações completas de processos por módulo (hoje MM, SD e EWM), em `content/itens/proc-<mod>-<nn>-<slug>.json`.
 Cada processo traz o fluxo inteiro, passo a passo, e o app desenha a ilustração em raias a partir de `fluxo`.
 
 Campos além dos comuns (`conceitos`, `transacoes`, `caso` = exemplo completo, `armadilhas`, `fixacao`, `links`, `fontes`):
@@ -138,6 +138,10 @@ Regras: base na documentação SAP Help (cite as subpáginas usadas em `fontes`)
 responsável real, `links` para os processos vizinhos (antes/depois no fluxo e o equivalente no
 outro módulo). Diferencie S/4HANA de ECC quando a transação ou tabela mudou (ex.: MATDOC, PRCD_ELEMENTS,
 Business Partner, Credit Management).
+
+EWM: diga sempre se o comportamento vale para o EWM embarcado, o descentralizado ou ambos; ligue cada
+processo ao equivalente no MM ou SD (recebimento ↔ entrada de mercadorias, expedição ↔ remessa/saída)
+e explique o reflexo no estoque do MM (ROD/AFS, tipos de estoque F1/F2).
 
 ## Chat do app
 

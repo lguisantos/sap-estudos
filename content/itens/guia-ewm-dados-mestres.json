@@ -1,0 +1,159 @@
+{
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "publicado": "2026-11-19",
+  "id": "guia-ewm-dados-mestres",
+  "area": "Dados mestres (EWM)",
+  "nivel": "básico",
+  "titulo": "Dados mestres do EWM: produto de depósito, especificação de embalagem, posições fixas e recursos",
+  "curto": "Dados mestres do EWM",
+  "resumo": "O EWM usa o mesmo material (produto) do MM, mas precisa de dados próprios por armazém: como armazenar e retirar, qual o fluxo de embalagem, em que posição fixa fica o produto de picking e quem são os operadores e equipamentos. Sem esses cadastros, as estratégias do EWM não têm o que aplicar e o recebimento para na zona de entrada.",
+  "conceitos": [
+    {
+      "termo": "Produto de depósito",
+      "explicacao": "Dados do material específicos de um número de depósito e de uma parte autorizada a dispor: indicador de controle de armazenagem, indicador de controle de retirada, indicador de inventário rotativo, área de preparação. No S/4HANA embarcado, ficam na visão EWM do produto."
+    },
+    {
+      "termo": "Parte autorizada a dispor",
+      "explicacao": "Quem pode dispor do estoque, normalmente o centro representado como BP. Faz parte da chave do quant e é obrigatória no produto de depósito."
+    },
+    {
+      "termo": "Indicador de controle de armazenagem",
+      "explicacao": "Liga o produto à sequência de busca de tipos de depósito usada na armazenagem (ex.: paletes inteiros vão para o porta-paletes)."
+    },
+    {
+      "termo": "Indicador de controle de retirada",
+      "explicacao": "Liga o produto à sequência de busca para separação (ex.: primeiro picking em prateleira, depois porta-paletes)."
+    },
+    {
+      "termo": "Especificação de embalagem",
+      "explicacao": "Descreve como o produto é embalado (caixa com 12, palete com 40 caixas) e pode determinar unidades de medida e a estrutura de unidades de manuseio (HU)."
+    },
+    {
+      "termo": "Posição fixa",
+      "explicacao": "Posição reservada a um produto, comum em picking. Mantida por produto e tipo de depósito; o reabastecimento usa mínimo e máximo dessa posição."
+    },
+    {
+      "termo": "Recursos, filas e usuários",
+      "explicacao": "Recurso é o operador ou equipamento (empilhadeira); filas organizam as ordens de depósito por área e atividade; o usuário é ligado a um recurso para trabalhar no coletor."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/MAT1",
+      "descricao": "Produto de depósito"
+    },
+    {
+      "codigo": "/SCWM/PACKSPEC",
+      "descricao": "Especificação de embalagem"
+    },
+    {
+      "codigo": "/SCWM/BINMAT",
+      "descricao": "Posições fixas por produto"
+    },
+    {
+      "codigo": "/SCWM/RSRC",
+      "descricao": "Recursos"
+    },
+    {
+      "codigo": "BP",
+      "descricao": "Parte autorizada a dispor e parceiros"
+    }
+  ],
+  "caso": {
+    "titulo": "Produto novo que travou na zona de recebimento",
+    "contexto": "O recebimento do produto FG-200 foi lançado, mas as tarefas de armazenagem não foram criadas: o sistema não encontrava posição de destino.",
+    "passos": [
+      "No produto de depósito do SP01 faltava o indicador de controle de armazenagem.",
+      "Foi preenchido com PAL (paletes inteiros → tipo 0010) e o indicador de retirada com PICK (prateleira 0050, depois 0010).",
+      "Criada a especificação de embalagem: caixa com 12, palete com 40 caixas.",
+      "Mantida a posição fixa 05-01-02 no tipo 0050, com mínimo 20 e máximo 80 caixas.",
+      "As tarefas foram recriadas e o produto seguiu para o porta-paletes."
+    ]
+  },
+  "armadilhas": [
+    "Criar o material no MM e esquecer a visão EWM do número de depósito.",
+    "Especificação de embalagem incoerente com a unidade de medida do MM.",
+    "Posição fixa sem mínimo e máximo: o reabastecimento planejado não funciona."
+  ],
+  "fixacao": {
+    "pergunta": "Por que o EWM não criou tarefa de armazenagem para um produto recém-cadastrado?",
+    "resposta": "Provavelmente falta o indicador de controle de armazenagem no produto de depósito (ou a sequência de busca ligada a ele), e sem isso o EWM não sabe em quais tipos procurar posição."
+  },
+  "links": [
+    {
+      "id": "guia-ewm-estrutura",
+      "motivo": "Etapa anterior: a estrutura que os cadastros usam."
+    },
+    {
+      "id": "guia-mm-mestre-material",
+      "motivo": "O mestre de material do MM, base do produto de depósito."
+    },
+    {
+      "id": "proc-ewm-01-recebimento",
+      "motivo": "Próximo passo: o primeiro processo que usa esses dados."
+    },
+    {
+      "id": "proc-ewm-02-armazenagem",
+      "motivo": "As estratégias leem os indicadores do produto."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Warehouse Product",
+      "url": "https://help.sap.com/docs/SAP_SUPPLY_CHAIN_MANAGEMENT/57574d15fa1d414792d74047b66c3e41/4fc7441636fe1b10e10000000a42189d.html"
+    },
+    {
+      "titulo": "Quant – Extended Warehouse Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4bc49585921f4c88e10000000a42189e.html"
+    },
+    {
+      "titulo": "Stock (EWM)",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/0a782e35aa9b499ab5e9dd30b1448280.html"
+    },
+    {
+      "titulo": "EWM Transaction Codes (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3354623031.html"
+    }
+  ],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "O que o EWM acrescenta ao material",
+      "legenda": "O material do MM é o mesmo; o EWM guarda dados por número de depósito e parte autorizada a dispor.",
+      "raiz": {
+        "nome": "Produto FG-200",
+        "sub": "mestre de material do MM",
+        "filhos": [
+          {
+            "nome": "Dados de depósito SP01",
+            "sub": "parte autorizada: centro SP01",
+            "filhos": [
+              {
+                "nome": "Controle de armazenagem",
+                "sub": "PAL → tipo 0010"
+              },
+              {
+                "nome": "Controle de retirada",
+                "sub": "PICK → 0050, depois 0010"
+              },
+              {
+                "nome": "Inventário rotativo",
+                "sub": "indicador A"
+              }
+            ]
+          },
+          {
+            "nome": "Especificação de embalagem",
+            "sub": "caixa 12 · palete 40 cx"
+          },
+          {
+            "nome": "Posição fixa 05-01-02",
+            "sub": "tipo 0050 · mín. 20 · máx. 80"
+          }
+        ]
+      }
+    }
+  ]
+}

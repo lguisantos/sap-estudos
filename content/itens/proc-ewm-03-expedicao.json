@@ -1,0 +1,255 @@
+{
+  "id": "proc-ewm-03-expedicao",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 3,
+  "publicado": "2026-11-19",
+  "area": "Saída (EWM)",
+  "curto": "Expedição no armazém",
+  "nivel": "básico",
+  "titulo": "Expedição no EWM: da ordem de entrega à saída de mercadoria",
+  "resumo": "Do lado da venda, o EWM recebe a remessa do SD como ordem de entrega de saída e organiza o trabalho físico: agrupa em ondas, cria tarefas de separação, leva a mercadoria à estação de embalagem e à área de preparação, controla o carregamento e, no fim, lança a saída de mercadoria, que baixa o estoque e libera o faturamento no SD.",
+  "quando": [
+    "Toda venda ou transferência expedida de um depósito com EWM.",
+    "Quando é preciso organizar a separação em lotes (ondas) e controlar doca e carregamento."
+  ],
+  "prerequisitos": [
+    "Remessa de saída do SD para um depósito EWM.",
+    "Produto com indicador de controle de retirada.",
+    "Ondas, estações de embalagem e áreas de preparação configuradas (quando usadas)."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Criar a remessa no SD",
+      "papel": "Expedição (SD)",
+      "transacao": "VL01N / VL10x",
+      "descricao": "A remessa de saída é criada a partir da ordem e distribuída ao EWM.",
+      "detalhes": [
+        "No EWM ela vira ordem de entrega de saída (ODO).",
+        "Ponto de expedição e itinerário vêm do SD."
+      ],
+      "resultado": "ODO no EWM.",
+      "exemplo": "ODO para 200 caixas do cliente 1000123."
+    },
+    {
+      "titulo": "Agrupar em onda e liberar",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/WAVE",
+      "descricao": "Ordens de várias remessas são agrupadas em ondas (por rota, horário, doca) e liberadas.",
+      "detalhes": [
+        "A liberação pode ser automática, imediata ou manual, conforme o modelo de onda.",
+        "Por padrão, as tarefas de separação são criadas na liberação da onda."
+      ],
+      "resultado": "Tarefas de separação criadas.",
+      "exemplo": "Onda 1000045 com 12 ordens da rota Sul."
+    },
+    {
+      "titulo": "Separar (picking)",
+      "papel": "Separador",
+      "transacao": "/SCWM/RFUI",
+      "descricao": "O separador percorre as posições na ordem indicada e confirma cada tarefa, levando para a estação de embalagem ou direto à área de preparação.",
+      "detalhes": [
+        "Fonte determinada pela sequência de retirada do produto (ex.: prateleira, depois porta-paletes).",
+        "Falta na posição: o operador registra exceção (negativa de separação) e o EWM pode buscar outra posição ou reabastecer."
+      ],
+      "resultado": "Mercadoria separada."
+    },
+    {
+      "titulo": "Embalar",
+      "papel": "Embalagem",
+      "transacao": "/SCWM/PACK",
+      "descricao": "Na estação de embalagem, os itens são conferidos e colocados em caixas ou paletes (unidades de manuseio).",
+      "detalhes": [
+        "Embalagem gera tarefas próprias, confirmadas ao final.",
+        "Diferenças entre quantidade pedida e separada são registradas."
+      ],
+      "resultado": "Volumes prontos e etiquetados."
+    },
+    {
+      "titulo": "Preparar e carregar",
+      "papel": "Expedição",
+      "transacao": "/SCWM/LOAD · doca",
+      "descricao": "Os volumes vão para a área de preparação e são carregados no veículo na doca.",
+      "detalhes": [
+        "O carregamento é registrado contra a ordem de entrega ou a unidade de transporte.",
+        "Ao final do carregamento, o sistema gera as remessas de saída correspondentes."
+      ],
+      "resultado": "Carga no caminhão."
+    },
+    {
+      "titulo": "Lançar a saída de mercadoria",
+      "papel": "Expedição",
+      "transacao": "/SCWM/PRDO (Saída)",
+      "descricao": "A saída é lançada no EWM: o estoque da posição de preparação é baixado e o S/4HANA recebe o documento 601.",
+      "detalhes": [
+        "D CMV × C estoque, como no SD sem EWM.",
+        "Status de saída é por item: o cabeçalho pode estar concluído com item ainda aberto."
+      ],
+      "resultado": "Remessa com saída; pronta para faturar."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Remessa de saída SD",
+      "tabelas": "LIKP · LIPS",
+      "descricao": "Origem."
+    },
+    {
+      "nome": "Ordem de entrega de saída",
+      "tabelas": "/SCDL/DB_PROCH_O · /SCDL/DB_PROCI_O",
+      "descricao": "Warehouse request de saída no EWM."
+    },
+    {
+      "nome": "Onda",
+      "tabelas": "/SCWM/WAVEHDR · /SCWM/WAVEITM",
+      "descricao": "Agrupamento das ordens."
+    },
+    {
+      "nome": "Documento de material",
+      "tabelas": "MATDOC (601)",
+      "descricao": "Saída lançada pelo EWM."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Ordem de entrega de saída (ODO)",
+      "explicacao": "Warehouse request de saída do EWM, criada da remessa do SD."
+    },
+    {
+      "termo": "Onda",
+      "explicacao": "Grupo de itens de várias ordens liberados juntos para separação."
+    },
+    {
+      "termo": "Estação de embalagem",
+      "explicacao": "Local onde se confere e embala antes de carregar."
+    },
+    {
+      "termo": "Área de preparação",
+      "explicacao": "Onde os volumes esperam o carregamento perto da doca."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/PRDO",
+      "descricao": "Ordem de entrega de saída"
+    },
+    {
+      "codigo": "/SCWM/WAVE",
+      "descricao": "Manter ondas"
+    },
+    {
+      "codigo": "/SCWM/PACK",
+      "descricao": "Estação de embalagem"
+    },
+    {
+      "codigo": "/SCWM/LOAD",
+      "descricao": "Carregamento"
+    },
+    {
+      "codigo": "VL01N / VL10x",
+      "descricao": "Remessa no SD"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Controle de retirada",
+      "onde": "SPRO › EWM › Processamento de mercadorias › Estratégias › Retirada",
+      "explicacao": "Sequência de tipos para separação."
+    },
+    {
+      "item": "Modelos de onda",
+      "onde": "SPRO › EWM › Saída › Gestão de ondas",
+      "explicacao": "Critérios e forma de liberação."
+    },
+    {
+      "item": "Estações e áreas de preparação",
+      "onde": "SPRO › EWM › Estrutura mestre",
+      "explicacao": "Estações de trabalho, docas e áreas."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "SD",
+      "explicacao": "A remessa vem do SD; após a saída, o SD fatura."
+    },
+    {
+      "com": "FI",
+      "explicacao": "Lançamento de CMV e baixa de estoque."
+    },
+    {
+      "com": "TM",
+      "explicacao": "Com transporte, unidades de transporte e docas podem vir do TM."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Saída sem ondas",
+      "explicacao": "Tarefas criadas direto da ODO."
+    },
+    {
+      "nome": "Separação de palete inteiro",
+      "explicacao": "Sem embalagem: do porta-paletes direto à doca."
+    }
+  ],
+  "caso": {
+    "titulo": "Pedido de 200 caixas para a rota Sul",
+    "contexto": "Cliente com entrega amanhã cedo.",
+    "passos": [
+      "VL01N cria a remessa; ODO no EWM.",
+      "Onda da rota Sul liberada às 14h.",
+      "Separação no picking e porta-paletes.",
+      "Embalagem em 4 paletes.",
+      "Carregamento na doca DE03 e saída lançada; SD fatura."
+    ]
+  },
+  "armadilhas": [
+    "Ondas presas sem liberar: nada é separado.",
+    "Negativas de separação sem reabastecimento: a ordem fica parcial.",
+    "Faturar no SD sem a saída lançada no EWM."
+  ],
+  "fixacao": {
+    "pergunta": "Onde, por padrão, nascem as tarefas de separação no EWM?",
+    "resposta": "Na liberação da onda. Também podem ser criadas por ação PPF direto da ordem de entrega."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-02-armazenagem",
+      "motivo": "Etapa anterior: a entrada e a armazenagem."
+    },
+    {
+      "id": "proc-ewm-05-movimentacoes",
+      "motivo": "Próximo passo: movimentações internas."
+    },
+    {
+      "id": "proc-sd-09-remessa",
+      "motivo": "A remessa do SD que origina a ordem de entrega."
+    },
+    {
+      "id": "proc-sd-10-saida",
+      "motivo": "A saída de mercadoria vista pelo SD."
+    },
+    {
+      "id": "proc-ewm-06-ondas",
+      "motivo": "Gestão de ondas em detalhe."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Goods Issue (EWM)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/c4c8cb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Outbound Delivery Order",
+      "url": "https://help.sap.com/docs/PRODUCT_ID/9832125c23154a179bfa1784cdc9577a/0e6f4ddc5007423fb34d3bf189398031.html"
+    },
+    {
+      "titulo": "Loading and Unloading",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/14c8cb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "EWM delivery status handling (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3354622098.html"
+    }
+  ]
+}

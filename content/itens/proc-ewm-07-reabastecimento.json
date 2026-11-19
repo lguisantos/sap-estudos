@@ -1,0 +1,190 @@
+{
+  "id": "proc-ewm-07-reabastecimento",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 7,
+  "publicado": "2026-11-19",
+  "area": "Controle (EWM)",
+  "curto": "Reabastecimento",
+  "nivel": "intermediário",
+  "titulo": "Reabastecimento das posições de picking",
+  "resumo": "Posições de picking têm pouca quantidade e esvaziam rápido. O reabastecimento traz estoque da reserva (porta-paletes) para o picking antes que falte. Pode ser planejado (pelo mínimo e máximo da posição fixa), relacionado a pedidos (pela quantidade das ordens abertas), automático (ao confirmar uma separação) ou direto (no momento da falta).",
+  "quando": [
+    "Armazém com área de picking separada da reserva.",
+    "Evitar negativa de separação.",
+    "Antes da liberação das ondas."
+  ],
+  "prerequisitos": [
+    "Posições fixas com mínimo e máximo.",
+    "Controle de reabastecimento configurado por tipo de depósito."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Definir mínimo e máximo",
+      "papel": "Analista",
+      "transacao": "/SCWM/BINMAT",
+      "descricao": "Para cada produto e posição fixa, define-se quando reabastecer e até quanto.",
+      "detalhes": [
+        "Ex.: mínimo 20, máximo 80 caixas.",
+        "Base para o reabastecimento planejado."
+      ],
+      "resultado": "Parâmetros cadastrados."
+    },
+    {
+      "titulo": "Calcular a necessidade",
+      "papel": "Sistema",
+      "transacao": "/SCWM/REPL",
+      "descricao": "Planejado: estoque abaixo do mínimo. Por pedido: estoque abaixo do que as ordens abertas pedem.",
+      "detalhes": [
+        "Execução manual ou em job.",
+        "Arredondamento para unidades inteiras (caixas, paletes)."
+      ],
+      "resultado": "Quantidade a repor.",
+      "exemplo": "Estoque 15 < mín. 20 → repor 65 cx."
+    },
+    {
+      "titulo": "Criar tarefas de reabastecimento",
+      "papel": "Sistema",
+      "transacao": "/SCWM/REPL",
+      "descricao": "Tarefas da reserva para a posição de picking, com fonte pela estratégia de retirada.",
+      "detalhes": [
+        "Prioridade maior que separação comum, se configurado.",
+        "Agrupadas em ordens para os operadores."
+      ],
+      "resultado": "Tarefas abertas."
+    },
+    {
+      "titulo": "Executar o reabastecimento",
+      "papel": "Operador",
+      "transacao": "/SCWM/RFUI",
+      "descricao": "O operador leva da reserva ao picking e confirma.",
+      "detalhes": [
+        "Exceções de quantidade registradas.",
+        "Estoque disponível no picking."
+      ],
+      "resultado": "Picking reabastecido."
+    },
+    {
+      "titulo": "Monitorar",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/MON",
+      "descricao": "Acompanhar tarefas de reabastecimento abertas e negativas de separação.",
+      "detalhes": [
+        "Ajustar mínimo/máximo pelo giro real.",
+        "Jobs antes da liberação de ondas."
+      ],
+      "resultado": "Menos faltas na separação."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Posição fixa",
+      "tabelas": "/SCWM/BINMAT",
+      "descricao": "Mínimo e máximo por produto."
+    },
+    {
+      "nome": "Tarefa de reabastecimento",
+      "tabelas": "/SCWM/ORDIM_O",
+      "descricao": "Movimento reserva → picking."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Planejado",
+      "explicacao": "Gatilho: estoque abaixo do mínimo."
+    },
+    {
+      "termo": "Relacionado a pedidos",
+      "explicacao": "Gatilho: ordens abertas pedem mais que o estoque."
+    },
+    {
+      "termo": "Automático",
+      "explicacao": "Disparado ao confirmar a separação que baixou o mínimo."
+    },
+    {
+      "termo": "Direto",
+      "explicacao": "Durante a separação, quando a posição está vazia."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/REPL",
+      "descricao": "Programar reabastecimento"
+    },
+    {
+      "codigo": "/SCWM/BINMAT",
+      "descricao": "Posições fixas"
+    },
+    {
+      "codigo": "/SCWM/MON",
+      "descricao": "Acompanhar"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Controle de reabastecimento",
+      "onde": "SPRO › EWM › Processos internos › Reabastecimento",
+      "explicacao": "Tipos de reabastecimento por tipo de depósito."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "Saída",
+      "explicacao": "Evita negativas de separação nas ondas."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Reabastecimento da produção",
+      "explicacao": "Com a área de abastecimento da produção (PSA)."
+    }
+  ],
+  "caso": {
+    "titulo": "Faltas no picking de FG-200",
+    "contexto": "Separadores encontravam a posição vazia toda tarde.",
+    "passos": [
+      "Mínimo 20 e máximo 80 na posição fixa.",
+      "Job de reabastecimento planejado às 13h.",
+      "Tarefas trazem 65 caixas da reserva.",
+      "Ondas das 14h encontram estoque.",
+      "Negativas caem."
+    ]
+  },
+  "armadilhas": [
+    "Mínimo baixo demais: reabastece tarde.",
+    "Esquecer arredondamento: tarefas com frações de palete."
+  ],
+  "fixacao": {
+    "pergunta": "Diferença entre reabastecimento planejado e relacionado a pedidos?",
+    "resposta": "O planejado olha o mínimo/máximo da posição; o relacionado a pedidos olha a quantidade das ordens de saída abertas."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-06-ondas",
+      "motivo": "Etapa anterior: ondas."
+    },
+    {
+      "id": "proc-ewm-08-inventario",
+      "motivo": "Próximo passo: inventário."
+    },
+    {
+      "id": "guia-ewm-dados-mestres",
+      "motivo": "Posições fixas com mínimo e máximo."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Replenishment Control",
+      "url": "https://help.sap.com/docs/SAP_SUPPLY_CHAIN_MANAGEMENT/57574d15fa1d414792d74047b66c3e41/95cecb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "EWM Transaction Codes (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3354623031.html"
+    },
+    {
+      "titulo": "Production Supply Area (PSA)",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/8969c21268d2466985f0c810fae7e9a8.html"
+    }
+  ]
+}

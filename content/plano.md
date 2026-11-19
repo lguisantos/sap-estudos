@@ -41,3 +41,8 @@ Publicados em 2026-10-30: MM (16) e SD (15). Próximos candidatos:
 - [ ] SD: faturamento intercompany
 - [ ] SD: acordos de bônus com contratos de condição (Settlement Management)
 - [ ] FI e CO: mesmos moldes, quando os de MM e SD estiverem revisados
+
+## EWM
+Trilha criada em 2026-11-19 (24 etapas, 6 níveis). Publicados: 4 guias (visão geral, estrutura,
+dados mestres, integração) e 8 processos (recebimento, armazenagem, expedição, monitor, movimentações,
+ondas, reabastecimento, inventário). As 8 etapas "em breve" estão no `trilhas.json`, na ordem de estudo.

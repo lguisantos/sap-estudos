@@ -41,10 +41,7 @@
 <div class="banner" id="banner" hidden></div>
 
 <section class="full" id="v-trilha">
-  <div class="tr-tabs" role="tablist" aria-label="Módulo">
-    <button role="tab" data-tmod="mm">MM · Materiais</button>
-    <button role="tab" data-tmod="sd">SD · Vendas</button>
-  </div>
+  <div class="tr-tabs" id="tr-tabs" role="tablist" aria-label="Módulo"></div>
   <div id="trilha-corpo"></div>
 </section>
 
@@ -56,6 +53,7 @@
       <button data-trilha="tecnico" aria-pressed="false">Técnico</button>
       <button data-trilha="MM" aria-pressed="false">MM</button>
       <button data-trilha="SD" aria-pressed="false">SD</button>
+      <button data-trilha="EWM" aria-pressed="false">EWM</button>
     </div>
     <input type="search" id="busca" placeholder="Buscar tema, transação, conceito…">
     <div id="lista"></div>
@@ -99,6 +97,7 @@
     <div class="mapa-filtros" role="group" aria-label="Mostrar no mapa">
       <button data-mapa-filtro="MM" aria-pressed="true"><span class="lg g-MM"></span>MM</button>
       <button data-mapa-filtro="SD" aria-pressed="true"><span class="lg g-SD"></span>SD</button>
+      <button data-mapa-filtro="EWM" aria-pressed="true"><span class="lg g-EWM"></span>EWM</button>
       <button data-mapa-filtro="base" aria-pressed="true"><span class="lg g-base"></span>Fundamentos</button>
       <button data-mapa-filtro="semanal" aria-pressed="true"><span class="lg g-semanal"></span>Edições</button>
     </div>

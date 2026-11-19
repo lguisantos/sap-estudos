@@ -1,0 +1,189 @@
+{
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "publicado": "2026-11-19",
+  "id": "guia-ewm-visao-geral",
+  "area": "Visão geral (EWM)",
+  "nivel": "básico",
+  "titulo": "EWM: o que é, onde fica no S/4HANA e quando a empresa precisa dele",
+  "curto": "EWM: visão geral",
+  "resumo": "O Extended Warehouse Management (EWM) controla o que acontece dentro do armazém: em qual posição cada produto está, quem vai buscar, em que ordem e com qual equipamento. O MM (gestão de estoque) sabe quanto existe em cada depósito; o EWM sabe onde, exatamente, está cada palete. No S/4HANA o antigo WM (LE-WM) só existe no pacote de compatibilidade, e a direção da SAP é o EWM, que pode rodar dentro do próprio S/4HANA (embarcado) ou num sistema separado (descentralizado).",
+  "conceitos": [
+    {
+      "termo": "EWM × gestão de estoque (MM-IM)",
+      "explicacao": "O MM-IM registra quantidades e valores por centro e depósito (ex.: 500 PC no depósito 0001). O EWM detalha esse estoque por posição física, unidade de manuseio e tipo de estoque, e comanda as tarefas do armazém."
+    },
+    {
+      "termo": "EWM × WM clássico",
+      "explicacao": "O WM (LE-WM) era o controle de armazém do ECC. No S/4HANA ele faz parte do escopo de compatibilidade, com uso limitado no tempo; projetos novos usam o EWM."
+    },
+    {
+      "termo": "EWM embarcado (embedded)",
+      "explicacao": "Roda no mesmo sistema e mandante do S/4HANA: compartilha cadastros e entregas, sem interface entre sistemas. É a opção mais comum em projetos novos."
+    },
+    {
+      "termo": "EWM descentralizado",
+      "explicacao": "Roda num S/4HANA separado, ligado ao ERP por filas (qRFC) para entregas e IDocs para cadastros. Usado em armazéns grandes, com alta automação ou que precisam funcionar mesmo se o ERP parar."
+    },
+    {
+      "termo": "Escopo básico × avançado",
+      "explicacao": "A SAP separa funções básicas (recebimento, armazenagem, expedição, inventário) de avançadas (ondas complexas, automação de transportadores, gestão de pátio, mão de obra). Segundo a SAP, o avançado tem licença própria; confirme no seu contrato antes de planejar."
+    },
+    {
+      "termo": "Número de depósito",
+      "explicacao": "A unidade do EWM que representa o armazém inteiro. Um centro/depósito do MM é ligado a um número de depósito do EWM."
+    },
+    {
+      "termo": "Tarefa de depósito (warehouse task)",
+      "explicacao": "Ordem para movimentar produto de uma posição para outra. Toda movimentação física no EWM é uma tarefa, criada e depois confirmada."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/MON",
+      "descricao": "Monitor do armazém: visão de tudo o que acontece"
+    },
+    {
+      "codigo": "/SCWM/PRDI",
+      "descricao": "Entregas de entrada no EWM"
+    },
+    {
+      "codigo": "/SCWM/PRDO",
+      "descricao": "Ordens de entrega de saída no EWM"
+    },
+    {
+      "codigo": "/SCWM/TO_CONF",
+      "descricao": "Confirmar tarefas de depósito"
+    },
+    {
+      "codigo": "/SCWM/RFUI",
+      "descricao": "Interface de radiofrequência (coletor)"
+    }
+  ],
+  "caso": {
+    "titulo": "Distribuidora que cresceu e perdeu o controle do armazém",
+    "contexto": "O MM mostrava 500 caixas em estoque, mas os separadores levavam 20 minutos procurando cada pedido. A empresa ativou o EWM embarcado no centro de distribuição.",
+    "passos": [
+      "O centro de distribuição SP01, depósito AFS, foi ligado ao número de depósito EWM SP01.",
+      "As áreas físicas viraram tipos de depósito: porta-paletes, picking em prateleira, docas.",
+      "Cada posição recebeu um código (ex.: 01-02-03 = corredor 1, coluna 2, nível 3).",
+      "Recebimentos e separações passaram a ser tarefas no coletor, com a posição exata.",
+      "O tempo médio por pedido caiu porque o sistema indica onde buscar, e o inventário passou a ser por posição."
+    ]
+  },
+  "armadilhas": [
+    "Achar que o EWM substitui o MM: o MM continua dono da quantidade e do valor contábil; o EWM cuida do físico.",
+    "Planejar funções avançadas sem conferir a licença.",
+    "Ativar o EWM sem limpar o estoque antigo: posições e saldos precisam ser migrados e conferidos."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre o que o MM e o EWM sabem sobre o mesmo estoque?",
+    "resposta": "O MM sabe quanto existe e quanto vale, por centro e depósito. O EWM sabe em que posição física, unidade de manuseio e tipo de estoque cada parte desse estoque está, e controla as tarefas para movê-lo."
+  },
+  "links": [
+    {
+      "id": "base-visao",
+      "motivo": "Integração do S/4HANA: o EWM é mais uma visão do mesmo estoque."
+    },
+    {
+      "id": "guia-ewm-estrutura",
+      "motivo": "Próximo passo: como o armazém é desenhado no EWM."
+    },
+    {
+      "id": "base-mm",
+      "motivo": "O estoque do MM que o EWM detalha."
+    },
+    {
+      "id": "proc-mm-10-movimentos",
+      "motivo": "Movimentos do MM que, num depósito com EWM, viram tarefas."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Extended Warehouse Management (EWM) – SAP S/4HANA",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4ecb88b8b2422afee10000000a42189e.html"
+    },
+    {
+      "titulo": "Integration of SAP S/4HANA with Decentralized EWM (guia)",
+      "url": "https://help.sap.com/doc/cae0ee080f144ca08e969756db05ae90/2021.001/en-US/HTG_Integration__Decentralized_EWM_based_on_SAP_S4HANA.pdf"
+    },
+    {
+      "titulo": "Defining the Scope of Embedded EWM (SAP Best Practices)",
+      "url": "https://help.sap.com/docs/s4hana-best-practices/administration-guide-to-implementation-of-sap-s-4hana-cloud-private-edition-2023-with-sap-best-practices/defining-scope-of-embedded-extended-warehouse-management-ewm"
+    }
+  ],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Onde o EWM pode rodar",
+      "legenda": "Embarcado no próprio S/4HANA ou num sistema separado; as funções básicas e avançadas existem nas duas formas.",
+      "raiz": {
+        "nome": "SAP EWM",
+        "sub": "gestão do armazém",
+        "filhos": [
+          {
+            "nome": "Embarcado",
+            "sub": "mesmo S/4HANA e mandante",
+            "filhos": [
+              {
+                "nome": "Cadastros compartilhados",
+                "sub": "BP, produto"
+              },
+              {
+                "nome": "Entregas sem interface",
+                "sub": "MM e SD → EWM"
+              }
+            ]
+          },
+          {
+            "nome": "Descentralizado",
+            "sub": "S/4HANA separado",
+            "filhos": [
+              {
+                "nome": "Entregas por qRFC",
+                "sub": "ERP ↔ EWM"
+              },
+              {
+                "nome": "Cadastros por IDoc",
+                "sub": "ALE / DRF"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "Onde o EWM entra no dia a dia",
+      "legenda": "MM e SD criam a necessidade; o EWM executa no armazém e devolve a confirmação para o estoque e a contabilidade.",
+      "passos": [
+        {
+          "titulo": "Pedido de compra ou ordem de venda",
+          "papel": "MM / SD",
+          "transacao": "ME21N · VA01"
+        },
+        {
+          "titulo": "Entrega criada no S/4HANA",
+          "papel": "MM / SD",
+          "transacao": "VL31N · VL01N"
+        },
+        {
+          "titulo": "Entrega no EWM com tarefas",
+          "papel": "EWM",
+          "transacao": "/SCWM/PRDI · PRDO"
+        },
+        {
+          "titulo": "Operador move o produto",
+          "papel": "Armazém",
+          "transacao": "/SCWM/RFUI"
+        },
+        {
+          "titulo": "Entrada ou saída lançada no estoque",
+          "papel": "EWM",
+          "transacao": "MATDOC · ACDOCA"
+        }
+      ]
+    }
+  ]
+}

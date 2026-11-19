@@ -425,6 +425,198 @@
           ]
         }
       ]
+    },
+    {
+      "id": "ewm",
+      "modulo": "EWM",
+      "titulo": "EWM · Gestão de armazém",
+      "objetivo": "Sair de usuário que vê estoque no MM para consultor júnior/pleno que entende a estrutura do armazém, opera recebimento e expedição no EWM, explica as estratégias e a integração com MM e SD e investiga problemas de armazém num projeto.",
+      "niveis": [
+        {
+          "id": "ewm-1",
+          "nome": "Nível 1 · Entender o terreno",
+          "perfil": "Júnior",
+          "meta": "Saber o que o EWM faz, como o armazém é desenhado no sistema e quais cadastros ele usa.",
+          "etapas": [
+            {
+              "item": "base-visao",
+              "porque": "Tudo no SAP é integrado; o EWM é mais uma visão do mesmo estoque.",
+              "consegue": "Explicar como uma venda e uma compra atravessam os módulos."
+            },
+            {
+              "item": "guia-ewm-visao-geral",
+              "porque": "Antes de operar, é preciso saber o que muda do MM para o EWM e as formas de implantar.",
+              "consegue": "Explicar a diferença entre MM-IM, WM e EWM, embarcado e descentralizado."
+            },
+            {
+              "item": "guia-ewm-estrutura",
+              "porque": "Toda decisão do EWM (onde guardar, de onde tirar) depende do desenho do armazém.",
+              "consegue": "Desenhar número de depósito, tipos, seções e posições de um CD."
+            },
+            {
+              "item": "guia-ewm-dados-mestres",
+              "porque": "Sem os dados de depósito do produto as estratégias não funcionam.",
+              "consegue": "Cadastrar produto de depósito, embalagem e posição fixa."
+            }
+          ]
+        },
+        {
+          "id": "ewm-2",
+          "nome": "Nível 2 · Operar o armazém",
+          "perfil": "Júnior",
+          "meta": "Executar sozinho a entrada, a armazenagem, a expedição e os movimentos do dia a dia.",
+          "etapas": [
+            {
+              "item": "proc-ewm-01-recebimento",
+              "porque": "É o primeiro processo físico e o mais comum.",
+              "consegue": "Receber uma entrega, lançar a entrada e armazenar no coletor."
+            },
+            {
+              "item": "proc-ewm-02-armazenagem",
+              "porque": "Explica por que o sistema escolhe cada posição.",
+              "consegue": "Prever e explicar a posição de destino de uma tarefa."
+            },
+            {
+              "item": "proc-ewm-03-expedicao",
+              "porque": "O caminho inverso: da remessa do SD até a saída.",
+              "consegue": "Separar, embalar, carregar e lançar a saída."
+            },
+            {
+              "item": "proc-ewm-05-movimentacoes",
+              "porque": "O estoque também muda de lugar e de situação sem entrar nem sair.",
+              "consegue": "Remanejar e transferir tipo de estoque sem desalinhar o MM."
+            },
+            {
+              "item": "proc-ewm-04-monitor",
+              "porque": "É a ferramenta para ver e destravar tudo o que acontece.",
+              "consegue": "Encontrar e resolver tarefas e entregas paradas no monitor."
+            }
+          ]
+        },
+        {
+          "id": "ewm-3",
+          "nome": "Nível 3 · Controles do armazém",
+          "perfil": "Pleno",
+          "meta": "Organizar o trabalho em ondas, manter o picking abastecido e garantir o inventário.",
+          "etapas": [
+            {
+              "item": "proc-ewm-06-ondas",
+              "porque": "Ondas organizam a separação por rota e horário de corte.",
+              "consegue": "Montar e liberar ondas e explicar a criação das tarefas."
+            },
+            {
+              "item": "proc-ewm-07-reabastecimento",
+              "porque": "Sem reabastecimento, a separação para por falta no picking.",
+              "consegue": "Configurar mínimo e máximo e rodar o reabastecimento."
+            },
+            {
+              "item": "proc-ewm-08-inventario",
+              "porque": "Inventário confiável é exigência de auditoria e base do fechamento.",
+              "consegue": "Conduzir inventário por posição e lançar diferenças no MM."
+            },
+            {
+              "item": "guia-ewm-tarefas-ordens",
+              "tipo": "guia",
+              "tema": "Tarefas, ordens de depósito, filas e recursos (radiofrequência)",
+              "porque": "Entender como o trabalho chega a cada operador.",
+              "consegue": "Explicar regras de criação de ordens, filas e o uso do coletor RF."
+            }
+          ]
+        },
+        {
+          "id": "ewm-4",
+          "nome": "Nível 4 · Integração com MM, SD, QM e finanças",
+          "perfil": "Pleno",
+          "meta": "Explicar o reflexo de cada passo do armazém no estoque do MM, nas entregas e na contabilidade.",
+          "etapas": [
+            {
+              "item": "guia-ewm-integracao",
+              "porque": "É onde o operador vira consultor: entender ROD/AFS, tipos de estoque e entregas.",
+              "consegue": "Explicar e conciliar divergências de estoque MM × EWM."
+            },
+            {
+              "item": "proc-mm-09-entrada",
+              "porque": "Ver o mesmo recebimento pelo lado do MM.",
+              "consegue": "Relacionar a entrada do EWM com o documento 101 e a GR/IR."
+            },
+            {
+              "item": "proc-sd-09-remessa",
+              "porque": "Ver a mesma expedição pelo lado do SD.",
+              "consegue": "Relacionar a remessa do SD com a ordem de entrega do EWM."
+            },
+            {
+              "item": "proc-ewm-09-qualidade",
+              "tipo": "processo",
+              "tema": "Inspeção de qualidade no recebimento do EWM",
+              "porque": "Muitos produtos exigem inspeção antes de ficar disponíveis.",
+              "consegue": "Receber com inspeção e liberar o estoque de Q para F."
+            }
+          ]
+        },
+        {
+          "id": "ewm-5",
+          "nome": "Nível 5 · Processos especiais",
+          "perfil": "Pleno/Sênior",
+          "meta": "Conhecer as variações que aparecem em quase todo armazém.",
+          "etapas": [
+            {
+              "item": "proc-ewm-10-producao",
+              "tipo": "processo",
+              "tema": "Abastecimento da produção (área de abastecimento, PSA)",
+              "porque": "Fábricas puxam componentes do armazém o tempo todo.",
+              "consegue": "Abastecer a produção e receber o produto acabado no EWM."
+            },
+            {
+              "item": "proc-ewm-11-devolucoes",
+              "tipo": "processo",
+              "tema": "Devoluções de clientes no armazém",
+              "porque": "Devolução física tem inspeção e destino diferentes.",
+              "consegue": "Receber uma devolução e decidir o destino do estoque."
+            },
+            {
+              "item": "proc-ewm-12-cross-docking",
+              "tipo": "processo",
+              "tema": "Cross-docking: do recebimento direto para a expedição",
+              "porque": "Reduz manuseio em operações de distribuição.",
+              "consegue": "Explicar quando o produto passa direto pela doca."
+            }
+          ]
+        },
+        {
+          "id": "ewm-6",
+          "nome": "Nível 6 · Configurar e se virar no projeto",
+          "perfil": "Consultor",
+          "meta": "Configurar o essencial, investigar erros com método e atuar nas fases de um projeto de armazém.",
+          "etapas": [
+            {
+              "item": "guia-ewm-customizing",
+              "tipo": "guia",
+              "tema": "Customizing essencial de EWM: tipos de processo, controle de armazenagem orientado ao processo e ao layout",
+              "porque": "É o mínimo esperado de um consultor de EWM.",
+              "consegue": "Configurar um tipo de processo novo e um fluxo com etapas intermediárias."
+            },
+            {
+              "item": "guia-ewm-investigar",
+              "tipo": "guia",
+              "tema": "Como investigar erros no EWM: monitor, ações PPF, filas e logs",
+              "porque": "Saber investigar vale mais do que decorar transações.",
+              "consegue": "Partir de uma entrega parada e chegar à causa."
+            },
+            {
+              "item": "base-projeto",
+              "porque": "Fases, workshops e papéis no projeto.",
+              "consegue": "Saber o que se espera de você em cada fase."
+            },
+            {
+              "item": "guia-ewm-projeto",
+              "tipo": "guia",
+              "tema": "EWM no projeto: desenho do armazém, migração de posições e estoque, testes",
+              "porque": "É onde o consultor iniciante mais precisa de roteiro.",
+              "consegue": "Preparar a carga de posições e estoque e os testes de ponta a ponta."
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,195 @@
+{
+  "id": "proc-ewm-06-ondas",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 6,
+  "publicado": "2026-11-19",
+  "area": "Saída (EWM)",
+  "curto": "Gestão de ondas",
+  "nivel": "intermediário",
+  "titulo": "Gestão de ondas: agrupar e liberar a separação",
+  "resumo": "Separar pedido por pedido é ineficiente. A onda agrupa itens de várias ordens de saída (por rota, horário de corte, doca ou área) para serem separados juntos. Modelos de onda decidem automaticamente quais itens entram em qual onda e quando ela é liberada.",
+  "quando": [
+    "Muitos pedidos pequenos por dia.",
+    "Horários de corte de transportadoras.",
+    "Separação por zona."
+  ],
+  "prerequisitos": [
+    "Modelos de onda e condições de atribuição configurados.",
+    "Ordens de entrega de saída no EWM."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Ordens chegam ao EWM",
+      "papel": "Sistema",
+      "transacao": "/SCWM/PRDO",
+      "descricao": "Remessas do SD viram ordens de entrega de saída.",
+      "detalhes": [
+        "Cada item pode ser atribuído a uma onda.",
+        "Atributos usados: rota, data, tipo de processo."
+      ],
+      "resultado": "Itens disponíveis para ondas."
+    },
+    {
+      "titulo": "Atribuir itens às ondas",
+      "papel": "Sistema",
+      "transacao": "Modelo de onda",
+      "descricao": "Pelas condições, o EWM coloca cada item na onda certa (ex.: rota Sul, corte 15h).",
+      "detalhes": [
+        "Atribuição automática ou manual.",
+        "Limites de itens, peso ou volume por onda."
+      ],
+      "resultado": "Ondas montadas.",
+      "exemplo": "Onda 1000045 com 12 ordens."
+    },
+    {
+      "titulo": "Revisar e ajustar",
+      "papel": "Supervisor",
+      "transacao": "/SCWM/WAVE",
+      "descricao": "O supervisor revisa ondas, junta, divide ou move itens.",
+      "detalhes": [
+        "Ondas com falta de estoque podem ser seguradas.",
+        "Prioridades podem mudar no dia."
+      ],
+      "resultado": "Ondas prontas."
+    },
+    {
+      "titulo": "Liberar a onda",
+      "papel": "Supervisor / Sistema",
+      "transacao": "/SCWM/WAVE (Liberar)",
+      "descricao": "Liberação imediata, automática no horário ou manual.",
+      "detalhes": [
+        "Na liberação são criadas as tarefas e as ordens de depósito.",
+        "Erros de liberação ficam no log da onda."
+      ],
+      "resultado": "Tarefas de separação criadas."
+    },
+    {
+      "titulo": "Separar e concluir",
+      "papel": "Separador",
+      "transacao": "/SCWM/RFUI",
+      "descricao": "Operadores executam as ordens; a onda fica concluída quando todos os itens são separados.",
+      "detalhes": [
+        "Separação por zona ou por onda inteira.",
+        "Itens não separados ficam pendentes para nova onda."
+      ],
+      "resultado": "Onda concluída."
+    }
+  ],
+  "documentos": [
+    {
+      "nome": "Onda",
+      "tabelas": "/SCWM/WAVEHDR · /SCWM/WAVEITM",
+      "descricao": "Cabeçalho e itens."
+    },
+    {
+      "nome": "Ordens de depósito",
+      "tabelas": "/SCWM/WHO",
+      "descricao": "Criadas na liberação."
+    }
+  ],
+  "conceitos": [
+    {
+      "termo": "Modelo de onda",
+      "explicacao": "Regras de agrupamento e horário de liberação."
+    },
+    {
+      "termo": "Liberação",
+      "explicacao": "Momento em que a onda vira trabalho (tarefas)."
+    },
+    {
+      "termo": "Regras de criação de ordens de depósito",
+      "explicacao": "Agrupam as tarefas da onda em ordens para os operadores."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/WAVE",
+      "descricao": "Manter e liberar ondas"
+    },
+    {
+      "codigo": "/SCWM/WAVETMP",
+      "descricao": "Modelos de onda"
+    },
+    {
+      "codigo": "/SCWM/MON",
+      "descricao": "Acompanhar ondas"
+    }
+  ],
+  "configuracao": [
+    {
+      "item": "Modelos e condições",
+      "onde": "SPRO › EWM › Processamento de saída › Gestão de ondas",
+      "explicacao": "Critérios de atribuição."
+    },
+    {
+      "item": "Regras de criação de ordens",
+      "onde": "SPRO › EWM › Configurações gerais › Ordem de depósito",
+      "explicacao": "Como as tarefas viram ordens."
+    }
+  ],
+  "integracao": [
+    {
+      "com": "SD",
+      "explicacao": "Rotas e datas da remessa definem a onda."
+    },
+    {
+      "com": "TM",
+      "explicacao": "Horários de transporte podem guiar a liberação."
+    }
+  ],
+  "variantes": [
+    {
+      "nome": "Ondas por zona",
+      "explicacao": "Separação paralela por áreas com consolidação depois."
+    }
+  ],
+  "caso": {
+    "titulo": "Corte das 15h da transportadora",
+    "contexto": "Pedidos até 14h saem no mesmo dia.",
+    "passos": [
+      "Modelo de onda por rota com liberação às 14h05.",
+      "Itens atribuídos automaticamente.",
+      "Supervisor segura onda com falta.",
+      "Liberação cria tarefas.",
+      "Separação concluída antes das 15h."
+    ]
+  },
+  "armadilhas": [
+    "Ondas grandes demais: separação não termina antes do corte.",
+    "Esquecer itens não atribuídos: ficam sem separação."
+  ],
+  "fixacao": {
+    "pergunta": "O que acontece ao liberar uma onda?",
+    "resposta": "O EWM cria as tarefas de separação dos itens da onda e as agrupa em ordens de depósito para os operadores."
+  },
+  "links": [
+    {
+      "id": "proc-ewm-04-monitor",
+      "motivo": "Etapa anterior da trilha."
+    },
+    {
+      "id": "proc-ewm-07-reabastecimento",
+      "motivo": "Próximo passo: reabastecer o picking."
+    },
+    {
+      "id": "proc-ewm-03-expedicao",
+      "motivo": "O processo de saída onde a onda se encaixa."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Goods Issue (EWM)",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/c4c8cb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Outbound Delivery Order",
+      "url": "https://help.sap.com/docs/PRODUCT_ID/9832125c23154a179bfa1784cdc9577a/0e6f4ddc5007423fb34d3bf189398031.html"
+    },
+    {
+      "titulo": "EWM Transaction Codes (SAP Support Content)",
+      "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3354623031.html"
+    }
+  ]
+}

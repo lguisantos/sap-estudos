@@ -7,7 +7,7 @@ notificação do Windows e marca o que você ainda não viu.
 
 ## O que tem no app
 
-- **Trilha de aprendizado** (tela inicial): MM e SD organizados em 6 níveis, do júnior ao consultor,
+- **Trilha de aprendizado** (tela inicial): MM, SD e EWM organizados em 6 níveis, do júnior ao consultor,
   na ordem certa de estudo. Cada etapa diz por que vem naquele ponto e o que você consegue fazer depois;
   o app mostra seu progresso e o próximo passo, e cada tema tem "anterior / seguir para a próxima etapa".
   Etapas ainda não escritas aparecem como "em breve" e são publicadas pelo Claude às sextas.

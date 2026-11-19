@@ -5,16 +5,17 @@
   const el = (tag, attrs = {}) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
 
   // Cada grupo tem uma região no plano: MM à esquerda, SD à direita, base no centro, atualidades embaixo.
-  const ANCORA = { MM: [-520, 40], SD: [520, 40], base: [0, -260], semanal: [0, 420], outro: [0, 320] };
-  const NOME_GRUPO = { MM: "MM", SD: "SD", base: "Fundamentos", semanal: "Edições semanais" };
-  const grupoDe = it => it.tipo === "fundamentos" ? "base" : it.tipo === "semanal" ? "semanal" : (it.modulo === "MM" || it.modulo === "SD") ? it.modulo : "outro";
+  // MM à esquerda, SD à direita, EWM embaixo (fica entre os dois no fluxo físico), atualidades no alto.
+  const ANCORA = { MM: [-560, 0], SD: [560, 0], EWM: [0, 470], base: [0, -120], semanal: [0, -560], outro: [0, -420] };
+  const MODULOS = ["MM", "SD", "EWM"];
+  const grupoDe = it => it.tipo === "fundamentos" ? "base" : it.tipo === "semanal" ? "semanal" : MODULOS.includes(it.modulo) ? it.modulo : "outro";
 
   let ctx = null;            // dados vindos do app (itens, estudado, abrir, posicao...)
   let nos = [], arestas = [], porId = {}, vizinhos = {};
   let assinatura = "";       // muda quando o conjunto de itens/links muda → refaz o layout
   let vista = { k: 1, x: 0, y: 0 };
   let selecionado = null, emFoco = null;
-  const filtros = { MM: true, SD: true, base: true, semanal: true, outro: true };
+  const filtros = { MM: true, SD: true, EWM: true, base: true, semanal: true, outro: true };
   let mostrarSequencia = false;
   let dom = null;
 
@@ -213,7 +214,7 @@
           <li>"Sequência da trilha" mostra a ordem de estudo do módulo escolhido na tela Trilha.</li>
         </ul>
         <h3>Legenda</h3>
-        <div class="m-leg"><span class="lg g-MM"></span>MM <span class="lg g-SD"></span>SD <span class="lg g-base"></span>Fundamentos <span class="lg g-semanal"></span>Edições</div>
+        <div class="m-leg"><span class="lg g-MM"></span>MM <span class="lg g-SD"></span>SD <span class="lg g-EWM"></span>EWM <span class="lg g-base"></span>Fundamentos <span class="lg g-semanal"></span>Edições</div>
         <div class="m-leg"><span class="lg estudado"></span>Estudado <span class="lg novo"></span>Novo</div>`;
       return;
     }

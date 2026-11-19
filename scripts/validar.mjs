@@ -20,7 +20,7 @@ for (const f of files) {
   if (items.has(it.id)) err("id duplicado");
   items.set(it.id, it);
   if (!["fundamentos", "semanal", "processo", "guia"].includes(it.tipo)) err("tipo deve ser fundamentos, semanal, processo ou guia");
-  if (it.tipo === "guia" && !["MM", "SD", "FI", "CO", "PP"].includes(it.modulo)) err("guia: modulo obrigatório");
+  if (it.tipo === "guia" && !["MM", "SD", "EWM", "FI", "CO", "PP"].includes(it.modulo)) err("guia: modulo obrigatório");
   if (it.tipo === "guia" && !arr(it.fontes)) err("guia precisa de fontes");
   if (!["funcional", "tecnico"].includes(it.trilha)) err("trilha deve ser funcional ou tecnico");
   for (const k of ["area", "titulo", "curto", "nivel", "resumo"]) if (!str(it[k])) err(`${k} obrigatório`);

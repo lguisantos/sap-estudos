@@ -239,6 +239,10 @@
     {
       "id": "proc-mm-15-consignacao",
       "motivo": "Movimento 411 K de consignação."
+    },
+    {
+      "id": "proc-ewm-05-movimentacoes",
+      "motivo": "Movimentações num depósito com EWM."
     }
   ],
   "fontes": [

@@ -218,6 +218,10 @@
     {
       "id": "base-fi",
       "motivo": "Impacto no resultado."
+    },
+    {
+      "id": "proc-ewm-08-inventario",
+      "motivo": "Inventário por posição no EWM."
     }
   ],
   "fontes": [

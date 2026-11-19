@@ -179,6 +179,10 @@
     {
       "id": "base-integra",
       "motivo": "Lançamento GBB-VAX/BSX."
+    },
+    {
+      "id": "proc-ewm-03-expedicao",
+      "motivo": "Num depósito EWM, a saída é lançada pelo EWM."
     }
   ],
   "fontes": [

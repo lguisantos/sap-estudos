@@ -1,0 +1,195 @@
+{
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "publicado": "2026-11-19",
+  "id": "guia-ewm-estrutura",
+  "area": "Estrutura do depósito (EWM)",
+  "nivel": "básico",
+  "titulo": "Estrutura do armazém no EWM: número de depósito, tipos, seções e posições",
+  "curto": "Estrutura do armazém",
+  "resumo": "Antes de qualquer recebimento, o armazém precisa ser desenhado no sistema, do mais geral ao mais detalhado: o número de depósito representa o armazém; os tipos de depósito são as áreas físicas ou lógicas (porta-paletes, prateleiras, docas); as seções agrupam posições parecidas; e as posições (bins) são os endereços onde o produto fica. Tudo o que o EWM decide (para onde levar, de onde tirar) depende desse desenho.",
+  "conceitos": [
+    {
+      "termo": "Número de depósito",
+      "explicacao": "Representa o complexo inteiro. Define unidades de peso, volume e tempo e reúne todos os tipos de depósito. Ex.: SP01."
+    },
+    {
+      "termo": "Tipo de depósito",
+      "explicacao": "Subdivisão física ou lógica com tecnologia, espaço ou função próprios: porta-paletes (0010), blocado (0020), picking em prateleira (0050), zona de recebimento (9010), zona de expedição (9020)."
+    },
+    {
+      "termo": "Função do tipo de depósito",
+      "explicacao": "Diz se o tipo é de armazenagem, de identificação/pontos (área de trabalho intermediária) ou de docas e áreas de preparação."
+    },
+    {
+      "termo": "Seção de depósito",
+      "explicacao": "Agrupa posições com características parecidas dentro do tipo, por exemplo itens de alto giro perto da saída. Só é obrigatória se o tipo usar controle ou busca por seção."
+    },
+    {
+      "termo": "Posição (storage bin)",
+      "explicacao": "Endereço físico, com coordenada (ex.: 01-02-03). Tem tipo de posição (tamanho) e capacidade."
+    },
+    {
+      "termo": "Quant",
+      "explicacao": "Registro de estoque de um produto numa posição, identificado por produto, lote, tipo de estoque e parte autorizada a dispor."
+    },
+    {
+      "termo": "Área de atividade",
+      "explicacao": "Agrupa posições por atividade (separação, armazenagem, inventário), podendo juntar posições de tipos diferentes; define a sequência de percurso."
+    },
+    {
+      "termo": "Docas, áreas de preparação e estações de trabalho",
+      "explicacao": "Portas onde o caminhão encosta, áreas onde a mercadoria espera antes de carregar e estações onde se embala ou desconsolida."
+    }
+  ],
+  "transacoes": [
+    {
+      "codigo": "/SCWM/LS01 / LS02 / LS03",
+      "descricao": "Criar, modificar e exibir posição"
+    },
+    {
+      "codigo": "/SCWM/SBUP",
+      "descricao": "Carga de posições em massa"
+    },
+    {
+      "codigo": "/SCWM/LS11",
+      "descricao": "Lista de posições"
+    },
+    {
+      "codigo": "/SCWM/SBST",
+      "descricao": "Ordenação de posições (área de atividade)"
+    },
+    {
+      "codigo": "SPRO › EWM › Estrutura mestre",
+      "descricao": "Número de depósito, tipos, seções, tipos de posição"
+    }
+  ],
+  "caso": {
+    "titulo": "Desenhando o centro de distribuição SP01",
+    "contexto": "Um armazém de 3.000 posições com porta-paletes, uma área de picking em prateleiras, 4 docas de recebimento e 6 de expedição.",
+    "passos": [
+      "Número de depósito SP01 ligado ao centro SP01 / depósito AFS.",
+      "Tipos: 0010 porta-paletes, 0050 picking em prateleira, 9010 zona de recebimento, 9020 zona de expedição.",
+      "Seções no tipo 0010: alto giro (corredores 01–03) e baixo giro (04–10).",
+      "Posições criadas em massa com o padrão corredor-coluna-nível (01-01-01 a 10-30-05).",
+      "Área de atividade de separação com a sequência de percurso em serpentina pelos corredores."
+    ]
+  },
+  "armadilhas": [
+    "Criar tipos de depósito demais: cada tipo multiplica configuração de estratégias.",
+    "Esquecer as áreas de atividade: sem ordenação de posições, a separação não tem sequência de percurso.",
+    "Usar o mesmo tipo para armazenagem e para docas: as funções de tipo são diferentes."
+  ],
+  "fixacao": {
+    "pergunta": "Qual a diferença entre seção de depósito e área de atividade?",
+    "resposta": "A seção agrupa posições dentro de um tipo para decidir onde armazenar (por exemplo, alto giro). A área de atividade agrupa posições, inclusive de tipos diferentes, para organizar o trabalho (separação, inventário) e o percurso do operador."
+  },
+  "links": [
+    {
+      "id": "guia-ewm-visao-geral",
+      "motivo": "Etapa anterior: o que é o EWM."
+    },
+    {
+      "id": "base-org",
+      "motivo": "Centro e depósito do MM, que se ligam ao número de depósito."
+    },
+    {
+      "id": "guia-ewm-dados-mestres",
+      "motivo": "Próximo passo: os cadastros que usam essa estrutura."
+    },
+    {
+      "id": "proc-ewm-02-armazenagem",
+      "motivo": "As estratégias que escolhem a posição usam tipos e seções."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Warehouse Structure",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/34c8cb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Warehouse Number",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/10cccb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Storage Type",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/07cdcb53ad377114e10000000a174cb4.html"
+    },
+    {
+      "titulo": "Storage Section",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4ab997fcf2b93d86e10000000a421937.html"
+    },
+    {
+      "titulo": "Storage Bins",
+      "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/4fa063fdfc52617be10000000a42189c.html"
+    },
+    {
+      "titulo": "Quant – Extended Warehouse Management",
+      "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/9832125c23154a179bfa1784cdc9577a/4bc49585921f4c88e10000000a42189e.html"
+    }
+  ],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Estrutura do centro de distribuição SP01",
+      "legenda": "Do armazém inteiro até o endereço físico onde o produto fica.",
+      "raiz": {
+        "nome": "Nº de depósito SP01",
+        "sub": "centro SP01 · depósito AFS",
+        "filhos": [
+          {
+            "nome": "Tipo 0010",
+            "sub": "porta-paletes",
+            "filhos": [
+              {
+                "nome": "Seção alto giro",
+                "sub": "corredores 01–03",
+                "filhos": [
+                  {
+                    "nome": "Posição 01-02-03",
+                    "sub": "corredor 1, col. 2, nível 3"
+                  }
+                ]
+              },
+              {
+                "nome": "Seção baixo giro",
+                "sub": "corredores 04–10"
+              }
+            ]
+          },
+          {
+            "nome": "Tipo 0050",
+            "sub": "picking em prateleira",
+            "filhos": [
+              {
+                "nome": "Posições fixas",
+                "sub": "um produto por posição"
+              }
+            ]
+          },
+          {
+            "nome": "Tipo 9010",
+            "sub": "zona de recebimento",
+            "filhos": [
+              {
+                "nome": "Docas DR01–DR04",
+                "sub": "descarga"
+              }
+            ]
+          },
+          {
+            "nome": "Tipo 9020",
+            "sub": "zona de expedição",
+            "filhos": [
+              {
+                "nome": "Áreas de preparação",
+                "sub": "antes de carregar"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
