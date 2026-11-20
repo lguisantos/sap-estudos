@@ -204,6 +204,7 @@ function renderItem() {
   if (it.novidades && it.novidades.length) h += sec("O que há de novo no mercado", `<div class="news">${it.novidades.map(n => `<div class="news-i"><b>${esc(n.titulo)}</b><p>${esc(n.resumo)}</p><button class="ext" data-url="${esc(n.url)}">${esc(n.fonte || "Fonte")}</button></div>`).join("")}</div>`);
   const ctxDiag = { posicao, etapasDa, porId: st.porId, itens: st.itens, estudado };
   h += window.renderDependencias(it, sec, ctxDiag);
+  h += window.renderCenario(it, sec);
   if (it.tipo === "processo") h += window.renderProcesso(it, sec);
   else {
   h += window.renderDiagramas(it, sec, ctxDiag);
@@ -414,6 +415,7 @@ function aplicarBiblioteca(b) {
   const antes = new Set(st.naoVistos);
   indexar(b.itens);
   st.trilhas = b.trilhas || null;
+  window.SAP_PRINTS = b.prints || "";
   st.naoVistos = new Set(b.naoVistos);
   if (!st.atual || !st.porId[st.atual]) {
     const t = trilhaAtiva(), p = t && proximaEtapa(t);

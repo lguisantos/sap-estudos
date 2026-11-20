@@ -1,5 +1,6 @@
 // Processo principal: janela, bandeja, sincronização periódica, notificações e chat.
 const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage, shell } = require("electron");
+const { pathToFileURL } = require("node:url");
 const path = require("node:path");
 const fs = require("node:fs");
 const conteudo = require("./conteudo");
@@ -60,7 +61,9 @@ function carregar(pasta, origem) {
   // Fundamentos não contam como novidade: marcados como vistos na primeira leitura.
   for (const it of itens) if (it.tipo === "fundamentos" && !estado.vistos[it.id]) estado.vistos[it.id] = it.versao;
   const trilhas = conteudo.carregarTrilhas(pasta) || conteudo.carregarTrilhas(pastaEmbutida);
-  biblioteca = { ...biblioteca, itens, trilhas, origem, erro: erros.length ? `Itens ignorados: ${erros.join("; ")}` : "" };
+  // Prints da WebGUI ficam em content/prints, ao lado da pasta de itens.
+  const prints = pathToFileURL(path.join(pasta, "..", "prints") + path.sep).href;
+  biblioteca = { ...biblioteca, itens, trilhas, prints, origem, erro: erros.length ? `Itens ignorados: ${erros.join("; ")}` : "" };
   return true;
 }
 
@@ -109,6 +112,7 @@ function resumo() {
   return {
     itens: biblioteca.itens,
     trilhas: biblioteca.trilhas,
+    prints: biblioteca.prints,
     naoVistos: conteudo.naoVistos(biblioteca.itens, estado.vistos).map(i => i.id),
     origem: biblioteca.origem,
     commit: biblioteca.commit,

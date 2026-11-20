@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "webgui": {
+      "command": "cmd",
+      "args": [
+        "/c", "npx", "-y", "@playwright/mcp@0.0.84",
+        "--browser", "msedge",
+        "--isolated",
+        "--storage-state=.webgui/sessao.json",
+        "--ignore-https-errors",
+        "--output-dir", ".webgui/saida",
+        "--viewport-size", "1440x900"
+      ]
+    }
+  }
+}

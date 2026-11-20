@@ -143,6 +143,37 @@ EWM: diga sempre se o comportamento vale para o EWM embarcado, o descentralizado
 processo ao equivalente no MM ou SD (recebimento ↔ entrada de mercadorias, expedição ↔ remessa/saída)
 e explique o reflexo no estoque do MM (ROD/AFS, tipos de estoque F1/F2).
 
+## Prints da WebGUI (cenários executados no sistema)
+
+Objetivo: cada processo ganha um cenário real executado na SAP WebGUI do ambiente de DEV do Lucas,
+com prints em cada passo, o que faltou configurar e os destaques do S/4HANA. Só funciona numa sessão
+do Claude Code rodando **no PC do Lucas** (a WebGUI fica numa rede interna).
+
+Segurança (obrigatório):
+- **Nunca abra, leia, imprima ou copie o arquivo `.env`.** O login é feito só pelo script:
+  `node scripts/webgui/login.mjs --env "<caminho do .env>"`. Ele salva a sessão em `.webgui/sessao.json`
+  (ignorado pelo git). Se a sessão expirar (tela de logon de novo), rode o script outra vez.
+- O navegador é o servidor MCP `webgui` (`.mcp.json`): Edge já logado com essa sessão.
+- **Não mude configuração (SPRO) nem dados mestres sem o Lucas pedir.** Ambiente de cliente: só crie
+  documentos de teste do cenário (pedido, remessa…). Se faltar configuração, documente em `pendencias`.
+- Antes de salvar um print, confira se não aparece senha, dado pessoal ou informação sensível do cliente.
+
+Como registrar cada processo:
+1. Monte um cenário simples com dados que existam no DEV (consulte antes: material, fornecedor/cliente, centro).
+2. Execute passo a passo pelo campo de comando da WebGUI (ex.: `/nME21N`). Em cada passo relevante,
+   tire print com o navegador (`browser_take_screenshot` com `filename` = `content/prints/<id>/<nn>-<o-que-mostra>.png`,
+   em minúsculas, até 700 KB; recorte a área útil quando possível).
+3. No JSON do processo, adicione em cada passo do `fluxo` a lista `prints` ([{ "arquivo": "<id>/<nome>.png",
+   "legenda": "o que observar" }]), e no item:
+   - `cenario`: { "titulo", "ambiente": "S/4HANA (DEV), mandante 300", "dados": [{ "campo", "valor" }],
+     "resultado": "documento gerado e número", "prints": [...] }
+   - `pendencias`: [{ "item": "o que faltou", "porque": "por que é necessário", "como": "transação/caminho SPRO
+     e o que preencher", "dependencia": "o que precisa existir antes", "prints": [...] }]
+   - `destaques_s4hana`: frases curtas com o que é importante e diferente no S/4HANA (BP, MATDOC,
+     PRCD_ELEMENTS, apps Fiori, Credit Management, EWM embarcado…).
+4. Mensagens de erro do sistema são material de estudo: print + explicação em `pendencias` ou no passo.
+5. Rode `node scripts/validar.mjs`, faça commit (`conteudo: prints <processo>`) e push na `main`.
+
 ## Chat do app
 
 - Responda como um mentor SAP: explique, dê exemplo prático e indique o item da trilha

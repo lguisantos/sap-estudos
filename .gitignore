@@ -1,2 +1,7 @@
 node_modules/
 dist/
+
+# Sessão e saídas da WebGUI (cookies; nunca versionar)
+.webgui/
+.env
+*.env

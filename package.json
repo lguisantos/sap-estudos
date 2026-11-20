@@ -1,7 +1,7 @@
 {
   "name": "sap-estudos",
   "productName": "SAP Estudos",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Ambiente de estudos SAP com conteúdo semanal atualizado pelo Claude",
   "main": "src/main.js",
   "author": "Lucas Guimarães Santos",
@@ -20,12 +20,15 @@
   },
   "devDependencies": {
     "electron": "33.2.1",
-    "electron-builder": "25.1.8"
+    "electron-builder": "25.1.8",
+    "playwright": "1.65.1"
   },
   "build": {
     "appId": "br.lguisantos.sapestudos",
     "productName": "SAP Estudos",
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "src/**",
       "content/**",

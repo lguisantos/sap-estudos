@@ -1,5 +1,5 @@
 // Valida os itens de content/itens. Uso: node scripts/validar.mjs
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -72,6 +72,27 @@ for (const f of files) {
       if (prof(d.raiz) > 4) err(`${onde}: hierarquia com no máximo 4 níveis (para caber legível na tela)`);
     } else err(`${onde}.tipo deve ser fluxo ou hierarquia`);
   });
+  // Cenário executado na WebGUI: prints existentes e leves, pendências explicadas.
+  const PASTA_PRINTS = join(dir, "..", "prints");
+  const checarPrints = (lista, onde) => (lista || []).forEach((pr, j) => {
+    if (!str(pr.legenda)) err(`${onde}.prints[${j}].legenda obrigatória`);
+    if (!/^[a-z0-9-]+\/[a-z0-9-]+\.(png|jpg)$/.test(pr.arquivo || "")) { err(`${onde}.prints[${j}].arquivo deve ser "<id-do-tema>/<nome>.png|jpg" em minúsculas`); return; }
+    if (!pr.arquivo.startsWith(it.id + "/")) err(`${onde}.prints[${j}]: guarde em content/prints/${it.id}/`);
+    const f = join(PASTA_PRINTS, pr.arquivo);
+    if (!existsSync(f)) err(`${onde}.prints[${j}]: arquivo não encontrado (content/prints/${pr.arquivo})`);
+    else if (statSync(f).size > 700 * 1024) err(`${onde}.prints[${j}]: ${pr.arquivo} passa de 700 KB; recorte ou reduza`);
+  });
+  (it.fluxo || []).forEach((p, i) => checarPrints(p.prints, `fluxo[${i}]`));
+  if (it.cenario) {
+    if (!str(it.cenario.titulo)) err("cenario.titulo obrigatório");
+    if (!Array.isArray(it.cenario.dados) || !it.cenario.dados.every(d => str(d.campo) && str(d.valor))) err("cenario.dados: lista de { campo, valor }");
+    checarPrints(it.cenario.prints, "cenario");
+  }
+  (it.pendencias || []).forEach((p, i) => {
+    for (const k of ["item", "porque", "como"]) if (!str(p[k])) err(`pendencias[${i}].${k} obrigatório`);
+    checarPrints(p.prints, `pendencias[${i}]`);
+  });
+  if (it.destaques_s4hana && !(Array.isArray(it.destaques_s4hana) && it.destaques_s4hana.every(str))) err("destaques_s4hana: lista de textos");
   for (const n of it.novidades || []) if (!str(n.titulo) || !str(n.resumo) || !/^https?:\/\//.test(n.url || "")) err("novidades: titulo, resumo e url http(s)");
   for (const s of it.fontes || []) if (!/^https?:\/\//.test(s.url || "")) err(`fonte sem url válida: ${s.titulo}`);
 }

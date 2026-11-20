@@ -75,8 +75,31 @@
       <ul class="plain">${p.detalhes.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
       <p class="res"><b>Resultado:</b> ${esc(p.resultado)}</p>
       ${p.exemplo ? `<div class="ex"><b>Exemplo:</b> ${esc(p.exemplo)}</div>` : ""}
+      ${prints(p.prints)}
     </li>`).join("")}</ol>`;
   }
+
+  // Prints da WebGUI de um passo: miniaturas com legenda; clique abre ampliado.
+  function prints(lista) {
+    if (!lista || !lista.length || !window.SAP_PRINTS) return "";
+    return `<div class="prints">${lista.map(p => `<figure class="print"><img src="${esc(window.SAP_PRINTS + p.arquivo)}" alt="${esc(p.legenda)}" loading="lazy" data-ampliar="1"><figcaption>${esc(p.legenda)}</figcaption></figure>`).join("")}</div>`;
+  }
+
+  /** Seções do cenário executado no sistema, comuns a processos e guias. */
+  window.renderCenario = function (it, sec) {
+    let h = "";
+    if (it.destaques_s4hana && it.destaques_s4hana.length) h += sec("Importante no S/4HANA", `<ul class="destaques">${it.destaques_s4hana.map(d => `<li>${esc(d)}</li>`).join("")}</ul>`);
+    const c = it.cenario;
+    if (c) h += sec("Cenário no sistema", `<div class="case"><p class="who">${esc(c.titulo)}</p>${c.ambiente ? `<p class="hint">${esc(c.ambiente)}</p>` : ""}
+      ${c.dados && c.dados.length ? `<dl class="terms">${c.dados.map(d => `<dt>${esc(d.campo)}</dt><dd>${esc(d.valor)}</dd>`).join("")}</dl>` : ""}
+      ${c.resultado ? `<p class="res"><b>Resultado no sistema:</b> ${esc(c.resultado)}</p>` : ""}${prints(c.prints)}</div>`);
+    if (it.pendencias && it.pendencias.length) h += sec("Faltou no ambiente (o que configurar e por quê)", `<ol class="pendencias">${it.pendencias.map(p => `<li>
+      <b>${esc(p.item)}</b>
+      <p><span class="pl">Por que é necessário:</span> ${esc(p.porque)}</p>
+      <p><span class="pl">Como resolver:</span> ${esc(p.como)}</p>
+      ${p.dependencia ? `<p><span class="pl">Depende de:</span> ${esc(p.dependencia)}</p>` : ""}${prints(p.prints)}</li>`).join("")}</ol>`);
+    return h;
+  };
 
   /** Corpo completo de um processo (depois do cabeçalho), usando o mesmo construtor de seções do leitor. */
   // Reaproveitado pelos diagramas de fluxo dos outros tipos de tema.
@@ -99,6 +122,14 @@
   };
 
   // Clique ou Enter num bloco do diagrama leva à explicação do passo.
+  // Ampliar print; clique ou Esc fecha.
+  document.addEventListener("click", e => {
+    const img = e.target.closest("img[data-ampliar]");
+    const box = document.getElementById("lightbox");
+    if (img) { document.getElementById("lightbox-img").src = img.src; document.getElementById("lightbox-leg").textContent = img.alt; box.hidden = false; return; }
+    if (e.target.closest("#lightbox")) box.hidden = true;
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") document.getElementById("lightbox").hidden = true; });
   document.addEventListener("click", e => {
     const g = e.target.closest(".raia-passo");
     if (g) document.getElementById("passo-" + g.dataset.passo)?.scrollIntoView({ behavior: "smooth", block: "start" });

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self'; font-src 'self'; script-src 'self'">
 <title>SAP Estudos</title>
 <link rel="stylesheet" href="../../node_modules/@fontsource/bricolage-grotesque/500.css">
 <link rel="stylesheet" href="../../node_modules/@fontsource/bricolage-grotesque/700.css">
@@ -39,6 +39,7 @@
 </header>
 
 <div class="banner" id="banner" hidden></div>
+<div class="lightbox" id="lightbox" hidden><img id="lightbox-img" alt=""><p id="lightbox-leg"></p></div>
 
 <section class="full" id="v-trilha">
   <div class="tr-tabs" id="tr-tabs" role="tablist" aria-label="Módulo"></div>
