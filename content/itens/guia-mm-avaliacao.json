@@ -1,0 +1,110 @@
+{
+  "id": "guia-mm-avaliacao",
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "area": "Avaliação de material (MM-IV / CO)",
+  "titulo": "Avaliação de material: preço standard × preço médio móvel e reavaliação",
+  "curto": "Avaliação de material",
+  "publicado": "2026-11-20",
+  "nivel": "intermediário",
+  "resumo": "Toda entrada, saída e fatura de material mexe no valor do estoque. Quem decide como esse valor é calculado é o controle de preço, na visão Contabilidade 1 do material: S (preço standard, fixo) ou V (preço médio móvel, recalculado a cada movimento). Escolher errado distorce o custo dos produtos e o resultado da empresa. Entender as duas lógicas permite prever exatamente o lançamento contábil de uma entrada de mercadorias e de uma fatura com diferença de preço, que é a pergunta mais comum que o consultor MM recebe do time de finanças.",
+  "conceitos": [
+    { "termo": "Área de avaliação", "explicacao": "Nível em que o estoque é avaliado. No Brasil e na maioria dos projetos é o centro: o mesmo material pode ter preços diferentes no centro SP01 e no centro RJ01." },
+    { "termo": "Controle de preço (campo VPRSV)", "explicacao": "Indicador da visão Contabilidade 1: S = preço standard, V = preço médio móvel. Define se diferenças de preço vão para o estoque (V) ou para uma conta de diferença de preço (S)." },
+    { "termo": "Preço standard (S)", "explicacao": "Preço fixo durante o período, normalmente vindo do custo planejado (estimativa de custo do CO). Toda entrada é valorizada por ele; a diferença para o preço real vai para a conta de diferença de preço (chave PRD). O sistema ainda calcula um preço médio móvel só estatístico." },
+    { "termo": "Preço médio móvel (V)", "explicacao": "Valor total do estoque dividido pela quantidade total. Muda a cada entrada com preço diferente e a cada fatura com diferença, enquanto houver estoque para absorver." },
+    { "termo": "Classe de avaliação", "explicacao": "Campo da visão Contabilidade 1 que liga o material às contas do razão (ex.: 3000 matéria-prima → conta de estoque de matéria-prima). É a ponte entre MM e FI na determinação de contas (OBYC)." },
+    { "termo": "Chaves de lançamento BSX, WRX e PRD", "explicacao": "BSX = conta de estoque; WRX = conta de compensação entrada × fatura (GR/IR); PRD = diferença de preço. São as três que aparecem em quase toda entrada e fatura." },
+    { "termo": "Reavaliação (mudança de preço)", "explicacao": "Alteração manual do preço do material com a transação MR21 (ou app Fiori). Para S, muda o preço standard; para V, corrige um médio móvel distorcido. O estoque existente é revalorizado e a diferença vai para uma conta de reavaliação (chave UMB)." },
+    { "termo": "Material Ledger e custo real", "explicacao": "No S/4HANA o Material Ledger é obrigatório para avaliação (guarda o estoque em até três moedas, ex.: BRL e USD). O custo real (actual costing, CKMLCP) é opcional: avalia pelo standard durante o mês e calcula no fechamento o preço unitário periódico com os custos reais do período." }
+  ],
+  "transacoes": [
+    { "codigo": "MM03 / MM02", "descricao": "Exibir ou alterar a visão Contabilidade 1 (controle de preço, classe de avaliação, preços)" },
+    { "codigo": "MR21", "descricao": "Mudança de preço (reavaliação do estoque)" },
+    { "codigo": "CKM3N", "descricao": "Análise de preço do material no Material Ledger (histórico de entradas, faturas e diferenças)" },
+    { "codigo": "MB5L", "descricao": "Lista de valores de estoque por área de avaliação" },
+    { "codigo": "OBYC", "descricao": "Determinação de contas MM (BSX, WRX, PRD, UMB…)" },
+    { "codigo": "CK11N / CK24", "descricao": "Calcular e liberar a estimativa de custo que vira o preço standard" },
+    { "codigo": "CKMLCP", "descricao": "Cockpit de custo real (fechamento do Material Ledger), quando ativo" }
+  ],
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Onde a avaliação é definida",
+      "legenda": "O preço vale por material e por área de avaliação (centro). A classe de avaliação leva às contas do FI.",
+      "raiz": {
+        "nome": "Empresa 1000", "sub": "plano de contas e moeda BRL",
+        "filhos": [
+          { "nome": "Área de avaliação SP01", "sub": "= centro SP01", "filhos": [
+            { "nome": "Material MP-100", "sub": "classe 3000 · controle V", "filhos": [ { "nome": "Preço médio móvel", "sub": "recalculado a cada movimento" } ] },
+            { "nome": "Material PA-200", "sub": "classe 7920 · controle S", "filhos": [ { "nome": "Preço standard", "sub": "vem da estimativa de custo" } ] }
+          ] },
+          { "nome": "Área de avaliação RJ01", "sub": "= centro RJ01", "filhos": [
+            { "nome": "Material MP-100", "sub": "preço próprio no RJ01" }
+          ] }
+        ]
+      }
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "Do pedido ao valor do estoque",
+      "legenda": "Em cada passo, observe para onde vai a diferença de preço: estoque (V) ou conta PRD (S).",
+      "passos": [
+        { "titulo": "Pedido com preço acordado", "papel": "Comprador", "transacao": "ME21N" },
+        { "titulo": "Entrada de mercadorias valorizada", "papel": "Almoxarifado", "transacao": "MIGO 101" },
+        { "titulo": "Lançamento BSX × WRX (e PRD se S)", "papel": "Sistema (FI)", "transacao": "OBYC" },
+        { "titulo": "Fatura com diferença de preço", "papel": "Contas a pagar", "transacao": "MIRO" },
+        { "titulo": "Diferença no estoque (V) ou em PRD (S)", "papel": "Sistema (FI)", "transacao": "CKM3N" },
+        { "titulo": "Reavaliar preço distorcido", "papel": "Controladoria", "transacao": "MR21" }
+      ]
+    }
+  ],
+  "caso": {
+    "titulo": "Mesma compra, dois controles de preço",
+    "contexto": "Centro SP01 tem 100 unidades do material MP-100 avaliadas a R$ 10,00 (estoque de R$ 1.000,00). Chega um pedido de 50 unidades a R$ 12,00 e, depois, a fatura vem a R$ 12,50 por unidade. Compare o que acontece com controle V e com controle S (standard R$ 10,00).",
+    "passos": [
+      "Controle V, entrada (MIGO 101): débito estoque BSX R$ 600,00 e crédito GR/IR WRX R$ 600,00. Estoque passa a 150 un e R$ 1.600,00; novo médio móvel = 1.600 ÷ 150 = R$ 10,67.",
+      "Controle V, fatura (MIRO) a R$ 12,50: débito WRX R$ 600,00, débito estoque BSX R$ 25,00 (a diferença de 50 × 0,50), crédito fornecedor R$ 625,00. Estoque fica R$ 1.625,00 → médio R$ 10,83.",
+      "Se metade das 50 unidades já tivesse sido consumida antes da fatura, só a parte em estoque vai para BSX; a parte consumida vai para PRD. O médio móvel só absorve diferença de estoque que ainda existe.",
+      "Controle S, entrada: débito BSX R$ 500,00 (50 × standard 10,00), débito PRD R$ 100,00 (diferença para 12,00), crédito WRX R$ 600,00. O preço continua R$ 10,00.",
+      "Controle S, fatura a R$ 12,50: débito WRX R$ 600,00, débito PRD R$ 25,00, crédito fornecedor R$ 625,00. O estoque nunca muda de preço; toda variação fica em PRD e é analisada pela controladoria (ou rateada no fechamento, se houver custo real).",
+      "Consulte o resultado na CKM3N: ela mostra, por período, as entradas, as faturas e as diferenças de preço de cada material."
+    ]
+  },
+  "armadilhas": [
+    "Usar preço médio móvel em produto acabado: cada ordem de produção com custo diferente altera o preço e a liquidação de variações tem restrições. A SAP recomenda V só para matérias-primas e mercadorias de revenda; S para semiacabados e acabados.",
+    "Fazer entrada de mercadorias com preço errado no pedido (ex.: R$ 120,00 em vez de R$ 12,00) num material V: o médio móvel dispara e contamina todos os consumos seguintes até alguém reavaliar com MR21.",
+    "Lançar a fatura depois de o estoque ter sido todo consumido e esperar que o médio móvel mude: sem estoque, a diferença vai para PRD.",
+    "Trocar o controle de preço de V para S no meio do período sem planejar: a mudança revaloriza o estoque e gera lançamentos de reavaliação.",
+    "Esquecer a determinação de contas (OBYC) para a classe de avaliação nova: a entrada de mercadorias para com erro de conta não encontrada."
+  ],
+  "fixacao": {
+    "pergunta": "Um material com controle S tem standard R$ 20,00. Chegam 10 unidades com pedido a R$ 22,00. Qual é o lançamento da entrada e qual o preço do material depois dela?",
+    "resposta": "Débito estoque (BSX) R$ 200,00, débito diferença de preço (PRD) R$ 20,00, crédito GR/IR (WRX) R$ 220,00. O preço continua R$ 20,00, porque com controle S as diferenças não entram no estoque."
+  },
+  "links": [
+    { "id": "base-integra", "motivo": "Etapa anterior: como MM gera lançamentos no FI." },
+    { "id": "proc-mm-13-nf-entrada", "motivo": "Próxima etapa: a nota fiscal de entrada, com os impostos que também entram (ou não) no valor do estoque." },
+    { "id": "guia-mm-mestre-material", "motivo": "A visão Contabilidade 1 do mestre de material é onde controle de preço e classe de avaliação são definidos." },
+    { "id": "proc-mm-09-entrada", "motivo": "A entrada de mercadorias é o primeiro momento em que a avaliação aparece." },
+    { "id": "proc-mm-12-fatura", "motivo": "A verificação de faturas trata as diferenças de preço explicadas aqui." },
+    { "id": "proc-mm-10-movimentos", "motivo": "Consumos e transferências também saem pelo preço do material." },
+    { "id": "base-co", "motivo": "O preço standard vem da estimativa de custo do CO." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Basic Concepts of Price Control", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/erpscm/3362168424.html" },
+    { "titulo": "SAP Help – Valuation with Moving Average Price (S/4HANA Cloud)", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/7f47a6d9441c46ac86c96fd27f6015f0/bbd9b6ce0be14516ad7868da0982024a.html" },
+    { "titulo": "SAP Help – Valuation Strategies for Materials", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/7f47a6d9441c46ac86c96fd27f6015f0/52db2a2dcc0146c2adb39b68fab8deda.html" },
+    { "titulo": "SAP Help – Restrictions for Variance Settlement with Moving Average Price", "url": "https://help.sap.com/docs/sap_s4hana_cloud/4032610758dc437089f0c28320eec93f/0ab8c1db86d64c10980a7105cba8597c.html" },
+    { "titulo": "SAP Help – Control of Material Valuation", "url": "https://help.sap.com/docs/PRODUCT_ID/af9ef57f504840d2b81be8667206d485/435eb6531de6b64ce10000000a174cb4.html" },
+    { "titulo": "SAP Help – Price Fields and Valuation Data", "url": "https://help.sap.com/docs/SAP_ERP/92419cca24534eaebb91b731261d911a/9c94d7531a4d414de10000000a174cb4.html" },
+    { "titulo": "SAP Help – Actual Costing/Material Ledger", "url": "https://help.sap.com/docs/SAP_ERP/56f7319a9048445eb86221af73cab72b/bcd6cc5340487214e10000000a174cb4.html" }
+  ],
+  "destaques_s4hana": [
+    "Material Ledger é obrigatório no S/4HANA para a avaliação de estoque (no ECC era opcional); o custo real (CKMLCP) continua opcional.",
+    "Quantidades e valores de estoque passam a ser derivados de MATDOC (documentos de material) e ACDOCA (Universal Journal); as tabelas antigas de totais viram views de compatibilidade.",
+    "Contas de estoque, GR/IR e diferença de preço caem direto no Universal Journal, junto com os dados de CO: a reconciliação MM × FI ficou muito mais simples.",
+    "Apps Fiori como Manage Material Valuations e Material Inventory Values substituem relatórios clássicos; MR21 e CKM3N continuam disponíveis."
+  ]
+}

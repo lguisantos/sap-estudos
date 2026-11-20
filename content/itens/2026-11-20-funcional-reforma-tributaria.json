@@ -1,0 +1,104 @@
+{
+  "id": "2026-11-20-funcional-reforma-tributaria",
+  "tipo": "semanal",
+  "trilha": "funcional",
+  "area": "Fiscal Brasil (SD/MM/FI)",
+  "titulo": "Reforma tributária no S/4HANA: CBS e IBS em 2026 e o que o consultor precisa saber",
+  "curto": "Reforma tributária (CBS/IBS)",
+  "publicado": "2026-11-20",
+  "nivel": "intermediário",
+  "resumo": "2026 é o ano de teste da reforma tributária: a CBS (federal) e o IBS (estados e municípios) já aparecem nas notas fiscais com alíquotas simbólicas, enquanto PIS, COFINS, ICMS e ISS continuam valendo. Para quem trabalha com MM e SD no Brasil, isso significa novas condições nos procedimentos de imposto, novos campos na nota fiscal e uma pilha de notas SAP para aplicar. O ano de 2027, quando a CBS passa a substituir PIS e COFINS, está a pouco mais de um mês: é a hora de entender a solução da SAP.",
+  "conceitos": [
+    { "termo": "CBS e IBS", "explicacao": "Contribuição sobre Bens e Serviços (federal, substitui PIS e COFINS) e Imposto sobre Bens e Serviços (estadual e municipal, substitui ICMS e ISS). Juntos formam o IVA dual brasileiro." },
+    { "termo": "Ano de teste 2026", "explicacao": "A LC 214/2025 fixa alíquota de teste de 0,9% para a CBS e 0,1% para o IBS. Quem cumpre as obrigações acessórias corretamente fica dispensado do recolhimento desses valores em 2026." },
+    { "termo": "Grupo IBSCBS da NF-e", "explicacao": "Bloco novo do XML da nota fiscal eletrônica com CST, classificação tributária, base e valores de CBS e IBS. É ele que o SAP precisa preencher." },
+    { "termo": "TAXBRA e TAXBRJ", "explicacao": "Procedimentos de cálculo de impostos do Brasil no SAP (TAXBRJ usa o Tax Calculation Engine baseado em condições). As notas da reforma acrescentam condições de CBS e IBS e o mapeamento para a nota fiscal." },
+    { "termo": "Valor estatístico", "explicacao": "Em 2026 a SAP recomenda marcar CBS e IBS como estatísticos: aparecem na nota, mas não entram no total da nota nem no valor a pagar, porque são só proposta de teste." },
+    { "termo": "Nota líder 3561376", "explicacao": "Nota SAP que descreve a estratégia de entrega e suporte da solução para a reforma; o XML anexo, usado com o Note Analyzer (nota 3200109), lista todas as notas a aplicar." }
+  ],
+  "transacoes": [
+    { "codigo": "SNOTE", "descricao": "Aplicar as notas SAP da reforma (lista vinda do Note Analyzer)" },
+    { "codigo": "J1BTAX", "descricao": "Customizing de impostos do Brasil (tipos e grupos de imposto)" },
+    { "codigo": "V/08", "descricao": "Procedimento de cálculo: conferir as condições novas de CBS/IBS no RVABRA" },
+    { "codigo": "J1BNFE", "descricao": "Monitor da NF-e: verificar o grupo IBSCBS no XML enviado" },
+    { "codigo": "J1B3N", "descricao": "Exibir a nota fiscal e seus impostos" }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Caminho da CBS/IBS numa venda em 2026",
+      "legenda": "Os valores são calculados e destacados na NF-e, mas ficam estatísticos durante o ano de teste.",
+      "passos": [
+        { "titulo": "Aplicar notas da reforma (nota líder)", "papel": "Basis / consultor", "transacao": "SNOTE" },
+        { "titulo": "Condições CBS/IBS no procedimento", "papel": "Consultor fiscal", "transacao": "V/08" },
+        { "titulo": "Ordem e fatura calculam CBS 0,9% e IBS 0,1%", "papel": "Vendas", "transacao": "VA01 / VF01" },
+        { "titulo": "Nota fiscal com valores estatísticos", "papel": "Sistema", "transacao": "J1B3N" },
+        { "titulo": "XML com grupo IBSCBS para a SEFAZ", "papel": "Fiscal", "transacao": "J1BNFE" }
+      ]
+    },
+    {
+      "tipo": "hierarquia",
+      "titulo": "Transição dos tributos (segundo as fontes)",
+      "legenda": "Datas da transição conforme LC 214/2025 e materiais oficiais; confira a regulamentação mais recente.",
+      "raiz": {
+        "nome": "Reforma tributária", "sub": "IVA dual",
+        "filhos": [
+          { "nome": "2026", "sub": "teste: CBS 0,9% e IBS 0,1%", "filhos": [ { "nome": "PIS, COFINS, ICMS e ISS", "sub": "continuam iguais" } ] },
+          { "nome": "2027", "sub": "CBS substitui PIS e COFINS" },
+          { "nome": "2029 a 2032", "sub": "ICMS e ISS reduzidos aos poucos" },
+          { "nome": "2033", "sub": "só CBS e IBS" }
+        ]
+      }
+    }
+  ],
+  "caso": {
+    "titulo": "Preparando uma indústria para a virada de 2027",
+    "contexto": "Uma indústria de cosméticos em São Paulo usa S/4HANA com TAXBRJ e emite cerca de 3.000 NF-e por mês. Em 2026 começou a destacar CBS e IBS; em 2027 precisa calcular a CBS de verdade e parar de calcular PIS e COFINS.",
+    "passos": [
+      "Rodar o Note Analyzer (nota 3200109) com o XML da nota líder 3561376 e aplicar as notas pendentes, inclusive a 3582512 (CBS e IBS na TAXBRJ).",
+      "Conferir na V/08 as condições novas de CBS e IBS e marcar como estatísticas em 2026, conforme as notas 3606019, 3605442 e 3606761.",
+      "Testar uma venda de 100 unidades a R$ 50,00 (R$ 5.000,00): CBS de R$ 45,00 (0,9%) e IBS de R$ 5,00 (0,1%) destacados, total da nota inalterado.",
+      "Validar no monitor J1BNFE que o XML leva o grupo IBSCBS com CST e classificação tributária corretos e que a SEFAZ autoriza.",
+      "No MM, aplicar a determinação por situação tributária (nota 3694434) e testar uma nota de entrada com CBS e IBS.",
+      "Planejar 2027: regras de crédito, fim do PIS e COFINS e testes de ponta a ponta com o fiscal, consultando a nota 3637842 para os cenários que a SAP ainda não suporta."
+    ]
+  },
+  "armadilhas": [
+    "Deixar CBS e IBS não estatísticos em 2026: o total da nota muda e a cobrança ao cliente fica errada.",
+    "Aplicar notas avulsas sem o Note Analyzer: faltam pré-requisitos e o cálculo sai incompleto.",
+    "Achar que a SAP cobre tudo: a própria nota 3637842 lista processos ainda não suportados, e o lado de entrada (notas de fornecedores) costuma exigir governança extra.",
+    "Confiar numa só data de obrigatoriedade: as fontes oficiais divergem sobre quando a SEFAZ passa a rejeitar notas sem o grupo IBSCBS (veja as novidades)."
+  ],
+  "fixacao": {
+    "pergunta": "Por que a SAP recomenda marcar CBS e IBS como estatísticos em 2026?",
+    "resposta": "Porque em 2026 as alíquotas são de teste (0,9% e 0,1%) e o contribuinte que cumpre as obrigações acessórias fica dispensado do recolhimento. Os valores precisam aparecer na nota, mas não podem somar ao total cobrado do cliente."
+  },
+  "novidades": [
+    { "titulo": "Alíquotas de teste de CBS e IBS em 2026", "resumo": "LC 214/2025: CBS 0,9% e IBS 0,1% em 2026, com dispensa de recolhimento para quem cumpre as obrigações acessórias (resposta à consulta da SEFAZ-SP).", "fonte": "SEFAZ-SP", "url": "https://www.fazenda.sp.gov.br/eCT/Consulta_Entrada/ConsultaRespostaDE.aspx?IDConsulta=32303" },
+    { "titulo": "Campos de IBS e CBS obrigatórios a partir de 3 de agosto de 2026", "resumo": "O Comitê Gestor do IBS anunciou que, a partir de 03/08/2026, o preenchimento dos campos de IBS e CBS nas notas passa a ser obrigatório. As fontes divergem sobre a rejeição automática: o CGIBS fala em rejeição de documentos incompletos, mas também cita que as regras de validação estão suspensas pelo Ato Conjunto RFB/CGIBS nº 1/2025, e a SEFAZ-ES diz que o adiamento da rejeição (regra UB12-10) não elimina a obrigação de informar o grupo IBSCBS.", "fonte": "CGIBS e SEFAZ-ES", "url": "https://www.cgibs.gov.br/novo-marco-da-reforma-tributaria-inicia-em-03-de-agosto-com-preenchimento-obrigatorio-dos-campos-relativos-ao-ibs-e-a-cbs" },
+    { "titulo": "SEFAZ-ES: grupo IBSCBS continua obrigatório mesmo sem rejeição", "resumo": "Nota técnica da SEFAZ-ES explica que a nota pode ser autorizada sem os campos em 2026, mas a obrigação de informá-los permanece.", "fonte": "SEFAZ-ES", "url": "https://sefaz.es.gov.br/media/Links/Nota%20IBS%20CBS%20Sefaz.pdf" },
+    { "titulo": "Simples Nacional dispensado em 2026", "resumo": "Segundo a Secretaria de Economia do DF, os optantes do Simples Nacional não precisam cumprir a exigência em 2026.", "fonte": "Secretaria de Economia do DF", "url": "https://www.economia.df.gov.br/w/reforma-tributaria-comite-gestor-e-receita-federal-regulamentam-os-novos-ibs-e-cbs" },
+    { "titulo": "SAP: CBS e IBS como valores estatísticos na nota fiscal", "resumo": "Documentação SAP descreve a função que mantém CBS e IBS fora dos totais da nota quando marcados como estatísticos, recomendada para 2026.", "fonte": "SAP Help Portal", "url": "https://help.sap.com/docs/SAP_ERP/063e7e5f4d7f4fc0be08565793a9b941/c4763af6f3274be8a616c2756c632047.html?locale=en-US" },
+    { "titulo": "SAP: CBS e IBS no procedimento TAXBRA", "resumo": "Documentação da inclusão dos impostos CBS e IBS no procedimento TAXBRA e do mapeamento para a nota fiscal.", "fonte": "SAP Help Portal", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/83fb257602634259bf40b22d80c1f563/ba336fd5b94547258362337d9ad62e8f.html" },
+    { "titulo": "SAP: determinação por situação tributária no MM", "resumo": "Nova determinação de imposto com situação tributária para CBS e IBS em Materials Management, com guia de implementação na nota 3694434.", "fonte": "SAP Help Portal", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/83fb257602634259bf40b22d80c1f563/5e47978db37444c180bd7a6575f28621.html" },
+    { "titulo": "Como a reforma impacta usuários SAP", "resumo": "Blog da SAP com a estratégia de entrega: nota líder 3561376, Note Analyzer (3200109) e a nota 3637842 de processos ainda não suportados.", "fonte": "SAP Community", "url": "https://community.sap.com/t5/financial-management-blog-posts-by-sap/how-the-tax-reform-in-brazil-impacts-sap-users/ba-p/14258640" }
+  ],
+  "links": [
+    { "id": "proc-sd-12-nf-saida", "motivo": "A nota fiscal de saída é onde CBS e IBS aparecem na venda." },
+    { "id": "proc-mm-13-nf-entrada", "motivo": "A nota fiscal de entrada recebe os mesmos impostos na compra." },
+    { "id": "proc-sd-04-preco", "motivo": "Os impostos são condições do procedimento de cálculo." },
+    { "id": "guia-mm-avaliacao", "motivo": "Impostos recuperáveis ficam fora do valor do estoque; os não recuperáveis entram nele." },
+    { "id": "base-fi", "motivo": "Os lançamentos de impostos caem no FI." }
+  ],
+  "fontes": [
+    { "titulo": "CGIBS – Novo marco da reforma tributária em 03/08", "url": "https://www.cgibs.gov.br/novo-marco-da-reforma-tributaria-inicia-em-03-de-agosto-com-preenchimento-obrigatorio-dos-campos-relativos-ao-ibs-e-a-cbs" },
+    { "titulo": "CGIBS – Prazo para adequação dos sistemas de emissão", "url": "https://www.cgibs.gov.br/prazo-para-adequacao-dos-sistemas-de-emissao-de-notas-fiscais-ao-regulamento-do-ibs-encerra-em" },
+    { "titulo": "SEFAZ-ES – Nota sobre IBS e CBS", "url": "https://sefaz.es.gov.br/media/Links/Nota%20IBS%20CBS%20Sefaz.pdf" },
+    { "titulo": "SEFAZ-SP – Resposta à consulta tributária", "url": "https://www.fazenda.sp.gov.br/eCT/Consulta_Entrada/ConsultaRespostaDE.aspx?IDConsulta=32303" },
+    { "titulo": "Secretaria de Economia do DF – Regulamentação de IBS e CBS", "url": "https://www.economia.df.gov.br/w/reforma-tributaria-comite-gestor-e-receita-federal-regulamentam-os-novos-ibs-e-cbs" },
+    { "titulo": "SAP Community – How the Tax Reform in Brazil Impacts SAP Users", "url": "https://community.sap.com/t5/financial-management-blog-posts-by-sap/how-the-tax-reform-in-brazil-impacts-sap-users/ba-p/14258640" },
+    { "titulo": "SAP Help – CBS and IBS Taxes as Statistical Values in Nota Fiscal", "url": "https://help.sap.com/docs/SAP_ERP/063e7e5f4d7f4fc0be08565793a9b941/c4763af6f3274be8a616c2756c632047.html?locale=en-US" },
+    { "titulo": "SAP Help – Inclusion of Taxes in TAXBRA Pricing Procedure", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/83fb257602634259bf40b22d80c1f563/ba336fd5b94547258362337d9ad62e8f.html" },
+    { "titulo": "SAP Help – Enhanced Tax Determination with Tax Situation for CBS and IBS (MM)", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/83fb257602634259bf40b22d80c1f563/5e47978db37444c180bd7a6575f28621.html" }
+  ]
+}

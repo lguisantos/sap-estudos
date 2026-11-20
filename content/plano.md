@@ -11,7 +11,8 @@ temas novos quando o mercado trouxer algo relevante.
 - [x] Joule e agentes de IA nos processos (2026-10-30)
 - [ ] Universal Journal na prática: relatórios de margem com ACDOCA e CO-PA por contas
 - [ ] Central Finance e SAP S/4HANA Finance para grupos
-- [ ] Reforma tributária brasileira (IBS/CBS) no S/4HANA: o que muda no fiscal
+- [x] Reforma tributária brasileira (IBS/CBS) no S/4HANA: o que muda no fiscal (2026-11-20)
+- [ ] Reforma tributária em 2027: CBS efetiva, fim de PIS/COFINS e regras de crédito no SAP
 - [ ] Advanced ATP e gestão de disponibilidade em vendas
 - [ ] Gestão de armazém: EWM embarcado x decentralizado
 - [ ] RISE with SAP e GROW with SAP: modelos de contratação e impacto em projetos
@@ -35,7 +36,7 @@ temas novos quando o mercado trouxer algo relevante.
 ## Processos por módulo
 Publicados em 2026-10-30: MM (16) e SD (15). Próximos candidatos:
 - [ ] MM: compra de serviços com folha de registro de serviço (lean services)
-- [ ] MM: avaliação de material, reavaliação de preço e Material Ledger
+- [ ] MM: avaliação de material, reavaliação de preço e Material Ledger (conceito coberto no guia-mm-avaliacao em 2026-11-20; falta o processo de fechamento com custo real)
 - [ ] MM: cockpit de compras centralizadas (Central Procurement)
 - [ ] SD: determinação de mensagens (Output Management com BRF+)
 - [ ] SD: faturamento intercompany
@@ -46,3 +47,7 @@ Publicados em 2026-10-30: MM (16) e SD (15). Próximos candidatos:
 Trilha criada em 2026-11-19 (24 etapas, 6 níveis). Publicados: 4 guias (visão geral, estrutura,
 dados mestres, integração) e 8 processos (recebimento, armazenagem, expedição, monitor, movimentações,
 ondas, reabastecimento, inventário). As 8 etapas "em breve" estão no `trilhas.json`, na ordem de estudo.
+
+
+## Etapas das trilhas publicadas
+- 2026-11-20: guia-mm-avaliacao (MM), guia-sd-determinacoes (SD), guia-ewm-tarefas-ordens (EWM).

@@ -1,0 +1,116 @@
+{
+  "id": "guia-sd-determinacoes",
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "area": "Configuração de vendas (SD)",
+  "titulo": "Determinações de SD: parceiros, categoria de item, ponto de expedição, itinerário e mensagens",
+  "curto": "Determinações de SD",
+  "publicado": "2026-11-20",
+  "nivel": "intermediário",
+  "resumo": "Quando o vendedor digita cliente, material e quantidade, a ordem de venda preenche sozinha dezenas de campos: quem recebe e quem paga, a categoria de cada item, de qual ponto de expedição sai, qual itinerário usa, qual procedimento de preço calcula e quais mensagens são emitidas. Cada um desses campos vem de uma tabela de determinação no Customizing. Saber ler essas tabelas é o que permite responder às perguntas do dia a dia do suporte: \"por que essa ordem veio com outro ponto de expedição?\", \"por que esse item não gerou remessa?\".",
+  "conceitos": [
+    { "termo": "Determinação", "explicacao": "Regra que escolhe um valor a partir de uma combinação de chaves. Ex.: tipo de ordem + grupo de categoria de item → categoria de item. Se não há entrada para a combinação, o campo fica vazio e a ordem cai no log de incompletude." },
+    { "termo": "Determinação de parceiros", "explicacao": "Procedimento de parceiros (por grupo de contas do cliente e por tipo de documento) define quais funções são obrigatórias: emissor (AG), recebedor (WE), pagador (RG) e recebedor da fatura (RE). Os valores vêm do cadastro do cliente (Business Partner, papel cliente)." },
+    { "termo": "Categoria de item", "explicacao": "Controla o comportamento do item: se tem preço, se gera remessa, se é faturado, se entra em planejamento. Vem de tipo de ordem + grupo de categoria de item do material (NORM, NLAG, VERP…) + uso + categoria do item superior. Ex.: OR + NORM → TAN." },
+    { "termo": "Ponto de expedição", "explicacao": "Local que organiza a saída (doca, área de expedição). Determinado por centro fornecedor + condição de expedição + grupo de carregamento do material. Uma remessa tem um único ponto de expedição." },
+    { "termo": "Condição de expedição", "explicacao": "Diz como o cliente quer receber (ex.: 01 padrão, 02 urgente). Vem primeiro do tipo de ordem, se configurado; senão, do cadastro do cliente." },
+    { "termo": "Itinerário (rota)", "explicacao": "Caminho e tempo de trânsito até o cliente. Determinado por país e zona de partida do ponto de expedição + condição de expedição + grupo de transporte do material + país e zona de transporte do recebedor. Na remessa pode ser redeterminado usando o grupo de peso." },
+    { "termo": "Determinação do procedimento de preço", "explicacao": "Organização de vendas + canal + setor + procedimento de documento (do tipo de ordem) + procedimento de cliente (do cadastro) → procedimento de cálculo (ex.: RVAA01 ou o brasileiro RVABRA)." },
+    { "termo": "Determinação de mensagens (output)", "explicacao": "Decide quais saídas são geradas (confirmação de ordem, impressão da fatura, EDI). No ECC usa técnica de condições (NACE); no S/4HANA o padrão é o Output Management com regras em BRF+." }
+  ],
+  "transacoes": [
+    { "codigo": "VOV4", "descricao": "Atribuir categorias de item (tipo de ordem + grupo + uso + item superior)" },
+    { "codigo": "OVL2", "descricao": "Determinação do ponto de expedição" },
+    { "codigo": "0VRF", "descricao": "Determinação de itinerário" },
+    { "codigo": "VOPAN", "descricao": "Procedimentos de determinação de parceiros" },
+    { "codigo": "OVKK", "descricao": "Determinação do procedimento de cálculo de preço" },
+    { "codigo": "OPD", "descricao": "Output Management (BRF+) para mensagens no S/4HANA" },
+    { "codigo": "VA03 › Ambiente › Análise", "descricao": "Ver na própria ordem como cada dado foi determinado (preço, mensagens)" }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "O que a ordem determina, na sequência",
+      "legenda": "Cada passo usa dados do cadastro do cliente, do material e do Customizing. Se um falhar, a ordem fica incompleta.",
+      "passos": [
+        { "titulo": "Parceiros: emissor, recebedor, pagador", "papel": "Cadastro do cliente", "transacao": "VOPAN" },
+        { "titulo": "Procedimento de preço", "papel": "Customizing de vendas", "transacao": "OVKK" },
+        { "titulo": "Categoria de item (OR + NORM → TAN)", "papel": "Customizing de vendas", "transacao": "VOV4" },
+        { "titulo": "Ponto de expedição", "papel": "Customizing de expedição", "transacao": "OVL2" },
+        { "titulo": "Itinerário", "papel": "Customizing de expedição", "transacao": "0VRF" },
+        { "titulo": "Mensagens de saída", "papel": "Output Management", "transacao": "OPD (BRF+)" }
+      ]
+    },
+    {
+      "tipo": "hierarquia",
+      "titulo": "De onde vem cada chave da determinação",
+      "legenda": "Quase todas as determinações misturam um dado do cliente, um do material e um do documento.",
+      "raiz": {
+        "nome": "Item da ordem", "sub": "cliente C100 · material M-10",
+        "filhos": [
+          { "nome": "Categoria de item", "sub": "resultado TAN", "filhos": [
+            { "nome": "Tipo de ordem OR", "sub": "do documento" },
+            { "nome": "Grupo NORM", "sub": "do mestre de material" }
+          ] },
+          { "nome": "Ponto de expedição", "sub": "resultado SP01", "filhos": [
+            { "nome": "Centro SP01", "sub": "do item" },
+            { "nome": "Condição 01", "sub": "do cliente ou do tipo de ordem" },
+            { "nome": "Grupo de carregamento 0001", "sub": "do material" }
+          ] },
+          { "nome": "Itinerário", "sub": "resultado R-SP-RJ", "filhos": [
+            { "nome": "Zona de partida", "sub": "do ponto de expedição" },
+            { "nome": "Zona de transporte", "sub": "do recebedor" },
+            { "nome": "Grupo de transporte", "sub": "do material" }
+          ] }
+        ]
+      }
+    }
+  ],
+  "caso": {
+    "titulo": "\"Por que essa ordem saiu pela doca errada?\"",
+    "contexto": "Uma distribuidora tem o centro SP01 com dois pontos de expedição: SP01 (paletes) e SP02 (pequenos volumes). O cliente C100 reclama que pedidos urgentes de caixas pequenas estão saindo pela doca de paletes e chegando um dia depois.",
+    "passos": [
+      "Abrir a ordem na VA03 e conferir no item: ponto de expedição SP01, condição de expedição 01 e itinerário R-SP-RJ (trânsito 2 dias).",
+      "Conferir o cliente no BP (papel cliente, área de vendas): condição de expedição 01 (padrão). O vendedor esperava 02 (urgente), mas não alterou na ordem.",
+      "Conferir o material: grupo de carregamento 0001 (empilhadeira) no lugar de 0003 (manual), por erro de cadastro.",
+      "Ler a OVL2: centro SP01 + condição 01 + grupo 0001 → ponto SP01. Com condição 02 + grupo 0003, a tabela daria SP02.",
+      "Ler a 0VRF: com condição 02, a rota proposta seria R-SP-RJ-EXP (1 dia). A condição errada explica também o atraso.",
+      "Corrigir os cadastros (grupo de carregamento do material e, se for regra, a condição de expedição do cliente) e orientar o vendedor. As ordens novas passam a sair por SP02; as já criadas precisam ter o item alterado antes de gerar remessa."
+    ]
+  },
+  "armadilhas": [
+    "Criar um tipo de ordem novo (ex.: ZOR) e esquecer de copiar as entradas da VOV4: os itens ficam sem categoria e a ordem não salva.",
+    "Achar que mudar o cadastro do cliente corrige ordens antigas: a determinação acontece na criação do item; documentos existentes mantêm os valores.",
+    "Itinerário vazio porque a zona de transporte do recebedor não foi preenchida no BP: a programação de entrega usa só o tempo padrão e as datas ficam erradas.",
+    "Configurar mensagens na NACE num S/4HANA que usa Output Management em BRF+: as regras não são lidas e nada é impresso.",
+    "Esquecer que a remessa só agrupa itens com o mesmo ponto de expedição, o mesmo recebedor e a mesma rota: itens com determinação diferente geram remessas separadas."
+  ],
+  "fixacao": {
+    "pergunta": "Quais três chaves determinam o ponto de expedição de um item da ordem e de onde vem cada uma?",
+    "resposta": "Centro fornecedor (do item da ordem), condição de expedição (do tipo de ordem, se configurado, senão do cadastro do cliente) e grupo de carregamento (do mestre de material, visão de vendas/geral do centro)."
+  },
+  "links": [
+    { "id": "proc-sd-05-credito", "motivo": "Etapa anterior: a verificação de crédito, outra regra que age na ordem." },
+    { "id": "base-integra", "motivo": "Próxima etapa: como SD conversa com MM e FI." },
+    { "id": "guia-sd-dados-mestres", "motivo": "Os campos do cliente e do material que alimentam todas as determinações." },
+    { "id": "proc-sd-02-ordem", "motivo": "A ordem de venda é onde as determinações acontecem." },
+    { "id": "proc-sd-04-preco", "motivo": "A determinação do procedimento de preço abre o cálculo de condições." },
+    { "id": "proc-sd-09-remessa", "motivo": "Ponto de expedição e itinerário decidem como as remessas são agrupadas." },
+    { "id": "proc-sd-11-faturamento", "motivo": "Pagador e mensagens determinados na ordem chegam à fatura." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Item Categories (S/4HANA Cloud)", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/c864b65334e6b54ce10000000a174cb4.html" },
+    { "titulo": "SAP Help – Flexible Item Category Determination", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/66327f62527a4a988c1976c23e8ba3c4.html" },
+    { "titulo": "SAP Help – Shipping Points (S/4HANA)", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c7894a248ca14f74aca67f97528e5ad7/5d1bbf53d25ab64ce10000000a174cb4.html" },
+    { "titulo": "SAP Help – Shipping Conditions", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c7894a248ca14f74aca67f97528e5ad7/7aa883be59fe4f29a1c3f47f5b18f2dc.html" },
+    { "titulo": "SAP Help – Route Determination", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/c7894a248ca14f74aca67f97528e5ad7/601bbf53d25ab64ce10000000a174cb4.html" },
+    { "titulo": "SAP Help – Sales Order Item", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/19d48293097f4a2589433856b034dfa5/32dc44581efca007e10000000a441470.html" }
+  ],
+  "destaques_s4hana": [
+    "Cliente é Business Partner: condição de expedição, zona de transporte e funções de parceiro ficam no papel cliente do BP (transação BP), não mais na XD01/VD01.",
+    "Mensagens: o padrão do S/4HANA é o Output Management com regras em BRF+ (OPD); a técnica NACE ainda existe, mas só para quem não migrou.",
+    "No S/4HANA Cloud há determinação flexível de categoria de item por tabela de decisão; no on-premise a VOV4 continua sendo a regra.",
+    "Os campos de status da ordem saíram das tabelas VBUK/VBUP e foram para as próprias VBAK/VBAP: ao investigar, olhe nelas."
+  ]
+}

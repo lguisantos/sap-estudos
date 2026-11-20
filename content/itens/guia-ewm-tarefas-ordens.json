@@ -1,0 +1,113 @@
+{
+  "id": "guia-ewm-tarefas-ordens",
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "area": "Execução no depósito (EWM)",
+  "titulo": "Tarefas, ordens de depósito, filas e recursos (radiofrequência)",
+  "curto": "Tarefas e ordens de depósito",
+  "publicado": "2026-11-20",
+  "nivel": "intermediário",
+  "resumo": "Todo movimento físico no EWM vira uma tarefa de depósito (de onde, para onde, quanto). As tarefas são agrupadas em ordens de depósito, que são os pacotes de trabalho entregues a um operador. As ordens entram em filas, e cada operador (recurso) puxa trabalho das filas que pode atender, normalmente pelo coletor de radiofrequência. Entender essa cadeia explica por que um operador recebe certo trabalho, por que uma separação demora e como o gerente redistribui o trabalho no monitor. Vale igual para o EWM embarcado no S/4HANA e para o descentralizado.",
+  "conceitos": [
+    { "termo": "Tarefa de depósito (warehouse task)", "explicacao": "Instrução de movimento de produto ou de unidade de depósito (HU): produto, quantidade, posição de origem e posição de destino. É criada a partir de uma solicitação de depósito (remessa de entrada ou saída) ou de forma avulsa, e é confirmada quando o movimento físico termina." },
+    { "termo": "Tipo de processo de depósito", "explicacao": "Classifica a tarefa (armazenagem, separação, transferência interna) e controla regras como confirmação imediata, impressão e a regra de criação de ordem a usar." },
+    { "termo": "Ordem de depósito (warehouse order)", "explicacao": "Agrupa tarefas num pacote de trabalho para um operador, dentro de uma área de atividade. Ex.: uma ordem com as 8 tarefas de separação de uma remessa no corredor 01-03." },
+    { "termo": "Regra de criação de ordem", "explicacao": "Definida por área de atividade: filtros, ordenação e limites (quantidade de itens, peso, volume, tempo). O EWM percorre as regras na sequência definida e, no fim, uma regra de resto agrupa o que sobrou. Sem regra própria, vale a padrão: uma tarefa por ordem, separada por área de atividade, fila e remessa." },
+    { "termo": "Fila (queue)", "explicacao": "Lista de trabalho com um tipo de atividade, por exemplo SEP-PICK (separação em prateleira) ou ARM-PAL (armazenagem de paletes). A fila é determinada pela área de atividade, pelo tipo de processo e pelas posições de origem e destino." },
+    { "termo": "Recurso e grupo de recursos", "explicacao": "Recurso é quem executa: um operador ou um equipamento (empilhadeira). Tem tipo de recurso e pode pertencer a um grupo; ambos são atribuídos a filas. O usuário do SAP se liga ao recurso para trabalhar no coletor." },
+    { "termo": "Seleção de ordem pelo RF", "explicacao": "Quando o operador pede trabalho no coletor, o EWM procura primeiro ordens atribuídas manualmente a ele; depois, ordens nas filas do recurso ou do grupo, onde ele tem autorização e com o mesmo ambiente de operação. Ordena por fila, data de início mais tarde (crescente) e prioridade (decrescente)." },
+    { "termo": "Framework de RF", "explicacao": "Interface de radiofrequência do EWM (/SCWM/RFUI), com telas pequenas para coletores e lógica de verificação (escanear posição, produto e quantidade)." }
+  ],
+  "transacoes": [
+    { "codigo": "/SCWM/RFUI", "descricao": "Logon e execução no coletor de radiofrequência" },
+    { "codigo": "/SCWM/MON", "descricao": "Monitor do depósito: tarefas, ordens, filas, recursos" },
+    { "codigo": "/SCWM/TO_CONF", "descricao": "Confirmar tarefas de depósito pelo desktop" },
+    { "codigo": "/SCWM/RSRC", "descricao": "Manter recursos" },
+    { "codigo": "/SCWM/USER", "descricao": "Atribuir usuário ao número de depósito e ao recurso" },
+    { "codigo": "SPRO › EWM › Processos interdepartamentais › Ordem de depósito", "descricao": "Regras de criação de ordem por área de atividade" },
+    { "codigo": "SPRO › EWM › Dados mestres › Gestão de recursos", "descricao": "Filas, determinação de fila, tipos e grupos de recurso" }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Como o trabalho chega ao operador",
+      "legenda": "A solicitação vira tarefas, as tarefas viram ordens, as ordens entram em filas e o recurso puxa pelo coletor.",
+      "passos": [
+        { "titulo": "Remessa de saída liberada (onda)", "papel": "Planejador do depósito", "transacao": "/SCWM/PRDO" },
+        { "titulo": "Tarefas de separação criadas", "papel": "Sistema EWM", "transacao": "WT" },
+        { "titulo": "Tarefas agrupadas em ordens", "papel": "Sistema EWM", "transacao": "regra de ordem" },
+        { "titulo": "Ordem colocada na fila SEP-PICK", "papel": "Sistema EWM", "transacao": "fila" },
+        { "titulo": "Operador pede trabalho no coletor", "papel": "Operador (recurso)", "transacao": "/SCWM/RFUI" },
+        { "titulo": "Escaneia e confirma cada tarefa", "papel": "Operador (recurso)", "transacao": "/SCWM/RFUI" },
+        { "titulo": "Acompanha e redistribui", "papel": "Supervisor", "transacao": "/SCWM/MON" }
+      ]
+    },
+    {
+      "tipo": "hierarquia",
+      "titulo": "Do armazém ao operador",
+      "legenda": "Área de atividade define as regras de ordem; fila liga a ordem a quem pode executá-la.",
+      "raiz": {
+        "nome": "Número de depósito SP01", "sub": "armazém",
+        "filhos": [
+          { "nome": "Área de atividade PICK", "sub": "corredores 01–03", "filhos": [
+            { "nome": "Fila SEP-PICK", "sub": "separação em prateleira", "filhos": [
+              { "nome": "Grupo de recursos SEPAR", "sub": "operadores a pé" },
+              { "nome": "Ordem 1000045", "sub": "8 tarefas, 1 remessa" }
+            ] }
+          ] },
+          { "nome": "Área de atividade PAL", "sub": "porta-paletes", "filhos": [
+            { "nome": "Fila ARM-PAL", "sub": "armazenagem de paletes", "filhos": [
+              { "nome": "Recurso EMP01", "sub": "empilhadeira" }
+            ] }
+          ] }
+        ]
+      }
+    }
+  ],
+  "caso": {
+    "titulo": "Separação de uma onda de 40 remessas",
+    "contexto": "O CD SP01 libera às 14h uma onda com 40 remessas e 320 itens no picking de prateleiras (área de atividade PICK). Trabalham 6 separadores a pé (grupo SEPAR). A meta é terminar até as 16h, quando chegam os caminhões.",
+    "passos": [
+      "A liberação da onda cria 320 tarefas de separação (uma por item) com origem nas posições de picking e destino na zona de expedição 9020.",
+      "A regra de criação de ordem da área PICK limita cada ordem a 12 itens e 25 kg, ordenando pela sequência de percurso. Resultado: cerca de 28 ordens; a regra de resto agrupa as tarefas que sobraram.",
+      "A determinação de fila coloca todas as ordens na fila SEP-PICK, atribuída ao grupo SEPAR.",
+      "Cada separador faz logon na /SCWM/RFUI e pede o próximo trabalho: recebe a ordem com data de início mais cedo e maior prioridade; escaneia posição, produto e quantidade para confirmar cada tarefa.",
+      "Às 15h, o supervisor vê no /SCWM/MON que restam 10 ordens e só 3 separadores livres. Atribui 4 ordens manualmente a dois operadores do recebimento (recursos com autorização na fila); no próximo pedido de trabalho eles recebem essas ordens primeiro.",
+      "Às 15h50 todas as tarefas estão confirmadas; a remessa de saída fica com status de separação concluído e segue para embalagem e carregamento."
+    ]
+  },
+  "armadilhas": [
+    "Deixar a regra de criação padrão (uma tarefa por ordem): cada item vira uma viagem e a produtividade da separação despenca.",
+    "Criar fila sem atribuir recurso ou grupo: as ordens ficam paradas e ninguém recebe trabalho no coletor.",
+    "Usuário sem ligação a um recurso (/SCWM/USER): o logon no RF falha ou o operador não vê as filas certas.",
+    "Mudar a fila na tarefa: só é possível na ordem; ao salvar, o EWM atualiza a fila das tarefas daquela ordem.",
+    "Atribuir ordem a um recurso e esperar que as tarefas mudem: a atribuição só propõe a ordem como próxima para aquele recurso."
+  ],
+  "fixacao": {
+    "pergunta": "Um operador pede trabalho no coletor. Em que ordem o EWM procura e escolhe a ordem de depósito?",
+    "resposta": "Primeiro, ordens atribuídas manualmente a esse recurso. Se não houver, ordens nas filas do recurso ou do seu grupo em que ele tem autorização e mesmo ambiente de operação. Entre as candidatas, ordena por fila, depois pela data de início mais tarde (crescente) e pela prioridade de execução (decrescente)."
+  },
+  "links": [
+    { "id": "proc-ewm-08-inventario", "motivo": "Etapa anterior: o inventário, que também gera tarefas e documentos de contagem." },
+    { "id": "guia-ewm-integracao", "motivo": "Próxima etapa: como essas tarefas refletem no MM e no SD." },
+    { "id": "guia-ewm-estrutura", "motivo": "Áreas de atividade e posições são a base das regras de ordem e de fila." },
+    { "id": "proc-ewm-02-armazenagem", "motivo": "Tarefas de armazenagem e estratégias de posição." },
+    { "id": "proc-ewm-03-expedicao", "motivo": "Tarefas de separação geradas pela remessa de saída." },
+    { "id": "proc-ewm-04-monitor", "motivo": "O monitor é onde o supervisor acompanha filas e recursos." },
+    { "id": "proc-ewm-06-ondas", "motivo": "A onda libera as tarefas que viram ordens de depósito." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Warehouse Order Creation (EWM)", "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/48890776d2b21b5ae10000000a42189c.html" },
+    { "titulo": "SAP Help – Creation of Warehouse Tasks for Warehouse Request", "url": "https://help.sap.com/docs/PRODUCT_ID/3d97bec9bf1649099384bb8167df3cf2/7fcccb53ad377114e10000000a174cb4.html" },
+    { "titulo": "SAP Help – Manual Assembly of Warehouse Orders", "url": "https://help.sap.com/docs/SAP_EXTENDED_WAREHOUSE_MANAGEMENT/3d97bec9bf1649099384bb8167df3cf2/1acbcb53ad377114e10000000a174cb4.html" },
+    { "titulo": "SAP Help – Warehouse Order Selection (Resource Management)", "url": "https://help.sap.com/doc/saphelp_ewm900/9.0/en-US/7c/ecfa40badbf46fe10000000a1550b0/content.htm?no_cache=true" },
+    { "titulo": "SAP Help – Create Warehouse Tasks (S/4HANA)", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/5aadd5aa0ed541e49b1e006d7e17919b/c5651d7847a549af8519881a92b045de.html" },
+    { "titulo": "SAP Help – Warehouse Order (WO), Support Content", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/3956531656.html" }
+  ],
+  "destaques_s4hana": [
+    "No EWM embarcado, tarefas e ordens são as mesmas do descentralizado, mas rodam no próprio S/4HANA, sem interface com o ERP: a confirmação da tarefa atualiza a remessa na hora.",
+    "O EWM substitui o WM clássico (ordens de transferência LT0x), que não tem evolução no S/4HANA: tarefa de depósito é o equivalente da antiga ordem de transferência.",
+    "Há apps Fiori para o monitor e para gerenciar tarefas e ordens; o framework de RF continua sendo o caminho padrão para os coletores."
+  ]
+}
