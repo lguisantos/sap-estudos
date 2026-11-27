@@ -1,0 +1,103 @@
+{
+  "id": "guia-sd-fechamento",
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "SD",
+  "area": "Fechamento (SD / FI)",
+  "titulo": "Fechamento de SD: faturas não contabilizadas, receita e conciliação com FI",
+  "curto": "Fechamento de SD",
+  "publicado": "2026-11-27",
+  "nivel": "intermediário",
+  "resumo": "No fechamento do mês o financeiro quer uma garantia: tudo o que saiu do armazém foi faturado, e toda fatura chegou à contabilidade. Do lado de SD isso significa olhar três listas: remessas com saída de mercadorias e sem fatura, faturas bloqueadas para a contabilidade e faturas com erro na interface com o FI. Quem domina essas listas responde em minutos à pergunta \"por que a receita do mês está menor que as saídas?\".",
+  "conceitos": [
+    { "termo": "Lista de documentos a faturar (billing due list)", "explicacao": "Remessas e ordens que já podem ser faturadas e ainda não foram. Filtrada por data de faturamento, tipo de fatura, organização e cliente. VF04 ou o app Create Billing Documents." },
+    { "termo": "Status de contabilização da fatura", "explicacao": "Indica se a fatura gerou documento contábil. 'A ser contabilizada' é o padrão quando não há contabilização automática e também volta depois de uma falha. 'C' = contabilizada; 'E' = cancelada sem lançamento." },
+    { "termo": "Fatura bloqueada para a contabilidade", "explicacao": "O sistema bloqueia a transferência ao FI quando há erro de determinação de contas, fatura incompleta ou erro de preço. Libera-se com VFX3 depois de corrigir a causa." },
+    { "termo": "Determinação de contas de receita (VKOA)", "explicacao": "Regra que escolhe a conta de receita por plano de contas, organização de vendas, grupo de contas do cliente, grupo de contas do material e chave de conta (ERL receita, ERS descontos). Sem entrada, a fatura não contabiliza." },
+    { "termo": "Saída sem fatura", "explicacao": "Remessa com saída de mercadorias lançada (custo e baixa de estoque já no FI) e sem fatura: o custo aparece no mês, a receita não. É a principal causa de margem distorcida no fechamento." },
+    { "termo": "Reconhecimento de receita", "explicacao": "Em casos como contratos de serviço ou entregas com aceite, a receita é reconhecida por período ou por evento, e não na data da fatura. No S/4HANA isso é tratado pelo Revenue Accounting and Reporting (RAR) para IFRS 15, ou pelo reconhecimento de receita do SD quando ainda usado." }
+  ],
+  "transacoes": [
+    { "codigo": "VF04 / app Create Billing Documents", "descricao": "Lista de documentos a faturar e faturamento em massa" },
+    { "codigo": "VFX3", "descricao": "Liberar faturas bloqueadas para a contabilidade" },
+    { "codigo": "VF31 / VF02", "descricao": "Reprocessar mensagens e contabilizar uma fatura específica" },
+    { "codigo": "App Manage Billing Documents", "descricao": "Listar faturas por status, com alerta (situation handling) de faturas não contabilizadas" },
+    { "codigo": "VKOA", "descricao": "Determinação de contas de receita" },
+    { "codigo": "VL06G / VL06F", "descricao": "Remessas com saída lançada e faturamento pendente" },
+    { "codigo": "VF11", "descricao": "Cancelar fatura" }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Checklist de fechamento de SD",
+      "legenda": "Primeiro feche o que saiu e não foi faturado; depois o que foi faturado e não chegou ao FI.",
+      "passos": [
+        { "titulo": "Faturar remessas com saída no mês", "papel": "Faturamento", "transacao": "VF04" },
+        { "titulo": "Listar faturas não contabilizadas", "papel": "Faturamento", "transacao": "VFX3" },
+        { "titulo": "Corrigir contas ou preço com erro", "papel": "Consultor SD", "transacao": "VKOA / VF02" },
+        { "titulo": "Liberar faturas para o FI", "papel": "Faturamento", "transacao": "VFX3" },
+        { "titulo": "Conciliar receita × custo das vendas", "papel": "Controladoria", "transacao": "Universal Journal" }
+      ]
+    },
+    {
+      "tipo": "hierarquia",
+      "titulo": "Por que uma venda não chegou ao resultado",
+      "legenda": "Três situações explicam quase todas as diferenças entre saídas e receita.",
+      "raiz": {
+        "nome": "Venda sem receita no mês", "sub": "custo lançado, receita não",
+        "filhos": [
+          { "nome": "Remessa sem fatura", "sub": "VF04", "filhos": [ { "nome": "Bloqueio de faturamento na ordem", "sub": "ex.: aguardando aceite" } ] },
+          { "nome": "Fatura bloqueada para o FI", "sub": "VFX3", "filhos": [
+            { "nome": "Erro de determinação de contas", "sub": "VKOA" },
+            { "nome": "Fatura incompleta ou erro de preço", "sub": "VF02" }
+          ] },
+          { "nome": "Receita diferida", "sub": "regra de reconhecimento", "filhos": [ { "nome": "Contrato de serviço", "sub": "receita por mês" } ] }
+        ]
+      }
+    }
+  ],
+  "caso": {
+    "titulo": "\"A margem de novembro caiu 4 pontos\"",
+    "contexto": "A distribuidora fatura em média R$ 2,0 milhões por mês. No fechamento de novembro o custo das vendas foi R$ 1,4 milhão, mas a receita contabilizada só R$ 1,8 milhão; a controladoria esperava R$ 2,0 milhões.",
+    "passos": [
+      "Na VF04 com data de faturamento até 30/11 aparecem 35 remessas com saída lançada e sem fatura, somando R$ 120.000,00: o faturamento em massa (job noturno) falhou no dia 29.",
+      "Executar a VF04 em coleta para as 35 remessas, com data de faturamento 30/11. A receita sobe para R$ 1,92 milhão.",
+      "Na VFX3 há 6 faturas bloqueadas (R$ 80.000,00). O log mostra 'conta não determinada' para o grupo de contas de material 03, criado no mês para uma linha nova de produtos.",
+      "O consultor SD inclui na VKOA a combinação do grupo 03 com a chave ERL apontando para a conta de receita de revenda, após aprovação da contabilidade.",
+      "Liberar as 6 faturas na VFX3: geram documentos contábeis em novembro. Receita final R$ 2,0 milhões, margem de volta ao esperado.",
+      "Para o mês seguinte: ativar o alerta de faturas não contabilizadas no app Manage Billing Documents e incluir a verificação da VFX3 no checklist do fechamento."
+    ]
+  },
+  "armadilhas": [
+    "Faturar no mês seguinte com a data do dia: a receita cai em dezembro e o custo ficou em novembro. Informe a data de faturamento correta (dentro do período ainda aberto).",
+    "Liberar na VFX3 sem corrigir a causa: a fatura volta para o status 'a ser contabilizada' com o mesmo erro.",
+    "Cancelar uma fatura já contabilizada esperando que suma do FI: o cancelamento gera estorno contábil; só faturas não contabilizadas ficam com status E sem lançamento.",
+    "Esquecer as notas fiscais: no Brasil, uma fatura sem NF-e autorizada não deveria ter saído; confira o monitor da NF-e junto com o fechamento."
+  ],
+  "fixacao": {
+    "pergunta": "Quais três motivos fazem o sistema bloquear uma fatura para a contabilidade, e qual transação libera depois da correção?",
+    "resposta": "Erro na determinação de contas, fatura incompleta e erro de preço. Depois de corrigir a causa, a VFX3 libera a fatura e gera o documento contábil."
+  },
+  "links": [
+    { "id": "proc-sd-13-devolucao", "motivo": "Etapa anterior: devoluções, que também geram faturas (créditos) a acompanhar no fechamento." },
+    { "id": "proc-sd-07-contrato", "motivo": "Próxima etapa: contratos de venda." },
+    { "id": "proc-sd-11-faturamento", "motivo": "O faturamento é a origem de tudo o que o fechamento confere." },
+    { "id": "proc-sd-10-saida", "motivo": "A saída de mercadorias lança o custo que precisa da receita correspondente." },
+    { "id": "proc-sd-12-nf-saida", "motivo": "A nota fiscal de saída precisa estar autorizada junto com a fatura." },
+    { "id": "guia-mm-fechamento", "motivo": "O fechamento equivalente do lado de compras e estoque." },
+    { "id": "base-fi", "motivo": "Contas de receita e períodos do FI." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Processing the Billing Due List (S/4HANA)", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/0270b6535fe6b74ce10000000a174cb4.html" },
+    { "titulo": "SAP Help – Billing Documents Blocked for Accounting", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/ab70b6535fe6b74ce10000000a174cb4.html" },
+    { "titulo": "SAP Help – Manage Billing Documents", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/d2185b549a8c8e4ce10000000a4450e5.html" },
+    { "titulo": "SAP Help – Change Billing Documents", "url": "https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/117e8357cb015c08e10000000a441470.html" },
+    { "titulo": "SAP Support Content – FAQ in SD-BIL-IV, Processing of billing documents", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sd/3362915424.html" }
+  ],
+  "destaques_s4hana": [
+    "Receita (fatura) e custo das vendas (saída de mercadorias) caem no mesmo Universal Journal com segmento de mercado: a margem por cliente e produto sai direto do ACDOCA, sem esperar CO-PA de custo.",
+    "Apps Create Billing Documents e Manage Billing Documents substituem VF04 e VFX3 no Fiori, com alerta automático de faturas não contabilizadas.",
+    "Reconhecimento de receita do SD clássico é substituído pelo Revenue Accounting and Reporting (RAR) para IFRS 15 nos cenários que exigem.",
+    "Cliente é Business Partner: o grupo de contas do cliente usado na VKOA está no papel cliente do BP."
+  ]
+}

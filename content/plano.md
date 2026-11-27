@@ -22,7 +22,7 @@ temas novos quando o mercado trouxer algo relevante.
 
 ## Trilha técnica
 - [x] Joule for Developers no ABAP Cloud (2026-10-30)
-- [ ] Modelo de extensibilidade em camadas (tiers) e contratos de liberação C0/C1/C2
+- [x] Clean core: níveis A–D e contratos de liberação C0–C3 (2026-11-27)
 - [ ] CDS view entities: associações, anotações e controle de acesso (DCL)
 - [ ] RAP com draft: ciclo de vida, ações, determinations e side effects
 - [ ] RAP eventos de negócio e integração com SAP Event Mesh
@@ -51,3 +51,4 @@ ondas, reabastecimento, inventário). As 8 etapas "em breve" estão no `trilhas.
 
 ## Etapas das trilhas publicadas
 - 2026-11-20: guia-mm-avaliacao (MM), guia-sd-determinacoes (SD), guia-ewm-tarefas-ordens (EWM).
+- 2026-11-27: guia-mm-fechamento (MM), guia-sd-fechamento (SD), proc-ewm-09-qualidade (EWM).

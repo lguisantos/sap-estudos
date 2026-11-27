@@ -1,0 +1,100 @@
+{
+  "id": "2026-11-27-tecnico-clean-core-niveis",
+  "tipo": "semanal",
+  "trilha": "tecnico",
+  "area": "ABAP Cloud",
+  "titulo": "Clean core na prática: níveis A a D e contratos de liberação C0 a C3",
+  "curto": "Clean core: níveis e contratos",
+  "publicado": "2026-11-27",
+  "nivel": "avançado",
+  "resumo": "A SAP passou a classificar extensões em níveis de clean core (A a D) em vez do antigo modelo de três camadas. A régua é simples: quanto mais o código depende de objetos liberados com contrato estável, mais seguro é o upgrade. Para o desenvolvedor ABAP, a pergunta do dia a dia vira \"esse objeto tem contrato C1?\" e a ferramenta para responder é o Cloudification Repository. Entender a régua é o que permite defender uma solução numa revisão de arquitetura.",
+  "conceitos": [
+    { "termo": "Contrato de liberação", "explicacao": "Promessa da SAP de estabilidade de um objeto para um uso específico. C0 = extensão (pontos de extensão estáveis), C1 = uso dentro do sistema (ABAP Cloud e key user), C2 = uso como API remota, C3 = gestão de conteúdo de configuração." },
+    { "termo": "C1 – Use System-Internally", "explicacao": "Interface tecnicamente estável para uso interno: componentes visíveis (parâmetros, campos, associações CDS) não mudam de forma incompatível; podem surgir campos opcionais novos. É o contrato que seu código ABAP Cloud consome." },
+    { "termo": "Nível A", "explicacao": "Só APIs liberadas (ABAP Cloud). Exige contrato C1 em todo objeto usado na extensão. Upgrade-safe." },
+    { "termo": "Nível B", "explicacao": "Uso de APIs clássicas (ex.: BAPIs documentadas e estáveis, mas sem contrato de liberação). Risco baixo, mas não garantido." },
+    { "termo": "Nível C", "explicacao": "Uso de objetos internos sem API (marcados como 'não será liberado' no Cloudification Repository ou sem entrada). Risco de quebrar no upgrade." },
+    { "termo": "Nível D", "explicacao": "Modificações e técnicas sem API (ex.: alterar objetos SAP, acessar tabelas internas sem alternativa). Evitar." },
+    { "termo": "Cloudification Repository Viewer", "explicacao": "Ferramenta pública da SAP que mostra, por release, o estado de liberação de cada objeto e o sucessor liberado de objetos clássicos (ex.: MARA → I_Product)." }
+  ],
+  "transacoes": [
+    { "codigo": "ADT › Properties › API State", "descricao": "Ver no Eclipse o contrato de liberação de um objeto" },
+    { "codigo": "ATC (variante ABAP_CLOUD_READINESS)", "descricao": "Checar código clássico contra as regras de ABAP Cloud" },
+    { "codigo": "Cloudification Repository Viewer", "descricao": "Consultar estado e sucessor de objetos por release" }
+  ],
+  "codigo": {
+    "linguagem": "abap",
+    "titulo": "Lendo produtos pelo jeito nível A (I_Product) em vez de MARA",
+    "conteudo": "CLASS zcl_produtos_acabados DEFINITION PUBLIC FINAL CREATE PUBLIC.\n  PUBLIC SECTION.\n    INTERFACES if_oo_adt_classrun.\nENDCLASS.\n\nCLASS zcl_produtos_acabados IMPLEMENTATION.\n  METHOD if_oo_adt_classrun~main.\n    \" I_Product é uma CDS view liberada (C1): estável entre upgrades.\n    \" Em ABAP Cloud, SELECT direto em MARA nem compila.\n    SELECT Product, ProductType, GrossWeight, WeightUnit\n      FROM I_Product\n      WHERE ProductType = 'FERT'\n      ORDER BY Product\n      INTO TABLE @DATA(produtos)\n      UP TO 20 ROWS.\n\n    IF produtos IS INITIAL.\n      out->write( |Nenhum produto acabado encontrado.| ).\n      RETURN.\n    ENDIF.\n\n    out->write( produtos ).\n  ENDMETHOD.\nENDCLASS.",
+    "explicacao": "Revise três coisas: (1) a fonte é a view liberada I_Product, sucessora de MARA indicada no Cloudification Repository; (2) os nomes de campo são os da view (Product, ProductType), não os técnicos (MATNR, MTART); (3) a classe roda pelo console do ADT (if_oo_adt_classrun), o que funciona em ABAP Cloud. Se precisar de um campo que só existe em MARA, a saída nível A é pedir a extensão da view ou criar um wrapper liberado com contrato C1, não ler a tabela."
+  },
+  "diagramas": [
+    {
+      "tipo": "hierarquia",
+      "titulo": "Régua de clean core",
+      "legenda": "Quanto mais perto do nível A, menor o risco no upgrade.",
+      "raiz": {
+        "nome": "Extensão ABAP", "sub": "o que ela usa?",
+        "filhos": [
+          { "nome": "Nível A", "sub": "só APIs liberadas (C1)", "filhos": [ { "nome": "Ex.: I_Product", "sub": "CDS liberada" } ] },
+          { "nome": "Nível B", "sub": "APIs clássicas", "filhos": [ { "nome": "Ex.: BAPI documentada", "sub": "sem contrato" } ] },
+          { "nome": "Nível C", "sub": "objetos internos", "filhos": [ { "nome": "Ex.: SELECT em MARA", "sub": "'não será liberado'" } ] },
+          { "nome": "Nível D", "sub": "sem API / modificação", "filhos": [ { "nome": "Ex.: alterar objeto SAP", "sub": "evitar" } ] }
+        ]
+      }
+    },
+    {
+      "tipo": "fluxo",
+      "titulo": "Decidir o nível de uma extensão",
+      "legenda": "Siga a ordem: procure primeiro a API liberada, só desça de nível com justificativa registrada.",
+      "passos": [
+        { "titulo": "Procurar API liberada (C1)", "papel": "Desenvolvedor", "transacao": "ADT / Cloudification" },
+        { "titulo": "Sem API: procurar sucessor ou extensão", "papel": "Desenvolvedor", "transacao": "Cloudification Repo" },
+        { "titulo": "Criar wrapper com contrato C1", "papel": "Desenvolvedor", "transacao": "ADT" },
+        { "titulo": "Rodar ATC de ABAP Cloud", "papel": "Revisor", "transacao": "ATC" },
+        { "titulo": "Registrar nível e justificativa", "papel": "Arquiteto", "transacao": "documentação" }
+      ]
+    }
+  ],
+  "caso": {
+    "titulo": "Relatório de peso de produtos acabados num S/4HANA 2023 on-premise",
+    "contexto": "A logística pede um relatório com o peso bruto dos 2.000 produtos acabados para cotar frete. O time tem um relatório antigo que lê MARA e MARM direto.",
+    "passos": [
+      "Abrir o Cloudification Repository Viewer para a release 2023 e procurar MARA: o sucessor liberado é I_Product.",
+      "Conferir no ADT que I_Product tem contrato C1 e os campos GrossWeight e WeightUnit.",
+      "Reescrever a leitura em uma classe ABAP Cloud (código acima) e expor como app ou relatório.",
+      "Rodar o ATC com a variante de ABAP Cloud: zero erros, extensão classificada como nível A.",
+      "Para unidades alternativas (dados de MARM), verificar a view liberada de unidades do produto; se não houver o campo necessário, criar wrapper C1 e registrar como nível B com justificativa."
+    ]
+  },
+  "armadilhas": [
+    "Achar que 'compila no on-premise' significa nível A: no ABAP clássico tudo compila; só a linguagem ABAP Cloud ou o ATC mostram o nível real.",
+    "Confiar só em posts da comunidade para o mapeamento de níveis C e D: confira no Cloudification Repository da sua release.",
+    "Usar C2 (API remota) dentro do sistema: para código interno o contrato certo é C1.",
+    "Criar wrapper sem contrato C1: o wrapper vira ele próprio um objeto de nível C."
+  ],
+  "fixacao": {
+    "pergunta": "Seu código ABAP Cloud precisa ler um dado que só existe numa tabela SAP sem sucessor liberado. Qual o caminho recomendado e em que nível a extensão fica?",
+    "resposta": "Criar, no ABAP clássico (camada de wrapper), um objeto que encapsula a leitura e liberá-lo com contrato C1 para o código ABAP Cloud. O código de negócio fica limpo, mas a extensão como um todo não é nível A puro: o wrapper usa objeto não liberado e deve ser registrado e revisado a cada upgrade."
+  },
+  "novidades": [
+    { "titulo": "ABAP Extensibility Guide (clean core) – agosto de 2025", "resumo": "Guia da SAP para extensibilidade no S/4HANA Cloud que organiza as extensões por níveis de clean core e é referência para o modelo atual.", "fonte": "SAP Community (blog da SAP)", "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/abap-extensibility-guide-clean-core-for-sap-s-4hana-cloud-august-2025/bc-p/14406048/highlight/true" },
+    { "titulo": "Estado de liberação no Cloudification Repository Viewer", "resumo": "Blog da SAP explica como o viewer mostra o estado de liberação dos objetos para a extensibilidade clean core.", "fonte": "SAP Community (blog da SAP)", "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/object-release-state-in-cloudification-repository-viewer-for-clean-core/ba-p/14350668" },
+    { "titulo": "Developer Guide: From Classic ABAP to ABAP Cloud (2026-07-03)", "resumo": "Guia oficial atualizado em julho de 2026; afirma que a atribuição de C1 é necessária para todo objeto usado numa extensão que mire o nível A.", "fonte": "SAP Help Portal", "url": "https://help.sap.com/doc/7beee672f5bd4b54b5398f36222d476c/sap_cross_product_abap/en-US/4e3d38dea4194ca592cb2c62430aac07.pdf" },
+    { "titulo": "Mapeamento dos níveis B, C e D", "resumo": "O mapeamento 'API clássica = B, não será liberado = C, sem API = D' aparece em respostas da comunidade, não numa tabela oficial; as fontes recomendam conferir no Cloudification Repository da release.", "fonte": "SAP Community", "url": "https://community.sap.com/t5/technology-blog-posts-by-members/understanding-release-contracts-c0-c3-in-s-4hana-repository-objects/ba-p/14223288" }
+  ],
+  "links": [
+    { "id": "2026-10-30-tecnico-joule-abap", "motivo": "Edição técnica anterior: Joule gerando código ABAP Cloud, que precisa respeitar esses contratos." },
+    { "id": "base-abap", "motivo": "Fundamentos de ABAP e da transição para ABAP Cloud." },
+    { "id": "guia-mm-mestre-material", "motivo": "I_Product é a visão liberada do mestre de material usado no exemplo." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Release Contracts (ABAP Keyword Documentation)", "url": "https://help.sap.com/docs/abap-cloud/abap-keyword/abenabap_release_contracts.html" },
+    { "titulo": "SAP Help – Released APIs (ADT User Guide)", "url": "https://help.sap.com/docs/abap-cloud/abap-development-tools-user-guide/released-apis" },
+    { "titulo": "SAP Help – release contract (glossário)", "url": "https://help.sap.com/doc/abapdocu_cp_index_htm/CLOUD/en-US/abenrelease_contract_glosry.htm?file=abenrelease_contract_glosry.htm" },
+    { "titulo": "SAP – Developer Guide: From Classic ABAP to ABAP Cloud (2026)", "url": "https://help.sap.com/doc/7beee672f5bd4b54b5398f36222d476c/sap_cross_product_abap/en-US/4e3d38dea4194ca592cb2c62430aac07.pdf" },
+    { "titulo": "SAP Community – Object Release State in Cloudification Repository Viewer", "url": "https://community.sap.com/t5/technology-blog-posts-by-sap/object-release-state-in-cloudification-repository-viewer-for-clean-core/ba-p/14350668" },
+    { "titulo": "SAP Community – Understanding Release Contracts (C0–C3)", "url": "https://community.sap.com/t5/technology-blog-posts-by-members/understanding-release-contracts-c0-c3-in-s-4hana-repository-objects/ba-p/14223288" },
+    { "titulo": "SAP Learning – Practicing Clean Core Extensibility for SAP S/4HANA Cloud", "url": "https://learning.sap.com/courses/practicing-clean-core-extensibility-for-sap-s-4hana-cloud/creating-tier-2-cloud-apis_a75bf2cd-815c-42bb-8d3b-2bba4931ecad" }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "id": "guia-mm-fechamento",
+  "tipo": "guia",
+  "trilha": "funcional",
+  "modulo": "MM",
+  "area": "Fechamento (MM / FI)",
+  "titulo": "Fechamento mensal de MM: períodos, GR/IR e conciliação com FI",
+  "curto": "Fechamento de MM",
+  "publicado": "2026-11-27",
+  "nivel": "intermediário",
+  "resumo": "No fim de cada mês o MM precisa entregar ao financeiro três coisas: o período certo aberto para os lançamentos, a conta GR/IR explicada (o que foi recebido e não faturado, e o que foi faturado e não recebido) e o valor do estoque batendo com a contabilidade. É a rotina em que o consultor MM mais é chamado. Entender cada passo evita a clássica sexta-feira de fechamento parada porque \"o período do material está fechado\" ou \"a GR/IR não bate\".",
+  "conceitos": [
+    { "termo": "Período contábil do material (MMPV)", "explicacao": "Período em que movimentos de estoque e faturas podem ser lançados por empresa. O MM mantém o período atual e o anterior abertos; MMPV avança para o mês seguinte. Fechado um período, não há mais lançamentos nele." },
+    { "termo": "Período contábil do FI (OB52)", "explicacao": "Controle independente do FI, por variante de período e tipo de conta. Para lançar uma entrada de mercadorias, os dois precisam estar abertos: o período do material e o do FI (contas M de material e S de razão)." },
+    { "termo": "Conta GR/IR (WRX)", "explicacao": "Conta de compensação entre entrada de mercadorias e fatura. A entrada credita, a fatura debita. Quando quantidade e valor batem, os itens se compensam; o saldo é o que está em trânsito entre logística e financeiro." },
+    { "termo": "Recebido e não faturado", "explicacao": "Saldo credor na GR/IR: a mercadoria chegou, a fatura não. No balanço é um passivo (obrigação com o fornecedor)." },
+    { "termo": "Faturado e não recebido", "explicacao": "Saldo devedor na GR/IR: a fatura chegou antes da mercadoria. No balanço é um ativo (adiantamento ou mercadoria em trânsito)." },
+    { "termo": "Reclassificação da GR/IR", "explicacao": "Programa de fechamento que separa os saldos de cada pedido em contas de ajuste (recebido não faturado × faturado não recebido) para o balanço, e estorna no início do mês seguinte." },
+    { "termo": "Compensação manual (MR11)", "explicacao": "Quando a diferença na GR/IR não vai mais ser resolvida (ex.: fornecedor entregou 98 de 100 e faturou 100 com acordo), MR11 baixa o saldo restante contra uma conta de diferença." },
+    { "termo": "Conciliação estoque × razão", "explicacao": "Conferência de que o valor do estoque no MM (MB5L) é igual ao saldo das contas de estoque no FI. No S/4HANA os dois saem do mesmo Universal Journal (ACDOCA), por isso diferenças são raras." }
+  ],
+  "transacoes": [
+    { "codigo": "MMPV / app Close Periods", "descricao": "Fechar o período do material e abrir o seguinte" },
+    { "codigo": "MMRV", "descricao": "Exibir o período atual e o anterior do material" },
+    { "codigo": "OB52", "descricao": "Abrir e fechar períodos do FI" },
+    { "codigo": "App Reconcile GR/IR Accounts", "descricao": "Analisar itens abertos da GR/IR com histórico do pedido" },
+    { "codigo": "MR11", "descricao": "Compensação manual ou baixa de saldos da GR/IR" },
+    { "codigo": "FAGLF101 / app Reclassify GR/IR", "descricao": "Reclassificação da GR/IR para o balanço" },
+    { "codigo": "MB5L", "descricao": "Lista de valores de estoque para conciliar com o razão" },
+    { "codigo": "ME2M / ME80FN", "descricao": "Pedidos com entrada sem fatura (e vice-versa) para cobrar áreas" }
+  ],
+  "diagramas": [
+    {
+      "tipo": "fluxo",
+      "titulo": "Roteiro do fechamento mensal de MM",
+      "legenda": "A ordem importa: primeiro abre o novo período, depois analisa e ajusta a GR/IR, por fim concilia o estoque.",
+      "passos": [
+        { "titulo": "Abrir o novo período do material", "papel": "Key user MM", "transacao": "MMPV" },
+        { "titulo": "Abrir período do FI para contas M e S", "papel": "Contabilidade", "transacao": "OB52" },
+        { "titulo": "Cobrar entradas e faturas pendentes", "papel": "Compras", "transacao": "ME2M / ME80FN" },
+        { "titulo": "Analisar itens abertos da GR/IR", "papel": "Contas a pagar", "transacao": "Reconcile GR/IR" },
+        { "titulo": "Baixar diferenças definitivas", "papel": "Contas a pagar", "transacao": "MR11" },
+        { "titulo": "Reclassificar GR/IR para o balanço", "papel": "Contabilidade", "transacao": "FAGLF101" },
+        { "titulo": "Conciliar estoque × razão", "papel": "Controladoria", "transacao": "MB5L" }
+      ]
+    },
+    {
+      "tipo": "hierarquia",
+      "titulo": "Os dois lados do saldo da GR/IR",
+      "legenda": "Cada pedido aberto cai num dos dois lados; a reclassificação separa os totais para o balanço.",
+      "raiz": {
+        "nome": "Conta GR/IR 211100", "sub": "saldo líquido do mês",
+        "filhos": [
+          { "nome": "Recebido e não faturado", "sub": "saldo credor · passivo", "filhos": [
+            { "nome": "Pedido 4500001234", "sub": "entrada R$ 8.000, sem fatura" },
+            { "nome": "Pedido 4500001240", "sub": "entrada 100 un, fatura 98 un" }
+          ] },
+          { "nome": "Faturado e não recebido", "sub": "saldo devedor · ativo", "filhos": [
+            { "nome": "Pedido 4500001251", "sub": "fatura R$ 3.000, mercadoria em trânsito" }
+          ] }
+        ]
+      }
+    }
+  ],
+  "caso": {
+    "titulo": "Fechamento de outubro numa indústria",
+    "contexto": "Em 31/10 a conta GR/IR da empresa 1000 tem saldo credor líquido de R$ 9.040,00 em vários pedidos abertos. O financeiro precisa do balanço até o 3º dia útil de novembro.",
+    "passos": [
+      "01/11: o key user roda a MMPV para a empresa 1000, avançando o período do material para 11/2026 (outubro continua aberto como período anterior). A contabilidade confirma na OB52 que novembro está aberto para contas M e S.",
+      "No app Reconcile GR/IR Accounts aparecem: pedido 4500001234 com entrada de R$ 8.000,00 e sem fatura (credor); pedido 4500001240 com entrada de 100 un e fatura de 98 un a R$ 20,00 (credor R$ 40,00); pedido 4500001251 com fatura de R$ 3.000,00 e mercadoria em trânsito (devedor). Há ainda R$ 4.000,00 de outros pedidos sem fatura. Líquido = 8.000 + 40 + 4.000 − 3.000 = R$ 9.040,00, igual ao saldo do razão.",
+      "Compras confirma que o fornecedor do pedido 4500001240 não vai faturar as 2 un restantes (acordo de quebra). Contas a pagar baixa R$ 40,00 na MR11 contra a conta de diferença.",
+      "A contabilidade roda a reclassificação: R$ 12.000,00 vão para 'mercadorias recebidas a faturar' (passivo) e R$ 3.000,00 para 'mercadorias faturadas a receber' (ativo); o programa estorna os lançamentos em 01/11.",
+      "Controladoria compara o total da MB5L com o saldo das contas de estoque no razão: no S/4HANA batem porque ambos leem o ACDOCA. Em 03/11, contabilidade fecha outubro na OB52; na próxima MMPV, outubro deixará de ser período anterior."
+    ]
+  },
+  "armadilhas": [
+    "Esquecer a MMPV no 1º dia útil: entradas de mercadorias do mês novo falham com a mensagem de que só os períodos X e Y são permitidos.",
+    "Avançar a MMPV pulando meses: ela só avança um período por vez; se ficou para trás, repita até chegar ao atual.",
+    "Fechar o período do FI antes de o almoxarifado terminar os estornos do mês: os estornos caem no mês seguinte e o estoque de fim de mês não bate com o físico.",
+    "Usar MR11 para 'limpar' a GR/IR sem investigar: o saldo pode ser uma fatura que falta lançar, e a baixa esconde uma dívida real.",
+    "Achar que a reclassificação corrige o saldo: ela só reapresenta no balanço e é estornada no mês seguinte."
+  ],
+  "fixacao": {
+    "pergunta": "Uma entrada de 50 un a R$ 10,00 foi lançada em outubro e a fatura de 50 un a R$ 10,00 só chegou em novembro. Qual era o saldo desse pedido na GR/IR em 31/10 e como aparece no balanço?",
+    "resposta": "Saldo credor de R$ 500,00 (recebido e não faturado). Na reclassificação vai para uma conta de passivo de mercadorias recebidas a faturar; em novembro, com a fatura, a GR/IR se compensa."
+  },
+  "links": [
+    { "id": "proc-mm-13-nf-entrada", "motivo": "Etapa anterior: a nota fiscal de entrada, que gera boa parte dos lançamentos do mês." },
+    { "id": "proc-mm-07-contrato", "motivo": "Próxima etapa: contratos de compra." },
+    { "id": "guia-mm-avaliacao", "motivo": "A avaliação explica os lançamentos BSX, WRX e PRD que o fechamento analisa." },
+    { "id": "proc-mm-09-entrada", "motivo": "A entrada de mercadorias credita a GR/IR." },
+    { "id": "proc-mm-12-fatura", "motivo": "A verificação de faturas debita a GR/IR e resolve a maioria dos itens abertos." },
+    { "id": "proc-mm-11-inventario", "motivo": "O inventário costuma ser feito no fechamento e mexe no valor do estoque." },
+    { "id": "guia-sd-fechamento", "motivo": "O fechamento equivalente do lado de vendas." },
+    { "id": "base-fi", "motivo": "Períodos contábeis e razão do FI." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Opening and Closing Posting Periods (S/4HANA)", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/273982318bde4278abeff26a3b020fd9/92d977d87add49e6853d0f3ac423f428.html" },
+    { "titulo": "SAP Best Practices – Closing MM Period and Opening New Posting Period", "url": "https://help.sap.com/docs/s4hana-best-practices/create-new-open-mm-posting-period-bnz-e6bb56cc6e51c3b42d4cf76e831ab93f/closing-mm-period-and-opening-new-posting-period" },
+    { "titulo": "SAP Help – Reconcile GR/IR Accounts", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/651d8af3ea974ad1a4d74449122c620e/17f3a45189524e78b4a80bf51ff2b741.html" },
+    { "titulo": "SAP Help – GR/IR Account Reconciliation: Automated Processing", "url": "https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/651d8af3ea974ad1a4d74449122c620e/972d2c0f719f4067b2d53b4dc1fa6576.html" },
+    { "titulo": "SAP Help – Machine Learning Service (GR/IR)", "url": "https://help.sap.com/docs/SAP_S4HANA_ONPREMISE/651d8af3ea974ad1a4d74449122c620e/0aa06061458c488d906d05ca9bf1b245.html" },
+    { "titulo": "SAP Help – Month-End Closing (SAP ERP)", "url": "https://help.sap.com/docs/SAP_ERP/1cd6e1d47833422fb4dc6e28de61c5b5/0a15d353c6244308e10000000a174cb4.html" }
+  ],
+  "destaques_s4hana": [
+    "Estoque e razão saem do mesmo Universal Journal (ACDOCA): a conciliação MM × FI que no ECC exigia relatórios cruzados virou conferência rápida.",
+    "App Reconcile GR/IR Accounts mostra num lugar só itens abertos do FI, histórico do pedido e log de tratamento; pode ter regras automáticas (programa FINS_GRIR_AUTOM_PROCESS) e sugestões por machine learning.",
+    "O app Close Periods substitui a MMPV na interface Fiori; a lógica de período atual e anterior continua igual à do ECC.",
+    "Programas de agendamento de fechamento (Financial Closing cockpit / Advanced Financial Closing) permitem encadear MMPV, reclassificação e relatórios com responsáveis e prazos."
+  ]
+}

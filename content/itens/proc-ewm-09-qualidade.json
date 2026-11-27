@@ -1,0 +1,181 @@
+{
+  "id": "proc-ewm-09-qualidade",
+  "tipo": "processo",
+  "trilha": "funcional",
+  "modulo": "EWM",
+  "ordem": 9,
+  "publicado": "2026-11-27",
+  "area": "Qualidade no recebimento (EWM-QM)",
+  "curto": "Inspeção de qualidade no recebimento",
+  "nivel": "intermediário",
+  "titulo": "Inspeção de qualidade no recebimento do EWM",
+  "resumo": "Muitos produtos não podem ser vendidos ou consumidos assim que chegam: alimentos, cosméticos, peças críticas. No recebimento, o EWM cria a inspeção, muda o tipo de estoque para qualidade (Q) e só depois da decisão de uso o estoque passa a livre (F). Este processo mostra a cadeia completa, do aviso de recebimento até a liberação ou devolução, e explica a diferença entre o EWM embarcado (que usa o lote de controle do QM do próprio S/4HANA) e o descentralizado (que usa o Quality Inspection Engine, QIE).",
+  "quando": [
+    "Produtos com exigência legal de análise antes do uso (alimentos, fármacos, cosméticos).",
+    "Fornecedores novos ou em observação, com inspeção por amostragem.",
+    "Materiais com certificado de qualidade obrigatório no recebimento."
+  ],
+  "prerequisitos": [
+    "Material com visão de qualidade ativa e tipo de inspeção de recebimento (no S/4HANA, visão Gestão de qualidade do mestre de material).",
+    "Tipo de objeto de inspeção (IOT) ativo para o depósito e regra de inspeção definida (Customizing do EWM).",
+    "Tipos de estoque de qualidade configurados no depósito (ex.: Q1 em recebimento/ROD e Q2 disponível/AFS).",
+    "Pedido de compra e aviso de recebimento (remessa de entrada) do fornecedor."
+  ],
+  "fluxo": [
+    {
+      "titulo": "Remessa de entrada ativada no EWM",
+      "papel": "Recebimento",
+      "transacao": "/SCWM/PRDI",
+      "descricao": "O aviso do fornecedor gera a remessa de entrada no EWM. Ao ativar a remessa, o EWM verifica a regra de inspeção do produto.",
+      "detalhes": [
+        "Se o produto exige inspeção, o EWM cria o documento de inspeção (descentralizado: no QIE; embarcado: lote de controle do QM).",
+        "A regra pode mudar o tipo de estoque do item da remessa de livre (F1) para qualidade (Q1) já no planejamento."
+      ],
+      "resultado": "Remessa de entrada com item marcado para inspeção e documento de inspeção criado.",
+      "exemplo": "Remessa 180000521, 1.000 frascos de shampoo, lote L2611, tipo de estoque Q1."
+    },
+    {
+      "titulo": "Entrada de mercadorias em estoque de qualidade",
+      "papel": "Recebimento",
+      "transacao": "/SCWM/PRDI",
+      "descricao": "A entrada é lançada e o estoque fica no tipo Q, bloqueado para separação e para consumo.",
+      "detalhes": [
+        "No MM o estoque aparece como estoque em controle de qualidade, não como livre.",
+        "Com o lançamento direto no estoque de qualidade, MRP vê a quantidade, mas vendas não pode reservá-la."
+      ],
+      "resultado": "Estoque físico no depósito, contabilmente em qualidade.",
+      "exemplo": "MMBE mostra 1.000 un em controle de qualidade no centro SP01."
+    },
+    {
+      "titulo": "Retirar amostra e levar ao laboratório",
+      "papel": "Operador de armazém",
+      "transacao": "/SCWM/RFUI",
+      "descricao": "O EWM pode gerar tarefa para levar a amostra (ou o palete inteiro) a uma estação de inspeção, conforme a regra.",
+      "detalhes": [
+        "A amostra pode ser separada da quantidade total (split da quantidade de amostra).",
+        "O restante pode ser armazenado nas posições normais, ainda como Q, ou ficar numa área de bloqueio."
+      ],
+      "resultado": "Amostra no laboratório; restante armazenado como Q.",
+      "exemplo": "13 frascos de amostra levados à estação QA01; 987 armazenados no tipo 0010 como Q2."
+    },
+    {
+      "titulo": "Registrar resultados da inspeção",
+      "papel": "Analista de qualidade",
+      "transacao": "QE51N",
+      "descricao": "O laboratório registra os resultados das características (pH, viscosidade, rótulo) no lote de controle.",
+      "detalhes": [
+        "Embarcado: resultados no lote de controle do QM (QE51N). Descentralizado: no documento de inspeção do QIE ou num QM conectado.",
+        "Sem certificado de qualidade obrigatório recebido, a decisão de uso fica bloqueada."
+      ],
+      "resultado": "Lote de controle com resultados e avaliação das características.",
+      "exemplo": "pH 5,6 (faixa 5,0–6,5) aprovado; viscosidade aprovada."
+    },
+    {
+      "titulo": "Decisão de uso: aceitar ou rejeitar",
+      "papel": "Analista de qualidade",
+      "transacao": "QA11 · /SCWM/QIDPR",
+      "descricao": "A decisão de uso diz se a mercadoria é aceita ou rejeitada e define o destino do estoque.",
+      "detalhes": [
+        "Aceite: o EWM cria tarefa de mudança de tipo de estoque de Q para F, e o estoque fica livre no MM.",
+        "Rejeição: estoque vai para bloqueado ou é preparado para devolução ao fornecedor ou sucata."
+      ],
+      "resultado": "Decisão registrada e movimento de estoque disparado.",
+      "exemplo": "Aceite: 987 un passam de Q2 para F2; as 13 amostras são baixadas como consumo de inspeção."
+    },
+    {
+      "titulo": "Estoque liberado e disponível",
+      "papel": "Sistema EWM / MM",
+      "transacao": "/SCWM/MON · MMBE",
+      "descricao": "Com a mudança de tipo de estoque, o EWM atualiza o estoque no MM (de qualidade para livre) e o produto passa a ser separável.",
+      "detalhes": [
+        "Embarcado: o lançamento no MM é imediato, no mesmo sistema. Descentralizado: a mensagem de mudança de estoque vai ao ERP pela interface (qRFC).",
+        "Se a rejeição vier depois da entrada, uma nova entrada no mesmo lote pode gerar um segundo lote de controle (comportamento conhecido em pré-amostragem)."
+      ],
+      "resultado": "Estoque livre (F2) disponível para vendas e produção.",
+      "exemplo": "Ordem de venda do cliente C100 consegue confirmar os 987 frascos."
+    }
+  ],
+  "documentos": [
+    { "nome": "Remessa de entrada (EWM)", "tabelas": "/SCDL/DB_PROCH_I · /SCDL/DB_PROCI_I", "descricao": "Aviso do fornecedor no EWM, com tipo de estoque por item.", "exemplo": "180000521" },
+    { "nome": "Lote de controle (QM) ou documento de inspeção (QIE)", "tabelas": "QALS · QAVE", "descricao": "Registro da inspeção: quantidade, amostra, resultados e decisão de uso.", "exemplo": "Lote de controle 010000004512" },
+    { "nome": "Tarefa de depósito de mudança de tipo de estoque", "tabelas": "/SCWM/ORDIM_C", "descricao": "Movimenta o estoque de Q para F (ou para bloqueado) após a decisão.", "exemplo": "Tarefa 400001238" },
+    { "nome": "Documento de material", "tabelas": "MATDOC", "descricao": "Reflexo no MM da entrada em qualidade e da liberação para livre.", "exemplo": "Movimento 101 em Q e 321 de Q para livre" }
+  ],
+  "conceitos": [
+    { "termo": "Tipo de estoque Q", "explicacao": "Estoque em controle de qualidade. Q1 costuma ser em recebimento (ROD, ainda não disponível), Q2 disponível no depósito (AFS); os códigos exatos são definidos no Customizing." },
+    { "termo": "Tipo de objeto de inspeção (IOT)", "explicacao": "O que é inspecionado: remessa de entrada, produto no recebimento, devolução, inventário. Ativado por depósito." },
+    { "termo": "Regra de inspeção", "explicacao": "Define o tipo de inspeção e se o tipo de estoque muda já no planejamento da inspeção." },
+    { "termo": "QIE (Quality Inspection Engine)", "explicacao": "Motor de inspeção usado pelo EWM descentralizado. No embarcado, o próprio QM do S/4HANA (lote de controle) faz esse papel." },
+    { "termo": "Decisão de uso", "explicacao": "Aceite ou rejeição do lote inspecionado; dispara o movimento de estoque." }
+  ],
+  "transacoes": [
+    { "codigo": "/SCWM/PRDI", "descricao": "Processar remessa de entrada" },
+    { "codigo": "QA32 / QE51N", "descricao": "Lista de lotes de controle e registro de resultados (embarcado)" },
+    { "codigo": "QA11", "descricao": "Decisão de uso do lote de controle (embarcado)" },
+    { "codigo": "/SCWM/QIDPR", "descricao": "Processar documento de inspeção no EWM (QIE)" },
+    { "codigo": "/SCWM/MON", "descricao": "Monitor: estoque por tipo de estoque e tarefas" },
+    { "codigo": "MMBE", "descricao": "Visão geral de estoque no MM (livre × qualidade)" }
+  ],
+  "configuracao": [
+    { "item": "Ativar tipo de objeto de inspeção por depósito", "onde": "SPRO › EWM › Processos interdepartamentais › Gestão de qualidade › Definir e ativar IOTs dependentes do depósito", "explicacao": "Sem o IOT ativo, nenhuma inspeção é criada na remessa de entrada." },
+    { "item": "Regra de inspeção", "onde": "SPRO › EWM › Gestão de qualidade › Regras de inspeção", "explicacao": "Liga produto ou fornecedor ao tipo de inspeção e controla a mudança de tipo de estoque." },
+    { "item": "Tipos de estoque de qualidade", "onde": "SPRO › EWM › Recebimento › Tipos de estoque", "explicacao": "Mapeia Q1/Q2 ao estoque em controle de qualidade do MM." },
+    { "item": "Visão de qualidade do material", "onde": "MM02 › Gestão de qualidade", "explicacao": "Tipo de inspeção ativo (ex.: 01 recebimento) e indicador de lançamento em estoque de qualidade." }
+  ],
+  "integracao": [
+    { "com": "MM", "explicacao": "A entrada em qualidade e a liberação geram documentos de material (MATDOC); o estoque no MM passa de controle de qualidade para livre." },
+    { "com": "QM", "explicacao": "No embarcado, o lote de controle e a decisão de uso são do QM do S/4HANA; no descentralizado, o QIE pode ser integrado a um QM no ERP." },
+    { "com": "SD / PP", "explicacao": "Vendas e produção só enxergam o estoque como disponível depois da decisão de uso." }
+  ],
+  "variantes": [
+    { "nome": "Pré-amostragem", "explicacao": "Amostra enviada pelo fornecedor e inspecionada antes da entrega; o recebimento depende do resultado." },
+    { "nome": "Inspeção só documental (certificado)", "explicacao": "Sem análise física: o recebimento exige o certificado de qualidade antes da decisão de uso." },
+    { "nome": "Inspeção de devoluções", "explicacao": "Mesmo mecanismo aplicado às devoluções de clientes, decidindo se volta ao estoque livre ou vai para sucata." }
+  ],
+  "caso": {
+    "titulo": "Recebimento de shampoo com análise obrigatória",
+    "contexto": "Uma indústria de cosméticos recebe no CD SP01 (EWM embarcado) 1.000 frascos de shampoo de um fabricante terceiro. A ANVISA exige análise de lote antes da venda.",
+    "passos": [
+      "O pedido 4500002100 gera a remessa de entrada 180000521; ao ativá-la, o EWM cria o lote de controle 010000004512 e marca o item como Q1.",
+      "O recebimento lança a entrada: no MM, 1.000 un em controle de qualidade, R$ 8.000,00 no estoque.",
+      "O operador leva 13 frascos à estação QA01 e armazena 987 no porta-paletes como Q2.",
+      "O laboratório registra pH 5,6 e viscosidade dentro da faixa na QE51N.",
+      "A analista dá a decisão de uso 'aceito' na QA11: o EWM muda 987 un para F2 e baixa as 13 amostras.",
+      "A ordem de venda do cliente C100, que estava sem confirmação, confirma os 987 frascos no dia seguinte."
+    ]
+  },
+  "armadilhas": [
+    "IOT não ativo para o depósito: a remessa entra direto como livre e o produto pode ser vendido sem análise.",
+    "Confundir os tipos de estoque do EWM com os do MM: Q1/Q2 são do EWM e mapeiam para 'controle de qualidade' no MM.",
+    "Esquecer o certificado obrigatório: a decisão de uso fica bloqueada e o estoque parado em Q.",
+    "Rejeitar no cabeçalho em pré-amostragem e lançar nova entrada: pode surgir um segundo lote de controle, sem Customizing para desligar."
+  ],
+  "fixacao": {
+    "pergunta": "No EWM embarcado, onde fica a inspeção e qual movimento libera o estoque para venda?",
+    "resposta": "A inspeção é um lote de controle do QM do próprio S/4HANA. Depois da decisão de uso 'aceito', o EWM cria a tarefa de mudança de tipo de estoque de Q para F, o que no MM passa o estoque de controle de qualidade para livre."
+  },
+  "links": [
+    { "id": "proc-sd-09-remessa", "motivo": "Etapa anterior na trilha EWM: a remessa do SD que o EWM executa." },
+    { "id": "proc-ewm-01-recebimento", "motivo": "O recebimento padrão, sobre o qual a inspeção se apoia." },
+    { "id": "proc-ewm-02-armazenagem", "motivo": "A armazenagem do restante enquanto a análise acontece." },
+    { "id": "proc-mm-09-entrada", "motivo": "O equivalente no MM: entrada em estoque de qualidade e transferência para livre." },
+    { "id": "proc-mm-10-movimentos", "motivo": "Movimentos de transferência entre tipos de estoque." },
+    { "id": "guia-ewm-tarefas-ordens", "motivo": "As tarefas que levam amostras e mudam o tipo de estoque." },
+    { "id": "guia-ewm-integracao", "motivo": "Como o EWM reflete o estoque no MM (ROD/AFS e tipos de estoque)." }
+  ],
+  "fontes": [
+    { "titulo": "SAP Help – Connection of Delivery Processing to Quality Management (EWM 9.5)", "url": "https://help.sap.com/docs/r/3d97bec9bf1649099384bb8167df3cf2/9.5.0.2/en-US/9bcccb53ad377114e10000000a174cb4.html" },
+    { "titulo": "SAP Help – Inspection Decision (EWM 9.5)", "url": "https://help.sap.com/docs/r/3d97bec9bf1649099384bb8167df3cf2/9.5.0.2/en-US/c7b7f650fe946766e10000000a445394.html" },
+    { "titulo": "SAP Help – Inspection Object Types (EWM QM)", "url": "https://help.sap.com/saphelp_ewm900/helpdata/en/43/45d4dc270d321ae10000000a422035/content.htm?no_cache=true" },
+    { "titulo": "SAP Help – Inspection Process (EWM QM)", "url": "https://help.sap.com/doc/saphelp_ewm900/9.0/en-US/1c/99c0413f1b6524e10000000a1550b0/content.htm?no_cache=true" },
+    { "titulo": "SAP Support Content – Quality Certificates in Goods Receipt with EWM", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/4206887240.html" },
+    { "titulo": "SAP Support Content – Presampling in Production", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/4202290101.html" },
+    { "titulo": "SAP Support Content – Split Sample Quantity", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/4209488869.html" },
+    { "titulo": "SAP Support Content – Synchronous Goods Movement + EWM-QM", "url": "https://help.sap.com/docs/SUPPORT_CONTENT/sewm/4428870892.html?locale=en-US&state=PRODUCTION&version=1.0" }
+  ],
+  "destaques_s4hana": [
+    "EWM embarcado usa o QM do próprio S/4HANA (lote de controle, QA11); o descentralizado usa o QIE. Projetos novos no embarcado ganham uma ferramenta de qualidade a menos.",
+    "Com movimento síncrono, o indicador de lançamento em estoque de qualidade do material decide se o estoque vai para QQ ou para FF.",
+    "Documentos de material de entrada e liberação ficam em MATDOC, com valor no Universal Journal."
+  ]
+}
